@@ -1,6 +1,6 @@
 /*
  ============================================================================
- Name        : Programa.c
+ Name        : Kernel.c
  Author      : 
  Version     :
  Copyright   : 

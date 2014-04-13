@@ -1,6 +1,6 @@
 /*
  ============================================================================
- Name        : Programa.c
+ Name        : CPU.c
  Author      : 
  Version     :
  Copyright   : 
