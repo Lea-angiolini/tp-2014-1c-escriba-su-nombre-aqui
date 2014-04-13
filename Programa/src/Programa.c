@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 #include <sys/socket.h>
 #include <sys/sendfile.h>
 
@@ -37,14 +36,22 @@ int main(int argc, char *argv[]) {
 		return EXIT_SUCCESS;
 	}
 
-	//send(sock, header, sizeof(header);
+	printf("Conectado al servidor.\n");
 
-	if( sendfile(sock, fileno(script), 0, scriptSize) < 0 ) {
+	socket_header header;
+	header.size = scriptSize;
+
+	if( send(sock, &header, sizeof(header), 0) < 0 && sendfile(sock, fileno(script), 0, scriptSize) < 0 ) {
 		printf("No se pudo enviar el archivo.\n");
 		return EXIT_SUCCESS;
 	}
 
-	//while( recv(sock, output) ) printf(“%s\n”, output);
+	socket_msg msg;
+
+	while(recv(sock, &msg, sizeof(msg),0) > 0)
+		printf("%s\n", msg.msg);
+
+	printf("Desconectado del servidor.\n");
 
 	close(sock);
 	fclose(script);
