@@ -27,7 +27,7 @@
 		<link>
 			<name>src/commons</name>
 			<type>2</type>
-			<locationURI>PARENT-2-PROJECT_LOC/git/tp-2014-1c-escriba-su-nombre-aqui/commons/commons</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/commons/commons</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
