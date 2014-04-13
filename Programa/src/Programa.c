@@ -7,6 +7,7 @@
 
 #include "commons/config.h"
 #include "commons/sockets.h"
+#include "commons/tools.h"
 
 int main(int argc, char *argv[]) {
 	if (argc != 2) {
@@ -14,9 +15,10 @@ int main(int argc, char *argv[]) {
 		return EXIT_SUCCESS;
 	}
 
-	t_config *config = config_create("$ANSISOP_CONFIG");
+	t_config *config = config_create(getenv("ANSISOP_CONFIG"));
 
 	FILE *script = fopen(argv[1], "r"); //argv[1] = nombre del script a correr
+	off_t scriptBase = 0;
 	size_t scriptSize;
 
 	if (script == NULL ) {
@@ -41,14 +43,14 @@ int main(int argc, char *argv[]) {
 	socket_header header;
 	header.size = scriptSize;
 
-	if( send(sock, &header, sizeof(header), 0) < 0 && sendfile(sock, fileno(script), 0, scriptSize) < 0 ) {
+	if( send(sock, &header, sizeof(header), 0) < 0 || sendfile(sock, script->_fileno, &scriptBase, scriptSize) < 0) {
 		printf("No se pudo enviar el archivo.\n");
 		return EXIT_SUCCESS;
 	}
 
 	socket_msg msg;
 
-	while(recv(sock, &msg, sizeof(msg),0) > 0)
+	while (recv(sock, &msg, sizeof(msg), 0) > 0)
 		printf("%s\n", msg.msg);
 
 	printf("Desconectado del servidor.\n");
