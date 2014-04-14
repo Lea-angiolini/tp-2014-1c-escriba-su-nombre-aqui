@@ -2,6 +2,7 @@
 #define SOCKETS_H_
 
 #include <stdlib.h>
+#include "log.h"
 
 typedef struct {
 	unsigned char code;
@@ -14,6 +15,7 @@ typedef struct {
 } socket_msg;
 
 
-int conectar(char *ip, int port);
+int conectar(char *ip, int port, t_log * log);
+int crearServidor(int puerto, void* (*fn_nuevo_cliente)( void * socket ), t_log * log);
 
 #endif /* SOCKETS_H_ */
