@@ -21,3 +21,17 @@
 *.i*86
 *.x86_64
 *.hex
+
+
+*.d
+*.mk
+
+Kernel/Debug/*
+Programa/Debug/*
+UMV/Debug/*
+CPU/Debug/*
+
+Kernel/Debug/src/commons/*
+Programa/Debug/src/commons/*
+UMV/Debug/src/commons/*
+CPU/Debug/src/commons/*

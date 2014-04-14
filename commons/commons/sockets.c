@@ -18,11 +18,11 @@ int conectar(char *ip, int port, t_log * log) {
 	//PF_INET: IPv4
 	//SOCK_STREAM: Los datos no se pierden ni se duplican
 	//IPPROTO_TCP: TCP
-	printf("Conectando...\n");
+	log_info(log, "Conectando");
 	int sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
 
 	if (sock < 0){
-		perror("Error al crear socket");
+		log_error(log, "Error al crear el socket");
 		return -1; //No se pudo crear el descriptor a un archivo
 	}
 
@@ -34,7 +34,7 @@ int conectar(char *ip, int port, t_log * log) {
 	sockaddress.sin_port = htons(port);
 
 	if( connect(sock, (struct sockaddr*)&sockaddress, sizeof(struct sockaddr))){
-		perror("Error al conectar socket");
+		log_error(log, "Error al conectar el socket");
 		return -1;  //No se pudo conectar
 	}
 

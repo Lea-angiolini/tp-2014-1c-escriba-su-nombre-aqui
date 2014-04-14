@@ -10,6 +10,9 @@
 #include "commons/tools.h"
 
 int main(int argc, char *argv[]) {
+
+	t_log * log =	log_create( "log.txt", "Programa", 1, LOG_LEVEL_TRACE );
+
 	if (argc != 2) {
 		printf("Modo de empleo: ./Programa ScriptAnsiSOp\n");
 		return EXIT_SUCCESS;
@@ -31,7 +34,7 @@ int main(int argc, char *argv[]) {
 	scriptSize = ftell(script);
 	fseek(script, 0, SEEK_SET);
 
-	int sock = conectar(config_get_string_value(config, "IP"), config_get_int_value(config, "Puerto"));
+	int sock = conectar(config_get_string_value(config, "IP"), config_get_int_value(config, "Puerto"), log);
 
 	if (sock == -1) {
 		printf("No se pudo conectar al servidor.\n");
@@ -61,3 +64,29 @@ int main(int argc, char *argv[]) {
 
 	return EXIT_SUCCESS;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
