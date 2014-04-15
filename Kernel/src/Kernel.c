@@ -1,7 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "plp.h"
+#include "pcp.h"
+#include "io.h"
+
 #include "commons/config.h"
+#include "commons/collections/queue.h"
 
 typedef struct {
 	unsigned int id;
@@ -11,8 +16,10 @@ typedef struct {
 	unsigned int etiquetaIndex;
 	unsigned int programCounter;
 	unsigned int contextSize;
-	//int ProgramaSocket;
-} PCB;
+	//Agregados
+	int programaSocket;
+	unsigned int prioridad;
+} pcb_t;
 
 int main(int argc, char *argv[]) {
 	if (argc != 2) {
@@ -21,6 +28,16 @@ int main(int argc, char *argv[]) {
 	}
 
 	t_config *config = config_create(argv[1]);
+	//t_list *readyQueue;
+	//t_queue *newQueue, *exitQueue, *execQueue, *blockQueue;
+
+	pthread_t plpThread, pcpThread;
+
+	pthread_create(&plpThread, NULL, &IniciarPlp, NULL);
+	pthread_create(&pcpThread, NULL, &IniciarPcp, NULL);
+
+	pthread_join(plpThread);
+	pthread_join(pcpThread);
 
 	//config_get_int_value(config, "PUERTO_PROG");
 	//config_get_int_value(config, "PUERTO_CPU");
