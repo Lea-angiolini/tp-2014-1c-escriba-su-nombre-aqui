@@ -10,13 +10,12 @@
 #include "commons/tools.h"
 
 int main(int argc, char *argv[]) {
-
-	t_log * log =	log_create( "log.txt", "Programa", 1, LOG_LEVEL_TRACE );
-
 	if (argc != 2) {
 		printf("Modo de empleo: ./Programa ScriptAnsiSOp\n");
 		return EXIT_SUCCESS;
 	}
+
+	t_log *log = log_create("log.txt", "Programa", 1, LOG_LEVEL_TRACE);
 
 	t_config *config = config_create(getenv("ANSISOP_CONFIG"));
 
@@ -44,7 +43,7 @@ int main(int argc, char *argv[]) {
 	printf("Conectado al servidor.\n");
 
 	socket_header header;
-	header.size = scriptSize;
+	header.size = sizeof(header)+scriptSize;
 
 	if( send(sock, &header, sizeof(header), 0) < 0 || sendfile(sock, script->_fileno, &scriptBase, scriptSize) < 0) {
 		printf("No se pudo enviar el archivo.\n");
@@ -61,6 +60,7 @@ int main(int argc, char *argv[]) {
 	close(sock);
 	fclose(script);
 	config_destroy(config);
+	log_destroy(log);
 
 	return EXIT_SUCCESS;
 }
