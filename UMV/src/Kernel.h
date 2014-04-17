@@ -1,0 +1,1 @@
+void * fnKernelConectado( void * socketPtr );
