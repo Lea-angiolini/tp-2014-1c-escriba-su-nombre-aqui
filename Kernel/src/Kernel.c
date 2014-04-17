@@ -8,17 +8,19 @@
 #include "commons/config.h"
 #include "commons/collections/queue.h"
 
+#include <stdint.h>
+
 typedef struct {
-	unsigned int id;
-	unsigned int codeSegment;
-	unsigned int stackSegment;
-	unsigned int stackIndex;
-	unsigned int etiquetaIndex;
-	unsigned int programCounter;
-	unsigned int contextSize;
+	uint32_t id;
+	uint32_t codeSegment;
+	uint32_t stackSegment;
+	uint32_t stackIndex;
+	uint32_t etiquetaIndex;
+	uint32_t programCounter;
+	uint32_t contextSize;
 	//Agregados
 	int programaSocket;
-	unsigned int prioridad;
+	uint32_t prioridad;
 } pcb_t;
 
 int main(int argc, char *argv[]) {
