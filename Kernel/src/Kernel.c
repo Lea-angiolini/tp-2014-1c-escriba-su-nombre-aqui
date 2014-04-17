@@ -4,24 +4,11 @@
 #include "plp.h"
 #include "pcp.h"
 #include "io.h"
+#include "colas.h"
 
 #include "commons/config.h"
-#include "commons/collections/queue.h"
 
 #include <stdint.h>
-
-typedef struct {
-	uint32_t id;
-	uint32_t codeSegment;
-	uint32_t stackSegment;
-	uint32_t stackIndex;
-	uint32_t etiquetaIndex;
-	uint32_t programCounter;
-	uint32_t contextSize;
-	//Agregados
-	int programaSocket;
-	uint32_t prioridad;
-} pcb_t;
 
 int main(int argc, char *argv[]) {
 	if (argc != 2) {
@@ -30,8 +17,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	t_config *config = config_create(argv[1]);
-	//t_list *readyQueue;
-	//t_queue *newQueue, *exitQueue, *execQueue, *blockQueue;
+	crearColas();
 
 	pthread_t plpThread, pcpThread;
 
@@ -51,7 +37,10 @@ int main(int argc, char *argv[]) {
 	//char** hio = config_get_array_value(config, "HIO");
 	//char** hioId = config_get_array_value(config, "ID_HIO");
 	//char** variablesCompartidas = config_get_array_value(config, "VARIABLES_COMPARTIDAS");
+	//config_get_string_value(config, "IP_UMV");
+	//config_get_int_value(config, "PUERTO_UMV");
 
+	destruirColas();
 	config_destroy(config);
 
 	return EXIT_SUCCESS;
