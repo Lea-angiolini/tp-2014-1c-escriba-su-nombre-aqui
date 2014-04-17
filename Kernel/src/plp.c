@@ -6,34 +6,37 @@
 
 #include "commons/log.h"
 #include "commons/sockets.h"
+#include "commons/pcb.h"
 
 #define CALCULAR_PRIORIDAD(e,f,t) (5 * e + 3 * f + t)
 
 int socketUMV;
+uint8_t multiprogramacion;
 t_log *logplp;
 
 void *IniciarPlp(void *arg) {
-	logplp = log_create("log_plp.txt", "KernelPCP", 1, LOG_LEVEL_TRACE);
+	logplp = log_create("log_plp.txt", "KernelPLP", 1, LOG_LEVEL_TRACE);
 	log_info(logplp, "Thread iniciado");
 
 	/*
-	 socketUMV = conectar(config_get_string_value(config, "IPUMV"), config_get_int_value(config, "PuertoUMV"), log);
+	socketUMV = conectar(config_get_string_value(config, "IPUMV"), config_get_int_value(config, "PuertoUMV"), log);
 
-	 if (socketUMV == -1) {
-	 log_error(logplp, "No se pudo establecer la conexion con la UMV");
-	 return EXIT_SUCCESS;
-	 }
+	if (socketUMV == -1) {
+		log_error(logplp, "No se pudo establecer la conexion con la UMV");
+		log_info(logpcp, "Thread concluido");
+		log_destroy(logplp);
+		return NULL ;
+	}
 
-	 log_info(logplp, "Conectado con la UMV");
-
-	 */
+	log_info(logplp, "Conectado con la UMV");
+	*/
 
 	if (crearServidorNoBloqueante(12345, nuevoMensaje, logplp) == -1) {
 		log_error(logplp, "No se pudo crear el servidor receptor de Programas");
 	}
 
+	log_info(logplp, "Thread concluido");
 	log_destroy(logplp);
-
 	return NULL ;
 }
 
@@ -50,27 +53,26 @@ void MoverNewAReady()
 #endif
 
 #if 0
-bool sjnAlgorithm(pcb_t *a, pcb_t *b)
-{
-	return a->prioridad < b->prioridad;
-}
-#endif
-
-#if 0
 void puedoMoverNewAReady()
 {
 	log_info(logplp, "Verificando grado de multiprogramacion");
 	if(multiprogramacion < config(multiprogramacion) {
-				MoverNewAReady();
-			}
-		}
-
-		void desconexionCliente()
-		{
-			log_info(logplp, "Se ha desconectado un Programa");
-			puedoMoverNewAReady();
-		}
+		//MoverNewAReady();
+	}
+}
 #endif
+
+bool sjnAlgorithm(pcb_t *a, pcb_t *b)
+{
+	return a->prioridad < b->prioridad;
+}
+
+void desconexionCliente()
+{
+	log_info(logplp, "Se ha desconectado un Programa");
+	//puedoMoverNewAReady();
+}
+
 
 bool nuevoMensaje(int socket) {
 	socket_header header;
@@ -83,7 +85,7 @@ bool nuevoMensaje(int socket) {
 	}
 
 	if (rc == 0 || recibirYprocesarScript(socket, header) == false) {
-		//desconexionCliente();
+		desconexionCliente();
 		return false;
 	}
 
@@ -108,11 +110,37 @@ bool recibirYprocesarScript(int socket, socket_header header) {
 	free(script);
 
 	//ansisop preprocesador
-	//request memory plp->umv response request memory
-	//contruir pcb_t pcb;
+	/*
+	log_info(logplp, "Pidiendole memoria a la UMV para que pueda correr el script ansisop");
+	socket_pedirMemoria pedirMemoria;
+	pedirMemoria.header.size = sizeof(pedirMemoria);
+	pedirMemoria.segmentSize[0] = ;
+	pedirMemoria.segmentSize[1] = ;
+	pedirMemoria.segmentSize[2] = ;
+	pedirMemoria.segmentSize[3] = ;
 
-	//queue_push(newQueue, pcb);
-	//puedoMoverNewAReady();
+	send(socketUMV, &pedirMemoria, sizeof(pedirMemoria), 0);
+
+	socket_respuesta respuesta;
+	recv(socketUMV, &respuesta, sizeof(respuesta), 0);
+
+	if(socket_respuesta.valor == true)
+	{
+		log_info(logplp, "La UMV informo que pudo alojar la memoria necesaria para el script ansisop");
+		//contruir pcb_t pcb;
+
+		//queue_push(newQueue, pcb);
+		//puedoMoverNewAReady();
+	} else {
+		log_error(logplp, "La UMV informo que no pudo alojar la memoria necesaria para el script ansisop");
+		log_info(logplp, "Informandole a Programa que el script no se puede procesar por el momento");
+		socket_msg msg;
+		strcpy(msg.msg, "No hay memoria suficiente en este momento para ejecutar este script. Intentelo mas tarde");
+		send(socket, &msg, sizeof(msg), 0);
+		close(socket);
+	}
+	*/
+
 	return true;
 }
 

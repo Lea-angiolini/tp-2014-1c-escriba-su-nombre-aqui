@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
 	size_t scriptSize;
 
 	if (script == NULL ) {
-		printf("Error al leer el script: %s\n", argv[1]);
+		log_error(log, "Error al leer el script: %s", argv[1]);
 		return EXIT_SUCCESS;
 	}
 
@@ -36,26 +36,26 @@ int main(int argc, char *argv[]) {
 	int sock = conectar(config_get_string_value(config, "IP"), config_get_int_value(config, "Puerto"), log);
 
 	if (sock == -1) {
-		printf("No se pudo conectar al servidor.\n");
+		log_error(log, "No se pudo conectar al kernel");
 		return EXIT_SUCCESS;
 	}
 
-	printf("Conectado al servidor.\n");
+	log_info(log, "Conectado al kernel");
 
 	socket_header header;
 	header.size = sizeof(header)+scriptSize;
 
 	if( send(sock, &header, sizeof(header), 0) < 0 || sendfile(sock, script->_fileno, &scriptBase, scriptSize) < 0) {
-		printf("No se pudo enviar el archivo.\n");
+		log_error(log, "No se pudo enviar el archivo");
 		return EXIT_SUCCESS;
 	}
 
 	socket_msg msg;
 
 	while (recv(sock, &msg, sizeof(msg), 0) > 0)
-		printf("%s\n", msg.msg);
+		log_info(log, "%s", msg.msg);
 
-	printf("Desconectado del servidor.\n");
+	log_info(log, "Desconectado del servidor");
 
 	close(sock);
 	fclose(script);

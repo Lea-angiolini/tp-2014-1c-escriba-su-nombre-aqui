@@ -125,7 +125,6 @@ int crearServidorNoBloqueante(int puerto, bool (*fn_nuevo_mensaje)(void *socket)
 	int socketEscucha, max_sd, new_sd;
 	bool desc_ready, end_server = false;
 	int close_conn;
-	char buffer[80];
 	fd_set master_set, working_set;
 
 	socketEscucha = crearYbindearSocket(puerto, log);
