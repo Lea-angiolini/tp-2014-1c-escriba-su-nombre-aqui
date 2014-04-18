@@ -1,37 +1,40 @@
 #include "plp.h"
+#include "colas.h"
 #include <stdio.h>
 #include <stdbool.h>
 #include <sys/socket.h>
 #include <errno.h>
+#include <pthread.h>
 
 #include "commons/log.h"
+#include "commons/config.h"
 #include "commons/sockets.h"
 #include "commons/pcb.h"
 
 #define CALCULAR_PRIORIDAD(e,f,t) (5 * e + 3 * f + t)
 
 int socketUMV;
-uint8_t multiprogramacion;
+uint8_t multiprogramacion = 0;
+pthread_mutex_t multiprogramacionMutex = PTHREAD_MUTEX_INITIALIZER;
+extern t_config *config;
 t_log *logplp;
 
 void *IniciarPlp(void *arg) {
 	logplp = log_create("log_plp.txt", "KernelPLP", 1, LOG_LEVEL_TRACE);
 	log_info(logplp, "Thread iniciado");
 
-	/*
-	socketUMV = conectar(config_get_string_value(config, "IPUMV"), config_get_int_value(config, "PuertoUMV"), log);
+	socketUMV = conectar(config_get_string_value(config, "IPUMV"), config_get_int_value(config, "PuertoUMV"), logplp);
 
 	if (socketUMV == -1) {
 		log_error(logplp, "No se pudo establecer la conexion con la UMV");
-		log_info(logpcp, "Thread concluido");
+		log_info(logplp, "Thread concluido");
 		log_destroy(logplp);
 		return NULL ;
 	}
 
 	log_info(logplp, "Conectado con la UMV");
-	*/
 
-	if (crearServidorNoBloqueante(12345, nuevoMensaje, logplp) == -1) {
+	if (crearServidorNoBloqueante(config_get_int_value(config, "PUERTO_PROG"), nuevoMensaje, logplp) == -1) {
 		log_error(logplp, "No se pudo crear el servidor receptor de Programas");
 	}
 
@@ -40,27 +43,29 @@ void *IniciarPlp(void *arg) {
 	return NULL ;
 }
 
-#if 0
 void MoverNewAReady()
 {
 	log_info(logplp, "Moviendo PCB de la cola New a Ready");
 	list_sort(newQueue->elements, sjnAlgorithm);
 
 	//New->Ready
+	pthread_mutex_lock(&readyQueueMutex);
 	queue_push(readyQueue, queue_pop(newQueue));
-	multiprogramacion++;
-}
-#endif
+	pthread_mutex_unlock(&readyQueueMutex);
 
-#if 0
+	pthread_mutex_lock(&multiprogramacionMutex);
+	multiprogramacion++;
+	pthread_mutex_unlock(&multiprogramacionMutex);
+}
+
 void puedoMoverNewAReady()
 {
 	log_info(logplp, "Verificando grado de multiprogramacion");
-	if(multiprogramacion < config(multiprogramacion) {
-		//MoverNewAReady();
+
+	if(multiprogramacion < config_get_int_value(config, "MULTIPROGRAMACION")) {
+		MoverNewAReady();
 	}
 }
-#endif
 
 bool sjnAlgorithm(pcb_t *a, pcb_t *b)
 {
@@ -70,7 +75,7 @@ bool sjnAlgorithm(pcb_t *a, pcb_t *b)
 void desconexionCliente()
 {
 	log_info(logplp, "Se ha desconectado un Programa");
-	//puedoMoverNewAReady();
+	puedoMoverNewAReady();
 }
 
 
@@ -137,7 +142,8 @@ bool recibirYprocesarScript(int socket, socket_header header) {
 		socket_msg msg;
 		strcpy(msg.msg, "No hay memoria suficiente en este momento para ejecutar este script. Intentelo mas tarde");
 		send(socket, &msg, sizeof(msg), 0);
-		close(socket);
+
+		return false;
 	}
 	*/
 
