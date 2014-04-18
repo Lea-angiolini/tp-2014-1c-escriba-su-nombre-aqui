@@ -27,20 +27,31 @@
 
 
 int socketKernel;
-t_list * cpus; //Lista en la que se van a guardar toda la info de cada cpu que se conecte
 t_log * logger;
+t_list * cpus; //Lista en la que se van a guardar toda la info de cada cpu que se conecte
 
+
+
+
+/*
+ *
+ * ACA, en este puntero se va a guardar toda la memoria virtual
+ *
+ */
+void * memoria;
 
 
 
 //TODO enviar codigo de error si no se puede bindear el socket
 void * iniciarServidorCpu( void * config ){
+
 	//crearServidor(int puerto, void* (*fn_nuevo_cliente)( void * socket ), t_log * log);
 	t_config * umvConfig = (t_config*) config;
 
 	crearServidor( config_get_int_value( umvConfig, "PUERTOCPU" ) , fnNuevoCpu, logger );
 
 	return NULL;
+
 }
 
 
@@ -50,6 +61,7 @@ void * iniciarServidorKernel( void * config ){
 	crearServidor( config_get_int_value( umvConfig, "PUERTOKERNEL" ) , fnKernelConectado, logger );
 	return NULL;
 }
+
 
 
 
@@ -67,9 +79,17 @@ int main(void) {
 	log_info( logger, "Iniciando UMV..." );
 
 
-
 	if( ! config_has_property( umvConfig, "PUERTOCPU" ) ||  ! config_has_property( umvConfig, "PUERTOKERNEL" ) || ! config_has_property( umvConfig, "MEMORIA" ) ){
 		log_error( logger, "Archivo de configuracion invalido" );
+		return -1;
+	}
+
+	memoria = malloc( config_get_int_value( umvConfig, "MEMORIA") );
+
+
+
+	if( memoria == 0 ){
+		log_error( logger, "No se pudo alocar la memoria, finalizando..." );
 		return -1;
 	}
 
@@ -80,20 +100,20 @@ int main(void) {
 	pthread_t threadKernel;
 	pthread_create ( &threadKernel, NULL, iniciarServidorKernel, 	(void*) umvConfig );
 
-	pthread_t threadCpu;
-	pthread_create ( &threadCpu, NULL, 	iniciarServidorCpu, 		(void*) umvConfig );
+	pthread_t threadCpus;
+	pthread_create ( &threadCpus, NULL, iniciarServidorCpu, 		(void*) umvConfig );
 
 
-	if( pthread_join( threadConsola, NULL ) || pthread_join( threadKernel, NULL ) || pthread_join( threadCpu, NULL ) ) {
+	if( pthread_join( threadConsola, NULL ) || pthread_join( threadKernel, NULL ) || pthread_join( threadCpus, NULL ) ) {
 
-		log_error( logger, "Hubo un error con los hilo" );
-		return 2;
+		log_error( logger, "Hubo un error esperando a algun hilo" );
+		return -1;
 
 	}
 
 
 
-
+	free			( memoria );
 	config_destroy	( umvConfig );
 	log_destroy		( logger );
 

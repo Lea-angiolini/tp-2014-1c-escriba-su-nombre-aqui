@@ -2,7 +2,7 @@ typedef struct {
 
 	int cpuId;
 	int pidProcesando;
-
+	int socket;
 
 } CPU;
 
