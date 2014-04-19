@@ -18,6 +18,10 @@ int main(int argc, char *argv[]) {
 	t_log *log = log_create("log.txt", "Programa", 1, LOG_LEVEL_TRACE);
 
 	t_config *config = config_create(getenv("ANSISOP_CONFIG"));
+	if( !config_has_property(config, "IP") || !config_has_property(config, "Puerto") ) {
+		log_error(log, "Configuracion invalida");
+		return EXIT_SUCCESS;
+	}
 
 	FILE *script = fopen(argv[1], "r"); //argv[1] = nombre del script a correr
 	off_t scriptBase = 0;
