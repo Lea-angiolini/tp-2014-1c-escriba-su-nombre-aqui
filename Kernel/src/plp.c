@@ -23,7 +23,8 @@ void *IniciarPlp(void *arg) {
 	logplp = log_create("log_plp.txt", "KernelPLP", 1, LOG_LEVEL_TRACE);
 	log_info(logplp, "Thread iniciado");
 
-	socketUMV = conectar(config_get_string_value(config, "IPUMV"), config_get_int_value(config, "PuertoUMV"), logplp);
+	/*
+	socketUMV = conectar(config_get_string_value(config, "IP_UMV"), config_get_int_value(config, "PUERTO_UMV"), logplp);
 
 	if (socketUMV == -1) {
 		log_error(logplp, "No se pudo establecer la conexion con la UMV");
@@ -32,7 +33,7 @@ void *IniciarPlp(void *arg) {
 		return NULL ;
 	}
 
-	log_info(logplp, "Conectado con la UMV");
+	log_info(logplp, "Conectado con la UMV");*/
 
 	if (crearServidorNoBloqueante(config_get_int_value(config, "PUERTO_PROG"), nuevoMensaje, logplp) == -1) {
 		log_error(logplp, "No se pudo crear el servidor receptor de Programas");

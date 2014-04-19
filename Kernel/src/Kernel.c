@@ -9,8 +9,31 @@
 #include "commons/config.h"
 
 #include <stdint.h>
+#include <stdbool.h>
 
 t_config *config;
+const char cofig_properties[][25] = {
+	"PUERTO_PROG", "PUERTO_CPU", "QUANTUM", "RETARDO",
+	"MULTIPROGRAMACION", "SEMAFOROS", "VALOR_SEMAFORO",
+	"HIO", "ID_HIO", "VARIABLES_COMPARTIDAS",
+	"IP_UMV", "PUERTO_UMV"
+};
+
+bool validar_configuracion()
+{
+	bool ret = true;
+	int elements = sizeof(cofig_properties)/sizeof(cofig_properties[0]);
+	int i;
+
+	for(i = 0; i < elements; i++) {
+		if( !config_has_property(config, &cofig_properties[i]) ) {
+			ret = false;
+			break;
+		}
+	}
+
+	return ret;
+}
 
 int main(int argc, char *argv[]) {
 	if (argc != 2) {
@@ -19,6 +42,11 @@ int main(int argc, char *argv[]) {
 	}
 
 	config = config_create(argv[1]);
+	if( !validar_configuracion() ) {
+		printf("Archivo de configuracion invalido\n");
+		return EXIT_SUCCESS;
+	}
+
 	crearColas();
 
 	pthread_t plpThread, pcpThread;
@@ -29,7 +57,6 @@ int main(int argc, char *argv[]) {
 	pthread_join(plpThread, NULL);
 	pthread_join(pcpThread, NULL);
 
-	//config_get_int_value(config, "PUERTO_CPU");
 	//config_get_int_value(config, "QUANTUM");
 	//config_get_int_value(config, "RETARDO");
 	//char** semaforos = config_get_array_value(config, "SEMAFOROS");

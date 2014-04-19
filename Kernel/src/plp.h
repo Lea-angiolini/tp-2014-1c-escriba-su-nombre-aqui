@@ -3,11 +3,8 @@
 
 #include <stdbool.h>
 #include <pthread.h>
-#include <commons/sockets.h>
+#include "commons/sockets.h"
 #include "commons/pcb.h"
-
-extern uint8_t multiprogramacion;
-extern pthread_mutex_t multiprogramacionMutex;
 
 void *IniciarPlp(void *arg);
 void MoverNewAReady();
