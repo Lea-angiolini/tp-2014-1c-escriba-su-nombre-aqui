@@ -2,6 +2,11 @@
 
 
 
+char * solicitarLineaPrograma(){
+	return "a+b";
+}
+
+
 
 /*
  * Informa a la UMV que este CPU ahora esta procesando el programa con PID pid

@@ -26,7 +26,7 @@ int procesarMenssajeKernel( Kernel * kernel, char * mensaje ){
 int recibirYProcesarMensajesKernel(Kernel * kernel) {
 
 	int nbytesRecibidos;
-	char * buffer = malloc(sizeof( BUFF_SIZE));
+	char * buffer = malloc( sizeof( BUFF_SIZE ) );
 
 	while (1) {
 
@@ -34,7 +34,7 @@ int recibirYProcesarMensajesKernel(Kernel * kernel) {
 
 		if (nbytesRecibidos > 0) {
 
-			procesarMenssajeKernel(Kernel, buffer);
+			procesarMenssajeKernel( Kernel, buffer );
 			memset(buffer, 0x0000, BUFF_SIZE);
 
 		} else if (nbytesRecibidos == 0) {

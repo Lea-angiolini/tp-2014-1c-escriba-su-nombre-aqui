@@ -12,6 +12,7 @@
 #include "commons/sockets.h"
 #include "commons/log.h"
 #include "commons/config.h"
+#include "kernel.h"
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -23,20 +24,6 @@ int conexionUMV;
 
 int quantumRestante;
 
-
-int main(void) {
-
-
-	t_log * logger =	log_create( "log.txt", "CPU", 1, LOG_LEVEL_TRACE );
-
-	if( crearConexiones( logger ) < 0 ){
-		return -1;
-	}
-
-	log_info(logger, "El programa finalizo con exito !");
-	return 0;
-
-}
 
 
 int crearConexiones(t_log * logger) {
@@ -53,15 +40,20 @@ int crearConexiones(t_log * logger) {
 	}
 
 	conexionKernel = conectar(config_get_string_value(cpuConfig, "IPKERNEL"), config_get_int_value(cpuConfig, "PUERTOKERNEL"), logger);
-	if (conexionKernel > 0) {
+	if (conexionKernel < 0) {
 		log_error(logger, "No se pudo conectar al Kernel");
 		return -1;
 	}
 
 	conexionUMV = conectar(config_get_string_value(cpuConfig, "IPUMV"), config_get_int_value(cpuConfig, "PUERTOUMV"), logger);
-	if (conexionUMV > 0) {
+	if (conexionUMV < 0) {
 		log_error(logger, "No se pudo conectar al UMV");
 		return -1;
+	}
+
+
+	if( recibirYProcesarMensajesKernel() > 0 ){
+		log_info(logger, "El programa finalizo con exito" );
 	}
 
 	config_destroy(cpuConfig);
@@ -81,7 +73,19 @@ int esperarMensajes(){
 }
 
 
+int main(void) {
 
+
+	t_log * logger =	log_create( "log.txt", "CPU", 1, LOG_LEVEL_TRACE );
+
+	if( crearConexiones( logger ) < 0 ){
+		return -1;
+	}
+
+	log_info(logger, "El programa finalizo con exito !");
+	return 0;
+
+}
 
 
 

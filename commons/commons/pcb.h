@@ -15,6 +15,7 @@ typedef struct {
 	//Agregados
 	int programaSocket;
 	uint32_t prioridad;
+	uint32_t lastErrorCode;	//Se guarda el codigo del error de la ultima instruccion ejecutada, 0 si no hay error
 } pcb_t;
 
 typedef struct {

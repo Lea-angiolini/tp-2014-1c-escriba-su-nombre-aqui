@@ -1,62 +1,89 @@
-uint32_t definirVariable ( char identificador_variable ){
-	return 3;
-}
-
-
-uint32_t obtenerPosicionVariable ( char identificador_variable ){
-	return 3;
-}
+#include "commons/parser/parser.h"
 
 
 
-/*
- * Obtiene el valor de la posicion de memoria que se solicite
- *
- */
-uint32_t dereferenciar ( uint32_t posicion ){
+AnSISOP_funciones * crearAnSISOP_funciones(){
 
-	uint32_t my_var;
-	return my_var;
+	AnSISOP_funciones * AnSISOP_funciones;
 
-}
+	AnSISOP_funciones->AnSISOP_definirVariable			= &definirVariable;
+	AnSISOP_funciones->AnSISOP_obtenerPosicionVariable	= &obtenerPosicionVariable;
+	AnSISOP_funciones->AnSISOP_dereferenciar			= &dereferenciar;
+	AnSISOP_funciones->AnSISOP_asignar					= &asignar;
+	AnSISOP_funciones->AnSISOP_obtenerValorCompartida	= &obtenerValorCompartida;
+	AnSISOP_funciones->AnSISOP_asignarValorCompartida	= &asignarValorCompartida;
+	AnSISOP_funciones->AnSISOP_irAlLabel				= &irAlLabel;
+	AnSISOP_funciones->AnSISOP_llamarSinRetorno 		= &llamarSinRetorno;
+	AnSISOP_funciones->AnSISOP_llamarConRetorno 		= &llamarConRetorno;
+	AnSISOP_funciones->AnSISOP_finalizar				= &finalizar;
+	AnSISOP_funciones->AnSISOP_retornar					= &retornar;
+	AnSISOP_funciones->AnSISOP_imprimir					= &imprimir;
+	AnSISOP_funciones->AnSISOP_imprimirTexto			= &imprimirTexto;
+	AnSISOP_funciones->AnSISOP_entradaSalida			= &entradaSalida;
 
-
-
-/*
- * Guarda en la memoria un valor y retorna la posicion de memoria en que se guardo
- */
-uint32_t asignar ( uint32_t valor ){
-
-	return 454;
+	return AnSISOP_funciones;
 
 }
 
-uint32_t obtenerValorCompartida( char variable ){
-	return 0;
+
+
+t_puntero definirVariable(t_nombre_variable identificador_variable){
+	return 32;
 }
 
 
-uint32_t asignarValorCompartida( char variable, uint32_t valor ){
-	return valor;
+t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable){
+	return 32;
+}
+
+t_valor_variable dereferenciar(t_puntero direccion_variable){
+	return 32;
+}
+
+void asignar(t_puntero direccion_variable, t_valor_variable valor){
+
+}
+
+t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
+	return 32;
+}
+
+t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor){
+	return 32;
 }
 
 
+void irAlLabel(t_nombre_etiqueta t_nombre_etiqueta){
 
-
-
-/*
- * Devuelve el número de la primer instrucción ejecutable de etiqueta y -1 en caso de error.
- */
-uint32_t irAlLabel( char * etiqueta ){
-	return -1;
 }
 
+void llamarSinRetorno(t_nombre_etiqueta etiqueta){
 
+}
 
+void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
 
+}
 
+void finalizar(void){
 
+}
 
+void retornar(t_valor_variable retorno){
+
+}
+
+void imprimir(t_valor_variable valor_mostrar){
+
+}
+
+void imprimirTexto(char* texto){
+
+}
+
+void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
+
+}
 
 
 

@@ -6,3 +6,4 @@ typedef struct {
 
 
 void * fnKernelConectado( void * socketPtr );
+int procesarMenssajeKernel( Kernel * kernel, char * mensaje );
