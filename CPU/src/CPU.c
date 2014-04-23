@@ -12,6 +12,13 @@
 #include "commons/sockets.h"
 #include "commons/log.h"
 #include "commons/config.h"
+#include "commons/parser/parser.h"
+#include "commons/pcb.h"
+#include "ejecucion.h"
+#include "mocks.h"
+
+#include "primitivas.h"
+
 #include "kernel.h"
 #include <string.h>
 #include <stdio.h>
@@ -23,12 +30,18 @@ int conexionKernel;
 int conexionUMV;
 
 int quantumRestante;
+t_log * logger;
+
+AnSISOP_funciones * ansisop_funciones;
+
+pcb_t * PCB_enEjecucion;
+
+t_config * cpuConfig;
 
 
 
-int crearConexiones(t_log * logger) {
-
-	t_config * cpuConfig = config_create("resources/config.cfg");
+int leerConfig(){
+	cpuConfig = config_create("resources/config.cfg");
 
 	if ( !config_has_property(cpuConfig, "IPKERNEL")
 			|| !config_has_property(cpuConfig, "PUERTOKERNEL")
@@ -39,6 +52,14 @@ int crearConexiones(t_log * logger) {
 		return -1;
 	}
 
+	return 1;
+}
+
+
+
+
+int crearConexiones() {
+
 	conexionKernel = conectar(config_get_string_value(cpuConfig, "IPKERNEL"), config_get_int_value(cpuConfig, "PUERTOKERNEL"), logger);
 	if (conexionKernel < 0) {
 		log_error(logger, "No se pudo conectar al Kernel");
@@ -47,42 +68,44 @@ int crearConexiones(t_log * logger) {
 
 	conexionUMV = conectar(config_get_string_value(cpuConfig, "IPUMV"), config_get_int_value(cpuConfig, "PUERTOUMV"), logger);
 	if (conexionUMV < 0) {
+		close(conexionKernel);
 		log_error(logger, "No se pudo conectar al UMV");
 		return -1;
 	}
 
 
-	if( recibirYProcesarMensajesKernel() > 0 ){
-		log_info(logger, "El programa finalizo con exito" );
-	}
-
-	config_destroy(cpuConfig);
-
 	return 1;
 }
 
 
-int cerrarConexiones( logger ){
-	return 0;
-}
-
-int esperarMensajes(){
-
-
-	return -1;
-}
 
 
 int main(void) {
 
 
-	t_log * logger =	log_create( "log.txt", "CPU", 1, LOG_LEVEL_TRACE );
+	logger = log_create( "log.txt", "CPU", 1, LOG_LEVEL_TRACE );
 
-	if( crearConexiones( logger ) < 0 ){
+	//TODO verificar errores
+	ansisop_funciones = crearAnSISOP_funciones();
+	PCB_enEjecucion = malloc( sizeof( pcb_t ) );
+
+	/*
+	if( leerConfig() < 0 || crearConexiones() < 0 || recibirYProcesarMensajesKernel() < 0 ) {
+		log_error( logger, "Hubo un error en el programa, finalizando :( " );
 		return -1;
+	}else{
+		log_info( logger, "El programa finalizo con exito !" );
 	}
 
-	log_info(logger, "El programa finalizo con exito !");
+	log_destroy( logger );
+	config_destroy( cpuConfig );
+	free( PCB_enEjecucion );
+	free( ansisop_funciones );
+	*/
+
+	ejecutarPrueba();
+
+
 	return 0;
 
 }

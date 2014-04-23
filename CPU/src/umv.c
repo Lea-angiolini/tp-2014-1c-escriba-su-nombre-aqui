@@ -1,9 +1,19 @@
 #include <stdint.h>
+#include "commons/log.h"
 
 
+extern t_log * logger;
 
-char * solicitarLineaPrograma(){
-	return "a+b";
+/*
+ * Dado el program counter de un pcb, se le solicita a la UMV la linea de codigo a ejecutar
+ *
+ *
+ */
+char * solicitarLineaPrograma( uint32_t programCounter ){
+	//TODO
+	char month[]="a = 3";
+
+	return month;
 }
 
 
@@ -14,6 +24,8 @@ char * solicitarLineaPrograma(){
  *
  */
 int enviarCambioContexto( uint32_t pid ){
+	//TODO
+	log_debug( logger, "Enviando a umv cambio de contexto" );
 	return 1;
 }
 
@@ -23,7 +35,7 @@ int enviarCambioContexto( uint32_t pid ){
  *
  */
 int enviarFinPrograma( uint32_t pid ){
-
+	log_debug( logger, "Enviando a umv fin de programa" );
 	return 1;
 }
 
@@ -37,6 +49,8 @@ int enviarFinPrograma( uint32_t pid ){
  *
  */
 int enviarFinQuantum( uint32_t pid ){
+	//TODO
+	log_debug( logger, "Enviando umv fin de quantum" );
 	return 1;
 }
 
