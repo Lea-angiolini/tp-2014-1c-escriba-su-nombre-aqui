@@ -213,3 +213,66 @@ int crearServidorNoBloqueante(int puerto, bool (*fn_nuevo_mensaje)(void *socket)
 
 	return -1;
 }
+
+
+
+
+
+
+
+void * enviarYRecibirPaquete( int socket, void * mensaje, uint32_t sizeSend, uint32_t sizeReceive, char sendCode, char receiveCode ) {
+
+	if( enviarPaquete( socket,  mensaje,  sizeSend, sendCode ) < 0 ){
+		return NULL;
+	}
+	return recibirPaquete( socket, sizeReceive, receiveCode );
+}
+
+
+int enviarPaquete( int socket, void * mensaje, uint32_t sizeSend, char sendCode ) {
+
+	socket_header header;
+	header.size = sizeSend;
+	header.code = sendCode;
+
+	memcpy( mensaje, &header, sizeof( socket_header ) );
+
+	if ( send( socket, mensaje, sizeSend, 0 ) < 0 ){
+		return -1;
+	}
+	return 1;
+}
+
+
+//TODO Revisar tamanio t_size == uint32_t ????
+void * recibirPaquete( int socket, t_size sizeReceive, char receiveCode ) {
+
+	socket_header headeRespuesta;
+	if ( recv( socket, &headeRespuesta, sizeof(socket_header), 0) < 0){
+		return NULL;
+	}
+/*
+	if( (headeRespuesta->size) != sizeReceive ){
+		return NULL;
+	}
+
+	//TODO, que pasa si responde con otro codigo o otra cosa ?
+	if( receiveCode != NULL && (headeRespuesta->code) != receiveCode ){
+		return NULL;
+	}*/
+
+	void * paqueteRespuesta = malloc( sizeReceive );
+	//Aritmetica de punteros !!!!!!
+	recv( socket, ( &paqueteRespuesta + sizeof( socket_header ) ), sizeReceive, 0);
+	memcpy( paqueteRespuesta, &headeRespuesta, sizeof( socket_header ) );
+
+	return paqueteRespuesta;
+
+}
+
+
+
+
+
+
+
