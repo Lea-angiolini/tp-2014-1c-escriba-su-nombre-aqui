@@ -1,7 +1,7 @@
 #ifndef PRIMITIVAS_H_
 #define PRIMITIVAS_H_
 
-
+AnSISOP_funciones * crearAnSISOP_funciones();
 
 t_puntero definirVariable(t_nombre_variable identificador_variable);
 t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable);

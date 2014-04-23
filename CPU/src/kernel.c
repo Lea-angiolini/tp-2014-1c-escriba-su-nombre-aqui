@@ -1,7 +1,8 @@
 #include "commons/pcb.h"
 #include "ejecucion.h"
 #include "commons/sockets.h"
-
+#include <sys/socket.h>
+#include "kernel.h"
 
 #define BUFF_SIZE 1024
 
@@ -41,21 +42,20 @@ int orden_ejecucion( int socket, socket_header header ) {
 
 
 //recibe un pcb despues de ser ejecutado y se lo re envia al kernel
-int responder_orden_ejecucion( int socket, pcb_t * PCB ) {
+int responder_orden_ejecucion( int socket ) {
 
 	socket_header header;
 	header.code = 's';
-	header.size = sizeof(header)+sizeof( PCB );
+	header.size = sizeof(header)+sizeof( pcb_t );
+
 	socket_msg msg;
-	memcpy( &msg.msg, (void * ) PCB, sizeof( PCB ) );
+	memcpy( &msg.msg, ( void * ) PCB_enEjecucion, sizeof( pcb_t ) );
 
 
 	if ( send(socket, &msg, header.size, 0 ) > 0 ){
-		free( PCB );
 		return 1;
 	}else{
 		log_error( logger, "No pudo responderse el mensaje al Kernel" );
-		free(PCB);
 		return -1;
 	}
 

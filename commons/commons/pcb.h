@@ -11,7 +11,7 @@ typedef struct {
 	uint32_t stackCursor;
 	uint32_t codeIndex;
 	uint32_t etiquetaIndex;
-	t_puntero_instruccion programCounter;
+	uint32_t programCounter;
 	uint32_t contextSize;
 
 	int programaSocket;

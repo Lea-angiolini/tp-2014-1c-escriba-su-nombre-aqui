@@ -12,7 +12,7 @@ void ejecutarPrueba(){
 	PCB_enEjecucion->prioridad = 2;
 	PCB_enEjecucion->programCounter = 432;
 	PCB_enEjecucion->programaSocket = 32423;
-	PCB_enEjecucion->stackIndex = 234;
+	//PCB_enEjecucion->stackIndex = 234;
 
 	ejecutar();
 
