@@ -8,11 +8,12 @@ typedef struct {
 	uint32_t id;
 	uint32_t codeSegment;
 	uint32_t stackSegment;
-	uint32_t stackIndex;
+	uint32_t stackCursor;
+	uint32_t codeIndex;
 	uint32_t etiquetaIndex;
-	uint32_t programCounter;
+	t_puntero_instruccion programCounter;
 	uint32_t contextSize;
-	//Agregados
+
 	int programaSocket;
 	uint32_t prioridad;
 	uint32_t lastErrorCode;	//Se guarda el codigo del error de la ultima instruccion ejecutada, 0 si no hay error

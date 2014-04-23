@@ -10,9 +10,11 @@
 #include "commons/config.h"
 #include "commons/sockets.h"
 #include "commons/pcb.h"
+#include "commons/parser/metadata_program.h"
 
 #define CALCULAR_PRIORIDAD(e,f,t) (5 * e + 3 * f + t)
 
+uint32_t nextProcessId = 1;
 int socketUMV;
 uint8_t multiprogramacion = 0;
 pthread_mutex_t multiprogramacionMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -112,31 +114,49 @@ bool recibirYprocesarScript(int socket, socket_header header) {
 	} while(ret != scriptSize);
 	log_info(logplp, "Script ansisop recibido");
 
-	printf("Nuevo script: %d %.*s\n", header.size, scriptSize, script);
-	free(script);
+	log_info(logplp, "Nuevo script: %d\n%.*s\n", header.size, scriptSize, script);
 
 	//ansisop preprocesador
-	/*
+	t_medatada_program *scriptMedatada = metadatada_desde_literal(script);
+	//t_puntero_instruccion metadata_buscar_etiqueta(scriptMedatada, t_nombre_etiqueta);
+
+
 	log_info(logplp, "Pidiendole memoria a la UMV para que pueda correr el script ansisop");
 	socket_pedirMemoria pedirMemoria;
 	pedirMemoria.header.size = sizeof(pedirMemoria);
-	pedirMemoria.segmentSize[0] = ;
-	pedirMemoria.segmentSize[1] = ;
-	pedirMemoria.segmentSize[2] = ;
-	pedirMemoria.segmentSize[3] = ;
 
-	send(socketUMV, &pedirMemoria, sizeof(pedirMemoria), 0);
+	pedirMemoria.segmentSize[0] = strlen(script);
+	pedirMemoria.segmentSize[1] = scriptMedatada->etiquetas_size;
+	pedirMemoria.segmentSize[2] = scriptMedatada->instrucciones_size;
+
+	//send(socketUMV, &pedirMemoria, sizeof(pedirMemoria), 0);
 
 	socket_respuesta respuesta;
-	recv(socketUMV, &respuesta, sizeof(respuesta), 0);
+	//recv(socketUMV, &respuesta, sizeof(respuesta), 0);
 
-	if(socket_respuesta.valor == true)
+	if(respuesta.valor == true)
 	{
 		log_info(logplp, "La UMV informo que pudo alojar la memoria necesaria para el script ansisop");
-		//contruir pcb_t pcb;
 
-		//queue_push(newQueue, pcb);
-		//puedoMoverNewAReady();
+		pcb_t *pcb = malloc(sizeof(pcb_t));
+
+		pcb->id = nextProcessId; nextProcessId++;
+		/* Me lo da la UMV
+		pcb->codeSegment;
+		pcb->stackSegment;
+		pcb->stackCursor;
+		pcb->codeIndex;
+		pcb->etiquetaIndex;
+		*/
+		pcb->programCounter = scriptMedatada->instruccion_inicio;
+		//pcb->contextSize = ;
+
+		pcb->programaSocket = socket;
+		pcb->prioridad = CALCULAR_PRIORIDAD(scriptMedatada->cantidad_de_etiquetas, scriptMedatada->cantidad_de_funciones, scriptMedatada->instrucciones_size);
+		pcb->lastErrorCode = 0;
+
+		queue_push(newQueue, pcb);
+		puedoMoverNewAReady();
 	} else {
 		log_error(logplp, "La UMV informo que no pudo alojar la memoria necesaria para el script ansisop");
 		log_info(logplp, "Informandole a Programa que el script no se puede procesar por el momento");
@@ -146,7 +166,9 @@ bool recibirYprocesarScript(int socket, socket_header header) {
 
 		return false;
 	}
-	*/
+
+	metadata_destruir(scriptMedatada);
+	free(script);
 
 	return true;
 }
