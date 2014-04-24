@@ -41,6 +41,8 @@ t_config * cpuConfig;
 
 
 int leerConfig(){
+
+	log_debug( logger, "Leyendo archivo de configuracion" );
 	cpuConfig = config_create("resources/config.cfg");
 
 	if ( !config_has_property(cpuConfig, "IPKERNEL")
@@ -57,24 +59,31 @@ int leerConfig(){
 
 
 
-
-int crearConexiones() {
-
+int crearConexionKernel() {
+	log_info( logger, "Conectando al Kernel");
 	conexionKernel = conectar(config_get_string_value(cpuConfig, "IPKERNEL"), config_get_int_value(cpuConfig, "PUERTOKERNEL"), logger);
 	if (conexionKernel < 0) {
 		log_error(logger, "No se pudo conectar al Kernel");
 		return -1;
 	}
+	return 1;
+}
 
+int crearConexionUMV() {
+	log_info( logger, "Conectando a la UMV");
 	conexionUMV = conectar(config_get_string_value(cpuConfig, "IPUMV"), config_get_int_value(cpuConfig, "PUERTOUMV"), logger);
 	if (conexionUMV < 0) {
 		close(conexionKernel);
 		log_error(logger, "No se pudo conectar al UMV");
 		return -1;
 	}
-
-
 	return 1;
+}
+
+
+int crearConexiones() {
+	return crearConexionUMV();
+	//return crearConexionKernel() && crearConexionUMV();
 }
 
 
@@ -85,25 +94,27 @@ int main(void) {
 
 	logger = log_create( "log.txt", "CPU", 1, LOG_LEVEL_TRACE );
 
+	log_info( logger, "Iniciando CPU");
 	//TODO verificar errores
+	log_debug( logger, "Setando primitivas");
 	ansisop_funciones = crearAnSISOP_funciones();
 	PCB_enEjecucion = malloc( sizeof( pcb_t ) );
 
-	/*
-	if( leerConfig() < 0 || crearConexiones() < 0 || recibirYProcesarMensajesKernel() < 0 ) {
+
+	//if( leerConfig() < 0 || crearConexiones() < 0 || recibirYProcesarMensajesKernel() < 0 ) {
+	if( leerConfig() < 0 || crearConexiones() < 0 || ejecutarPrueba() < 0 ) {
 		log_error( logger, "Hubo un error en el programa, finalizando :( " );
 		return -1;
 	}else{
 		log_info( logger, "El programa finalizo con exito !" );
 	}
 
+
+
 	log_destroy( logger );
 	config_destroy( cpuConfig );
 	free( PCB_enEjecucion );
 	free( ansisop_funciones );
-	*/
-
-	ejecutarPrueba();
 
 
 	return 0;

@@ -1,3 +1,5 @@
+#include "commons/sockets.h"
+
 typedef struct {
 
 	int cpuId;
@@ -7,4 +9,6 @@ typedef struct {
 } CPU;
 
 
-void * fnNuevoCpu( void * socketPtr );
+int		procesarSolicitudDeLinea	( CPU * cpu, socket_obtenerLineaCodigo * solicitud );
+void *	fnNuevoCpu					( void * socketPtr );
+int 	recibirYProcesarMensajesCpu	( CPU * cpu );

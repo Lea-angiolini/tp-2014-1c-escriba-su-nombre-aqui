@@ -11,17 +11,6 @@ extern t_log * logger;
 
 
 
-int procesarMenssajeKernel( Kernel * kernel, char * mensaje ){
-
-	printf( "Me llego un mensaje del kernel: %s \n", mensaje );
-	return 1;
-
-}
-
-
-
-
-
 //TODO se podria reusar lo de cpu ??
 int recibirYProcesarMensajesKernel(Kernel * kernel) {
 
@@ -34,7 +23,7 @@ int recibirYProcesarMensajesKernel(Kernel * kernel) {
 
 		if (nbytesRecibidos > 0) {
 
-			procesarMenssajeKernel( Kernel, buffer );
+			procesarMenssajeKernel( kernel, buffer );
 			memset(buffer, 0x0000, BUFF_SIZE);
 
 		} else if (nbytesRecibidos == 0) {
@@ -55,6 +44,17 @@ int recibirYProcesarMensajesKernel(Kernel * kernel) {
 	return -1;
 
 }
+
+
+
+int procesarMenssajeKernel( Kernel * kernel, char * mensaje ) {
+
+	printf( "Me llego un mensaje del kernel: %s \n", mensaje );
+	return 1;
+
+}
+
+
 
 
 

@@ -108,7 +108,7 @@ int recibirYProcesarMensajesKernel() {
 		}
 	}
 
-	log_error( logger, "Hubo un error al leer el paquete enviado del kernel");
+	log_error( logger, "Hubo un error al leer el paquete que envio el kernel");
 	return -1;
 }
 

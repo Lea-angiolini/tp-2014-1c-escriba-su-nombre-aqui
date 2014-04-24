@@ -10,6 +10,7 @@
 #include <pthread.h>
 #include <sys/ioctl.h>
 #include <errno.h>
+#include <unistd.h>
 
 /*
  * Funcion que crea un socket cliente para conectarlo a la ip y puerto pasados como parametros
@@ -104,21 +105,27 @@ int crearServidor(int puerto, void* (*fn_nuevo_cliente)(void * socket), t_log * 
 	while (1) {
 
 		// Aceptar una nueva conexion entrante. Se genera un nuevo socket con la nueva conexion.
+		log_info(log, "Esperando nueva conexion...");
 		if ((socketNuevaConexion = accept(socketEscucha, NULL, 0)) < 0) {
-			log_error(log, "Error al aceptar conexion entrante");
+			log_error(log, "Error al aceptar conexion entrante !! ");
 			return -1;
 		}
 
 		pthread_t thread;
 		int * soc = malloc(sizeof(int));
 		*soc = socketNuevaConexion;
+		log_info(log, "Se establecio la nueva conexion, creando el thread...");
 		pthread_create(&thread, NULL, fn_nuevo_cliente, (void*) soc);
 		log_info(log, "Nuevo thread creado");
+
 	}
 
 	return 0;
 
 }
+
+
+
 
 int crearServidorNoBloqueante(int puerto, bool (*fn_nuevo_mensaje)(void *socket), t_log * log) {
 	int i, rc, optval = 1;
@@ -220,16 +227,17 @@ int crearServidorNoBloqueante(int puerto, bool (*fn_nuevo_mensaje)(void *socket)
 
 
 
-void * enviarYRecibirPaquete( int socket, void * mensaje, uint32_t sizeSend, uint32_t sizeReceive, char sendCode, char receiveCode ) {
 
-	if( enviarPaquete( socket,  mensaje,  sizeSend, sendCode ) < 0 ){
+
+void * enviarYRecibirPaquete( int socket, void * mensaje, uint32_t sizeSend, uint32_t sizeReceive, char sendCode, char receiveCode, t_log * logger ) {
+
+	if( enviarPaquete( socket,  mensaje,  sizeSend, sendCode, logger ) < 0 ){
 		return NULL;
 	}
-	return recibirPaquete( socket, sizeReceive, receiveCode );
+	return recibirPaquete( socket, sizeReceive, receiveCode, logger );
 }
 
-
-int enviarPaquete( int socket, void * mensaje, uint32_t sizeSend, char sendCode ) {
+int enviarPaquete( int socket, void * mensaje, uint32_t sizeSend, char sendCode, t_log * logger ) {
 
 	socket_header header;
 	header.size = sizeSend;
@@ -237,34 +245,45 @@ int enviarPaquete( int socket, void * mensaje, uint32_t sizeSend, char sendCode 
 
 	memcpy( mensaje, &header, sizeof( socket_header ) );
 
+	log_debug( logger, "Enviando paquete de tamaño %d.", sizeSend );
 	if ( send( socket, mensaje, sizeSend, 0 ) < 0 ){
 		return -1;
 	}
+
 	return 1;
 }
 
-
 //TODO Revisar tamanio t_size == uint32_t ????
-void * recibirPaquete( int socket, t_size sizeReceive, char receiveCode ) {
+void * recibirPaquete( int socket, t_size sizeReceive, char receiveCode, t_log * logger ) {
 
-	socket_header headeRespuesta;
-	if ( recv( socket, &headeRespuesta, sizeof(socket_header), 0) < 0){
+	socket_header headerRespuesta;
+	int tamRecibido = recv( socket, &headerRespuesta, sizeof(socket_header), 0);
+	if ( tamRecibido < 0 ){
+		//log_error( logger, "Se recibio mal un paquete");
+		return NULL;
+	}else if (tamRecibido == 0)  {
 		return NULL;
 	}
-/*
-	if( (headeRespuesta->size) != sizeReceive ){
+
+	//log_info( logger, "Se recibio un paquete" );
+	/*
+	if( sizeReceive != NULL && (headeRespuesta.size) != sizeReceive ){
 		return NULL;
 	}
 
-	//TODO, que pasa si responde con otro codigo o otra cosa ?
-	if( receiveCode != NULL && (headeRespuesta->code) != receiveCode ){
+	if( receiveCode != NULL && (headeRespuesta.code) != receiveCode ){
 		return NULL;
-	}*/
+	}
+	*/
 
-	void * paqueteRespuesta = malloc( sizeReceive );
+	//log_info( logger, "Reservando el espacio de memoria..." );
+	void * paqueteRespuesta = malloc( headerRespuesta.size );
 	//Aritmetica de punteros !!!!!!
-	recv( socket, ( &paqueteRespuesta + sizeof( socket_header ) ), sizeReceive, 0);
-	memcpy( paqueteRespuesta, &headeRespuesta, sizeof( socket_header ) );
+	//log_info( logger, "Leyendo el paquete de tamaño: %d", headerRespuesta.size );
+	recv( socket, ( paqueteRespuesta + sizeof( socket_header ) ), headerRespuesta.size, 0);
+	//recv( socket, ( &paqueteRespuesta + sizeof( socket_header ) ), headerRespuesta.size, 0);
+	//log_info( logger, "Se leyo el paquete y se va a agregarle el header" );
+	memcpy( paqueteRespuesta, &headerRespuesta, sizeof( socket_header ) );
 
 	return paqueteRespuesta;
 

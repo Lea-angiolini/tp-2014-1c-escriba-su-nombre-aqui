@@ -30,7 +30,9 @@ int socketKernel;
 t_log * logger;
 t_list * cpus; //Lista en la que se van a guardar toda la info de cada cpu que se conecte
 
-
+pthread_t threadConsola;
+pthread_t threadKernel;
+pthread_t threadCpus;
 
 
 /*
@@ -72,7 +74,7 @@ int main(void) {
 
 
 	logger					= log_create( "log.txt", "UMV", 1, LOG_LEVEL_TRACE );
-	t_config * umvConfig	= config_create( "resources/config.cfg" );
+	t_config * umvConfig	= config_create( "config.cfg" );
 	cpus					= list_create();
 
 
@@ -87,28 +89,21 @@ int main(void) {
 	memoria = malloc( config_get_int_value( umvConfig, "MEMORIA") );
 
 
-
 	if( memoria == 0 ){
 		log_error( logger, "No se pudo alocar la memoria, finalizando..." );
 		return -1;
 	}
 
 
-	pthread_t threadConsola;
+
 	pthread_create ( &threadConsola, NULL, iniciarConsola,			(void*) NULL );
-
-	pthread_t threadKernel;
 	pthread_create ( &threadKernel, NULL, iniciarServidorKernel, 	(void*) umvConfig );
-
-	pthread_t threadCpus;
 	pthread_create ( &threadCpus, NULL, iniciarServidorCpu, 		(void*) umvConfig );
 
 
 	if( pthread_join( threadConsola, NULL ) || pthread_join( threadKernel, NULL ) || pthread_join( threadCpus, NULL ) ) {
-
 		log_error( logger, "Hubo un error esperando a algun hilo" );
 		return -1;
-
 	}
 
 

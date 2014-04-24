@@ -1,9 +1,11 @@
 #include "commons/collections/list.h"
 #include "commons/log.h"
+#include "commons/sockets.h"
 #include "CPU.h"
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 #define BUFF_SIZE 1024
 
@@ -16,44 +18,57 @@ extern t_list * cpus;
 int contadorCpuId;
 
 
-int procesarMensajeCpu( CPU * cpu, const char * mensaje ){
 
-	printf( "Me llego un mensaje a procesar: %s \n", mensaje );
-	return 1;
+
+int procesarSolicitudDeLinea( CPU * cpu, socket_obtenerLineaCodigo * solicitud ) {
+	//log_info( logger, "La CPU ID: %d solicito la linea de programa: %d del pid XXX", cpu->cpuId, solicitud->numero_linea_Codigo );
+	log_info( logger, "Alguna cpu solicito una linea de codigo" );
+
+	socket_responderLineaCodigo * paquete = malloc( sizeof( socket_responderLineaCodigo ) ) ;
+	//respuesta->lineaCodigo = "a = 3";
+	paquete->numero_linea_Codigo = 3;
+
+	return enviarPaquete( cpu->socket, (void *) paquete, sizeof( socket_responderLineaCodigo ) , 'a', logger );
 
 }
 
 
-int recibirYProcesarMensajesCpu( CPU * cpu ){
 
-	int nbytesRecibidos;
-	char * buffer = malloc(sizeof( BUFF_SIZE ));
 
-	while( 1 ){
+int recibirYProcesarMensajesCpu( CPU * cpu ) {
 
-		nbytesRecibidos = recv( cpu->socket, buffer, BUFF_SIZE, 0);
+	int todoSaleBien = 1;
 
-		if ( nbytesRecibidos > 0 ) {
+	while( todoSaleBien > 0 ){
 
-			procesarMensajeCpu( cpu, buffer );
-			memset( buffer, 0x0000, BUFF_SIZE );
+		log_info( logger, "Esperando un mensaje de la CPU..." );
+		void * paquete = recibirPaquete( cpu->socket , 0, 'a', logger );
 
-		} else if ( nbytesRecibidos == 0 ){
-
-			free(buffer);
-			return 1;
-
-		} else {
-
+		if( paquete == NULL ){
 			break;
+		}
+
+		socket_header * header = ( socket_header * ) paquete;
+
+		switch ( header->code ){
+			case 'a':
+				todoSaleBien = procesarSolicitudDeLinea( cpu, (socket_obtenerLineaCodigo *) paquete );
+				break;
+			case 'b':
+				todoSaleBien = procesarSolicitudDeLinea( cpu, (socket_obtenerLineaCodigo *) paquete );
+				break;
+			default:
+				//TODO decidir que hacer aca
+				log_error( logger, "La CPU ID: %d envio un mensaje que no pude entender... ???", cpu->cpuId );
+				break;
 
 		}
 
+		free( paquete );
+
 	}
 
-	free( buffer );
-
-	return -1;
+	return todoSaleBien;
 
 }
 
@@ -81,9 +96,10 @@ void * fnNuevoCpu( void * socketPtr ){
 		log_error( logger, "Hubo un problema con el cpu ID %d: " , cpu->cpuId );
 	}
 
-	close( cpu ->socket );
+	//TODO !!!! IMPORTANTE que paso acaaa ??
+	close( cpu->socket );
 
-	return 0x0000;
+	return NULL;
 
 }
 

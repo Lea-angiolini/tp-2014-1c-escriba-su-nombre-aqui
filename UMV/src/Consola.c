@@ -24,7 +24,7 @@ void * iniciarConsola( void * params ){
 	}
 
 	log_info( logger, "\n\nFinalizando la consola ..." );
-
+	return NULL;
 }
 
 

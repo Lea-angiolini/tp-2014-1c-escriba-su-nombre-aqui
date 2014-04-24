@@ -85,15 +85,15 @@ typedef struct {
 
 /*******************************************************************/
 
-int conectar(char *ip, int port, t_log * log);
-int crearYbindearSocket(int puerto, t_log * log);
-int crearServidor(int puerto, void* (*fn_nuevo_cliente)( void * socket ), t_log * log);
-int crearServidorNoBloqueante(int puerto, bool (*fn_nuevo_mensaje)(void *socket), t_log * log);
+int conectar					(char *ip, int port, t_log * log);
+int crearYbindearSocket			(int puerto, t_log * log);
+int crearServidor				(int puerto, void* (*fn_nuevo_cliente)( void * socket ), t_log * log);
+int crearServidorNoBloqueante	(int puerto, bool (*fn_nuevo_mensaje)(void *socket), t_log * log);
 
 
-void *	enviarYRecibirPaquete( int socket, void * mensaje, uint32_t sizeSend, uint32_t sizeReceive, char sendCode, char receiveCode );
-int		enviarPaquete( int socket, void * mensaje, uint32_t sizeSend, char sendCode );
-void *	recibirPaquete( int socket, uint32_t sizeReceive, char receiveCode );
+void *	enviarYRecibirPaquete	( int socket, void * mensaje, uint32_t sizeSend, uint32_t sizeReceive, char sendCode, char receiveCode, t_log * logger );
+int		enviarPaquete			( int socket, void * mensaje, uint32_t sizeSend, char sendCode, t_log * logger );
+void *	recibirPaquete			( int socket, uint32_t sizeReceive, char receiveCode, t_log * logger );
 
 
 #endif /* SOCKETS_H_ */
