@@ -57,13 +57,9 @@ int main(int argc, char *argv[]) {
 	pthread_join(plpThread, NULL);
 	pthread_join(pcpThread, NULL);
 
-	//config_get_int_value(config, "QUANTUM");
-	//config_get_int_value(config, "RETARDO");
-	//char** semaforos = config_get_array_value(config, "SEMAFOROS");
-	//char** valor_semaforos = config_get_array_value(config, "VALOR_SEMAFORO");
 	//char** hio = config_get_array_value(config, "HIO");
 	//char** hioId = config_get_array_value(config, "ID_HIO");
-	//char** variablesCompartidas = config_get_array_value(config, "VARIABLES_COMPARTIDAS");
+
 
 	destruirColas();
 	config_destroy(config);

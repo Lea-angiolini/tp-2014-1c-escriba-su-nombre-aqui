@@ -13,6 +13,12 @@ extern t_config *config;
 extern uint8_t multiprogramacion;
 extern pthread_mutex_t multiprogramacionMutex;
 
+//config_get_int_value(config, "QUANTUM");
+//config_get_int_value(config, "RETARDO");
+//char** semaforos = config_get_array_value(config, "SEMAFOROS");
+//char** valor_semaforos = config_get_array_value(config, "VALOR_SEMAFORO");
+//char** variablesCompartidas = config_get_array_value(config, "VARIABLES_COMPARTIDAS");
+
 void *IniciarPcp(void *arg)
 {
 	logpcp = log_create("log_pcp.txt", "KernelPCP", 1, LOG_LEVEL_TRACE);

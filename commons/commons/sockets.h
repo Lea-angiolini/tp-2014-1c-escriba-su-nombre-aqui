@@ -24,13 +24,26 @@ typedef struct {
 	bool valor; //false = no se pudo, true = se puede
 }  __attribute__((packed)) socket_respuesta ;
 
+/*******************************************************************/
+
 //KernelPLP->UMV
 typedef struct {
 	socket_header header;
-	uint32_t segmentSize[4];
+	uint32_t codeSegmentSize; //Segmento codigo literal ansisop
+	uint32_t etiquetasSegmentSize; //Segmento de indice de etiquetas
+	uint32_t instruccionesSegmentSize; //Segmento de indice de codigo
 }  __attribute__((packed)) socket_pedirMemoria ;
 
+//UMV->KernelPLP
+typedef struct {
+	socket_header header;
+	uint32_t codeSegment;
+	uint32_t stackSegment;
+	uint32_t codeIndex;
+	uint32_t etiquetaIndex;
 
+	//pcb->contextSize = ;
+}  __attribute__((packed)) socket_umvpcb ;
 
 
 
@@ -70,7 +83,7 @@ typedef struct {
 
 
 
-/////////////////////////////////////////////////////////////////
+/*******************************************************************/
 
 int conectar(char *ip, int port, t_log * log);
 int crearYbindearSocket(int puerto, t_log * log);

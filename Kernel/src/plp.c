@@ -25,7 +25,7 @@ void *IniciarPlp(void *arg) {
 	logplp = log_create("log_plp.txt", "KernelPLP", 1, LOG_LEVEL_TRACE);
 	log_info(logplp, "Thread iniciado");
 
-	/*
+#ifdef UMV_ENABLE
 	socketUMV = conectar(config_get_string_value(config, "IP_UMV"), config_get_int_value(config, "PUERTO_UMV"), logplp);
 
 	if (socketUMV == -1) {
@@ -34,6 +34,7 @@ void *IniciarPlp(void *arg) {
 		log_destroy(logplp);
 		return NULL ;
 	}
+#endif
 
 	log_info(logplp, "Conectado con la UMV");*/
 
@@ -48,17 +49,16 @@ void *IniciarPlp(void *arg) {
 
 void MoverNewAReady()
 {
+	log_info(logplp, "Ordenando la cola New segun algoritmo SJN");
+	list_sort(newQueue, sjnAlgorithm);
+
 	log_info(logplp, "Moviendo PCB de la cola New a Ready");
-	list_sort(newQueue->elements, sjnAlgorithm);
-
-	//New->Ready
 	pthread_mutex_lock(&readyQueueMutex);
-	queue_push(readyQueue, queue_pop(newQueue));
-	pthread_mutex_unlock(&readyQueueMutex);
-
 	pthread_mutex_lock(&multiprogramacionMutex);
+	queue_push(readyQueue, queue_pop(newQueue));
 	multiprogramacion++;
 	pthread_mutex_unlock(&multiprogramacionMutex);
+	pthread_mutex_unlock(&readyQueueMutex);
 }
 
 void puedoMoverNewAReady()
@@ -125,37 +125,56 @@ bool recibirYprocesarScript(int socket, socket_header header) {
 	socket_pedirMemoria pedirMemoria;
 	pedirMemoria.header.size = sizeof(pedirMemoria);
 
-	pedirMemoria.segmentSize[0] = strlen(script);
-	pedirMemoria.segmentSize[1] = scriptMedatada->etiquetas_size;
-	pedirMemoria.segmentSize[2] = scriptMedatada->instrucciones_size;
+	pedirMemoria.codeSegmentSize = strlen(script);
+	pedirMemoria.etiquetasSegmentSize = scriptMedatada->etiquetas_size;
+	pedirMemoria.instruccionesSegmentSize = scriptMedatada->instrucciones_size;
 
-	//send(socketUMV, &pedirMemoria, sizeof(pedirMemoria), 0);
+#ifdef UMV_ENABLE
+	send(socketUMV, &pedirMemoria, sizeof(pedirMemoria), 0);
+#endif
 
 	socket_respuesta respuesta;
-	//recv(socketUMV, &respuesta, sizeof(respuesta), 0);
+
+#ifdef UMV_ENABLE
+	recv(socketUMV, &respuesta, sizeof(respuesta), 0);
+#endif
 
 	if(respuesta.valor == true)
 	{
 		log_info(logplp, "La UMV informo que pudo alojar la memoria necesaria para el script ansisop");
+		log_info(logplp, "Enviando a la UMV los datos a guardar en los segmentos");
+
+#ifdef UMV_ENABLE
+		send(socketUMV, script, sizeof(script), 0);
+		send(socketUMV, scriptMedatada->etiquetas, scriptMedatada->etiquetas_size, 0);
+		send(socketUMV, scriptMedatada->instrucciones_serializado, scriptMedatada->instrucciones_size * sizeof(t_intructions), 0);
+#endif
+
+		socket_umvpcb umvpcb;
+#ifdef UMV_ENABLE
+		recv(socketUMV, &socket_umvpcb, sizeof(socket_umvpcb), 0);
+#endif
 
 		pcb_t *pcb = malloc(sizeof(pcb_t));
 
 		pcb->id = nextProcessId; nextProcessId++;
-		/* Me lo da la UMV
-		pcb->codeSegment;
-		pcb->stackSegment;
-		pcb->stackCursor;
-		pcb->codeIndex;
-		pcb->etiquetaIndex;
-		*/
+
+		pcb->codeSegment = umvpcb->codeSegment;
+		pcb->stackSegment = umvpcb->stackSegment;
+		pcb->stackCursor = umvpcb->stackSegment;
+		pcb->codeIndex = umvpcb->codeIndex;
+		pcb->etiquetaIndex = umvpcb->etiquetaIndex;
+
 		pcb->programCounter = scriptMedatada->instruccion_inicio;
-		//pcb->contextSize = ;
+		pcb->contextSize = 0;
 
 		pcb->programaSocket = socket;
 		pcb->prioridad = CALCULAR_PRIORIDAD(scriptMedatada->cantidad_de_etiquetas, scriptMedatada->cantidad_de_funciones, scriptMedatada->instrucciones_size);
 		pcb->lastErrorCode = 0;
 
 		queue_push(newQueue, pcb);
+		log_info(logplp, "Segmentos cargados en la UMV y PCB generada en la cola NEW");
+
 		puedoMoverNewAReady();
 	} else {
 		log_error(logplp, "La UMV informo que no pudo alojar la memoria necesaria para el script ansisop");
