@@ -34,9 +34,9 @@ void *IniciarPlp(void *arg) {
 		log_destroy(logplp);
 		return NULL ;
 	}
-#endif
 
-	log_info(logplp, "Conectado con la UMV");*/
+	log_info(logplp, "Conectado con la UMV");
+#endif
 
 	if (crearServidorNoBloqueante(config_get_int_value(config, "PUERTO_PROG"), nuevoMensaje, logplp) == -1) {
 		log_error(logplp, "No se pudo crear el servidor receptor de Programas");
@@ -159,11 +159,11 @@ bool recibirYprocesarScript(int socket, socket_header header) {
 
 		pcb->id = nextProcessId; nextProcessId++;
 
-		pcb->codeSegment = umvpcb->codeSegment;
-		pcb->stackSegment = umvpcb->stackSegment;
-		pcb->stackCursor = umvpcb->stackSegment;
-		pcb->codeIndex = umvpcb->codeIndex;
-		pcb->etiquetaIndex = umvpcb->etiquetaIndex;
+		pcb->codeSegment = umvpcb.codeSegment;
+		pcb->stackSegment = umvpcb.stackSegment;
+		pcb->stackCursor = umvpcb.stackSegment;
+		pcb->codeIndex = umvpcb.codeIndex;
+		pcb->etiquetaIndex = umvpcb.etiquetaIndex;
 
 		pcb->programCounter = scriptMedatada->instruccion_inicio;
 		pcb->contextSize = 0;
