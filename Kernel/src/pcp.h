@@ -5,6 +5,7 @@
 #include "commons/sockets.h"
 
 void *IniciarPcp(void *arg);
+void *Dispatcher(void *arg);
 
 void desconexionCPU();
 bool nuevoMensajeCPU(int socket);

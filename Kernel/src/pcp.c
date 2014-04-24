@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <sys/socket.h>
 #include <sys/errno.h>
+#include <pthread.h>
 
 #include "commons/log.h"
 #include "commons/config.h"
@@ -12,6 +13,7 @@ t_log *logpcp;
 extern t_config *config;
 extern uint8_t multiprogramacion;
 extern pthread_mutex_t multiprogramacionMutex;
+pthread_cond_t dispatcherCond = PTHREAD_COND_INITIALIZER;
 
 //config_get_int_value(config, "QUANTUM");
 //config_get_int_value(config, "RETARDO");
@@ -23,13 +25,37 @@ void *IniciarPcp(void *arg)
 {
 	logpcp = log_create("log_pcp.txt", "KernelPCP", 1, LOG_LEVEL_TRACE);
 	log_info(logpcp, "Thread iniciado");
+	pthread_t dispatcherThread;
+	pthread_create(&dispatcherThread, NULL, &Dispatcher, NULL);
 
 	if(crearServidorNoBloqueante(config_get_int_value(config, "PUERTO_CPU"), nuevoMensajeCPU, logpcp) == -1) {
 		log_error(logpcp, "No se pudo crear el servidor receptor de Programas");
 	}
 
+	pthread_destroy(&dispatcherThread);
+
 	log_info(logpcp, "Thread concluido");
 	log_destroy(logpcp);
+	return NULL;
+}
+
+void MoverReadyAExec()
+{
+	log_info(logpcp, "Moviendo PCB de la cola Ready a Exec");
+
+	pthread_mutex_lock(&readyQueueMutex);
+	queue_push(execQueue, queue_pop(readyQueue));
+	pthread_mutex_unlock(&readyQueueMutex);
+}
+
+void *Dispatcher(void *arg)
+{
+	while(1)
+	{
+		pthread_cond_wait(&dispatcherCond, &readyQueueMutex);
+
+	}
+
 	return NULL;
 }
 
