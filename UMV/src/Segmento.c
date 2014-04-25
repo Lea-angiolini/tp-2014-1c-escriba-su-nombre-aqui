@@ -1,33 +1,22 @@
 #include <stdint.h>
+#include <stdlib.h>
 
-uint32_t crearSegmento( uint32_t tamanio ){
+#include "Segmento.h"
 
+#include "commons/log.h"
 
-	return 0;
-
-}
-
-
-uint32_t crearSegmentoFistFit( uint32_t tamanio ){
-
-	return 0;
-
-}
+extern t_log * logger;
 
 
-uint32_t crearSegmentoWorstFit( uint32_t tamanio ){
+Segmento * new_Segmento( uint32_t inicio, uint32_t fin ) {
 
-	return 0;
+	Segmento * segmento = malloc( sizeof( Segmento ) );
+	segmento->inicioReal = inicio;
+	segmento->finReal = fin;
 
-}
+	segmento->finVirtual = 0;
+	segmento->inicioVirtual = 0;
 
-
-
-int compactar(){
-
-	return 1;
+	return segmento;
 
 }
-
-
-

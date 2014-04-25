@@ -17,6 +17,8 @@
 #include "Kernel.h"
 #include "CPU.h"
 
+#include "mocks.h"
+
 #include "commons/sockets.h"
 #include "commons/log.h"
 #include "commons/config.h"
@@ -29,11 +31,15 @@
 int socketKernel;
 t_log * logger;
 t_list * cpus; //Lista en la que se van a guardar toda la info de cada cpu que se conecte
+t_list * programas;
+t_list * tabla_segmentos;
+
+t_config * umvConfig;
+
 
 pthread_t threadConsola;
 pthread_t threadKernel;
 pthread_t threadCpus;
-
 
 /*
  *
@@ -41,76 +47,85 @@ pthread_t threadCpus;
  *
  */
 void * memoria;
-
+uint32_t memoria_size;
 
 
 //TODO enviar codigo de error si no se puede bindear el socket
-void * iniciarServidorCpu( void * config ){
+void * iniciarServidorCpu() {
 
-	//crearServidor(int puerto, void* (*fn_nuevo_cliente)( void * socket ), t_log * log);
-	t_config * umvConfig = (t_config*) config;
-
-	crearServidor( config_get_int_value( umvConfig, "PUERTOCPU" ) , fnNuevoCpu, logger );
-
+	crearServidor(config_get_int_value(umvConfig, "PUERTOCPU"), fnNuevoCpu, logger);
 	return NULL;
 
 }
 
-
 //TODO enviar codigo de error si no se puede bindear el socket
-void * iniciarServidorKernel( void * config ){
-	t_config * umvConfig = (t_config*) config;
-	crearServidor( config_get_int_value( umvConfig, "PUERTOKERNEL" ) , fnKernelConectado, logger );
+void * iniciarServidorKernel() {
+	crearServidor(config_get_int_value(umvConfig, "PUERTOKERNEL"), fnKernelConectado, logger);
 	return NULL;
+}
+
+int leerConfiguraciones() {
+	umvConfig = config_create("config.cfg");
+	if (!config_has_property(umvConfig, "PUERTOCPU")
+			|| !config_has_property(umvConfig, "PUERTOKERNEL")
+			|| !config_has_property(umvConfig, "MEMORIA")) {
+		log_error(logger, "Archivo de configuracion invalido");
+		config_destroy(umvConfig);
+		free(memoria);
+		return -1;
+	}
+	return 1;
 }
 
 
 
+int setUp() {
+
+	leerConfiguraciones();
+
+	cpus				= list_create();
+	programas			= list_create();
+	tabla_segmentos		= list_create();
+
+	memoria_size = config_get_int_value(umvConfig, "MEMORIA");
+
+	log_info( logger, "Reservando %d Bytes de memoria", memoria_size );
+	memoria = malloc( memoria_size );
+	if (memoria == 0) {
+		log_error(logger, "No se pudo alocar la memoria, finalizando...");
+		return -1;
+	}
+	return 1;
+
+}
 
 
+int startThreads() {
+	pthread_create(&threadConsola, NULL, iniciarConsola, NULL);
+	pthread_create(&threadKernel, NULL, iniciarServidorKernel, NULL);
+	pthread_create(&threadCpus, NULL, iniciarServidorCpu, NULL);
+
+	if (pthread_join(threadConsola, NULL) || pthread_join(threadKernel, NULL) || pthread_join(threadCpus, NULL)) {
+		log_error(logger, "Hubo un error esperando a algun hilo");
+		return -1;
+	}
+	return 1;
+}
 
 
 int main(void) {
 
+	logger = log_create("log.txt", "UMV", 1, LOG_LEVEL_TRACE);
 
-	logger					= log_create( "log.txt", "UMV", 1, LOG_LEVEL_TRACE );
-	t_config * umvConfig	= config_create( "config.cfg" );
-	cpus					= list_create();
+	log_info(logger, "Iniciando UMV...");
 
+	setUp();
+	//startThreads();
+	ejecutar();
 
-	log_info( logger, "Iniciando UMV..." );
-
-
-	if( ! config_has_property( umvConfig, "PUERTOCPU" ) ||  ! config_has_property( umvConfig, "PUERTOKERNEL" ) || ! config_has_property( umvConfig, "MEMORIA" ) ){
-		log_error( logger, "Archivo de configuracion invalido" );
-		return -1;
-	}
-
-	memoria = malloc( config_get_int_value( umvConfig, "MEMORIA") );
-
-
-	if( memoria == 0 ){
-		log_error( logger, "No se pudo alocar la memoria, finalizando..." );
-		return -1;
-	}
-
-
-
-	pthread_create ( &threadConsola, NULL, iniciarConsola,			(void*) NULL );
-	pthread_create ( &threadKernel, NULL, iniciarServidorKernel, 	(void*) umvConfig );
-	pthread_create ( &threadCpus, NULL, iniciarServidorCpu, 		(void*) umvConfig );
-
-
-	if( pthread_join( threadConsola, NULL ) || pthread_join( threadKernel, NULL ) || pthread_join( threadCpus, NULL ) ) {
-		log_error( logger, "Hubo un error esperando a algun hilo" );
-		return -1;
-	}
-
-
-
-	free			( memoria );
-	config_destroy	( umvConfig );
-	log_destroy		( logger );
+	free(memoria);
+	config_destroy(umvConfig);
+	log_destroy(logger);
 
 	return EXIT_SUCCESS;
 

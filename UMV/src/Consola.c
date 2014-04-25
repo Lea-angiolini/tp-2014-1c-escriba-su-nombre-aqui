@@ -1,10 +1,19 @@
-#include "commons/log.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+
 #include "Consola.h"
+#include "Segmento.h"
+
+#include "commons/log.h"
 #include "commons/string.h"
+#include "commons/collections/list.h"
 
 
 char comandosBuffer[200];
 extern t_log * logger;
+extern t_list * tabla_segmentos;
 
 
 void * iniciarConsola( void * params ){
@@ -17,7 +26,7 @@ void * iniciarConsola( void * params ){
 		memset( &comandosBuffer, 0x0000, sizeof( comandosBuffer ) );
 		printf( ">>> " );
 		gets( &comandosBuffer );
-		if( parsearComando( &comandosBuffer, logger ) == 0){
+		if( parsearComando( &comandosBuffer ) == 0){
 			break;
 		}
 
@@ -28,9 +37,7 @@ void * iniciarConsola( void * params ){
 }
 
 
-
-
-int parsearComando( char * comando, t_log * logger ){
+int parsearComando( char * comando ) {
 
 	if ( string_starts_with( comando, "holi" ) ){
 		printf("El comando es holi\n\n");
@@ -42,6 +49,62 @@ int parsearComando( char * comando, t_log * logger ){
 
 	return 1;
 }
+
+
+
+
+
+
+void printTodosSegmentos() {
+	printSegmentos( tabla_segmentos );
+}
+
+void printSegmentos( t_list * segmentos ) {
+	printSegmentosHeaders();
+		int i = 0;
+		for( i = 0; i < list_size( segmentos ) ; i++ ){
+			Segmento * segmento = (Segmento *) list_get( segmentos, i );
+			printSegmento( segmento );
+		}
+}
+
+void printSegmentosHeaders(){
+	printf("\n\n");
+	printf("\t\tInicio Real\tFin Real\tTamaño\n\n");
+}
+
+void printSegmento( Segmento * segmento ) {
+	printf(">>>\t\t%d\t\t%d\t\t%d\n", segmento->inicioReal, segmento->finReal, segmento->finReal - segmento->inicioReal );
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
