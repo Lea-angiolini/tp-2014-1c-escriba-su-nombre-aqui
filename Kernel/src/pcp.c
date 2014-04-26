@@ -100,10 +100,10 @@ void conexionCPU(int socket)
 {
 	log_info(logpcp, "Se ha conectado un CPU");
 
-	//Poner el socket en la cola de cpuReady
-	int *socketCPU = malloc(sizeof(int));
-	*socketCPU = socket;
-	queue_push(cpuReadyQueue, socketCPU);
+	//Agregandolo a la cpuReadyQueue
+	cpu_info_t *cpuInfo = malloc(sizeof(cpu_info_t));
+	cpuInfo->socketCPU = socket;
+	queue_push(cpuReadyQueue, cpuInfo);
 
 	/*
 	 * Hay que mandar QUANTUM y RETARDO al CPU
@@ -144,7 +144,7 @@ void desconexionCPU(int socket)
 		log_info(logpcp, "Moviendo PCB de la cola EXEC a EXIT");
 		queue_push(exitQueue, list_remove_by_condition(execQueue, limpiarPcb));
 
-		log_info(logpcp, "Informandole a Programa que el script no se pudo concluir su ejecucion");
+		log_info(logpcp, "Informandole a Programa que el script no pudo concluir su ejecucion");
 		socket_msg msg;
 		strcpy(msg.msg, "El script no pudo concluir su ejecucion debido a la desconexion de un CPU");
 		send(cpuInfo->socketPrograma, &msg, sizeof(msg), 0);
