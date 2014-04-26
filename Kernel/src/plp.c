@@ -14,12 +14,16 @@
 
 #define CALCULAR_PRIORIDAD(e,f,t) (5 * e + 3 * f + t)
 
+t_log *logplp;
+extern t_config *config;
+extern pthread_cond_t dispatcherCond;
+
 uint32_t nextProcessId = 1;
-int socketUMV;
 uint8_t multiprogramacion = 0;
 pthread_mutex_t multiprogramacionMutex = PTHREAD_MUTEX_INITIALIZER;
-extern t_config *config;
-t_log *logplp;
+
+int socketUMV;
+
 
 void *IniciarPlp(void *arg) {
 	logplp = log_create("log_plp.txt", "KernelPLP", 1, LOG_LEVEL_TRACE);
@@ -49,16 +53,19 @@ void *IniciarPlp(void *arg) {
 
 void MoverNewAReady()
 {
-	log_info(logplp, "Ordenando la cola New segun algoritmo SJN");
+	log_info(logplp, "Ordenando la cola NEW segun algoritmo de planificacion SJN");
 	list_sort(newQueue, sjnAlgorithm);
 
-	log_info(logplp, "Moviendo PCB de la cola New a Ready");
+	log_info(logplp, "Moviendo PCB de la cola NEW a READY");
 	pthread_mutex_lock(&readyQueueMutex);
 	pthread_mutex_lock(&multiprogramacionMutex);
 	queue_push(readyQueue, queue_pop(newQueue));
 	multiprogramacion++;
 	pthread_mutex_unlock(&multiprogramacionMutex);
 	pthread_mutex_unlock(&readyQueueMutex);
+
+	//Llamada a dispatcher del PCP para avisar que hay un nuevo trabajo pendiente
+	pthread_cond_signal(&dispatcherCond);
 }
 
 void puedoMoverNewAReady()
@@ -118,8 +125,6 @@ bool recibirYprocesarScript(int socket, socket_header header) {
 
 	//ansisop preprocesador
 	t_medatada_program *scriptMedatada = metadatada_desde_literal(script);
-	//t_puntero_instruccion metadata_buscar_etiqueta(scriptMedatada, t_nombre_etiqueta);
-
 
 	log_info(logplp, "Pidiendole memoria a la UMV para que pueda correr el script ansisop");
 	socket_pedirMemoria pedirMemoria;
