@@ -18,9 +18,9 @@ void crearColas()
 
 void destruirColas()
 {
-	queue_clean_and_destroy_elements(newQueue, free);
-	queue_clean_and_destroy_elements(readyQueue, free);
-	queue_clean_and_destroy_elements(execQueue, free);
-	queue_clean_and_destroy_elements(exitQueue, free);
-	queue_clean_and_destroy_elements(blockQueue, free);
+	queue_destroy_and_destroy_elements(newQueue, free);
+	queue_destroy_and_destroy_elements(readyQueue, free);
+	queue_destroy_and_destroy_elements(execQueue, free);
+	queue_destroy_and_destroy_elements(exitQueue, free);
+	queue_destroy_and_destroy_elements(blockQueue, free);
 }
