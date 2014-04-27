@@ -17,6 +17,7 @@ extern uint8_t multiprogramacion;
 extern pthread_mutex_t multiprogramacionMutex;
 
 pthread_cond_t dispatcherCond = PTHREAD_COND_INITIALIZER;
+extern pthread_cond_t loaderCond;
 
 t_queue *cpuReadyQueue, *cpuExecQueue;
 
@@ -120,6 +121,9 @@ void bajarNivelMultiprogramacion()
 	pthread_mutex_lock(&multiprogramacionMutex);
 	multiprogramacion--;
 	pthread_mutex_unlock(&multiprogramacionMutex);
+
+	//Avisandole al loader del PLP que bajo el grado de multiprogramacion
+	pthread_cond_signal(&loaderCond);
 }
 
 void desconexionCPU(int socket)

@@ -16,11 +16,13 @@
 
 t_log *logplp;
 extern t_config *config;
-extern pthread_cond_t dispatcherCond;
 
 uint32_t nextProcessId = 1;
 uint8_t multiprogramacion = 0;
+
 pthread_mutex_t multiprogramacionMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t loaderCond = PTHREAD_COND_INITIALIZER;
+extern pthread_cond_t dispatcherCond;
 
 int socketUMV;
 
@@ -28,6 +30,9 @@ int socketUMV;
 void *IniciarPlp(void *arg) {
 	logplp = log_create("log_plp.txt", "KernelPLP", 1, LOG_LEVEL_TRACE);
 	log_info(logplp, "Thread iniciado");
+
+	pthread_t loaderThread;
+	pthread_create(&loaderThread, NULL, &Loader, NULL);
 
 #ifdef UMV_ENABLE
 	socketUMV = conectar(config_get_string_value(config, "IP_UMV"), config_get_int_value(config, "PUERTO_UMV"), logplp);
@@ -46,9 +51,34 @@ void *IniciarPlp(void *arg) {
 		log_error(logplp, "No se pudo crear el servidor receptor de Programas");
 	}
 
+	pthread_join(&loaderThread, NULL);
+
 	log_info(logplp, "Thread concluido");
 	log_destroy(logplp);
 	return NULL ;
+}
+
+/*
+ * Para activar este hilo usar la siguiente instruccion
+ * pthread_cond_signal(&loaderCond);
+ */
+void *Loader(void *arg)
+{
+	log_info(logplp, "Loader Thread iniciado");
+
+	pthread_mutex_lock(&newQueueMutex);
+
+	while(1)
+	{
+		pthread_cond_wait(&loaderCond, &newQueueMutex);
+		log_info(logplp, "Loader invocado");
+
+		puedoMoverNewAReady();
+	}
+
+	pthread_mutex_unlock(&newQueueMutex);
+
+	return NULL;
 }
 
 void MoverNewAReady()
@@ -177,10 +207,14 @@ bool recibirYprocesarScript(int socket, socket_header header) {
 		pcb->prioridad = CALCULAR_PRIORIDAD(scriptMedatada->cantidad_de_etiquetas, scriptMedatada->cantidad_de_funciones, scriptMedatada->instrucciones_size);
 		pcb->lastErrorCode = 0;
 
+		pthread_mutex_lock(&newQueueMutex);
 		queue_push(newQueue, pcb);
+		pthread_mutex_unlock(&newQueueMutex);
+
 		log_info(logplp, "Segmentos cargados en la UMV y PCB generada en la cola NEW");
 
-		puedoMoverNewAReady();
+		//Avisandole al loader que se cargo un nuevo script
+		pthread_cond_signal(&loaderCond);
 	} else {
 		log_error(logplp, "La UMV informo que no pudo alojar la memoria necesaria para el script ansisop");
 		log_info(logplp, "Informandole a Programa que el script no se puede procesar por el momento");
