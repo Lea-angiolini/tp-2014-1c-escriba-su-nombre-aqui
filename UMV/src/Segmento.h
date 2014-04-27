@@ -6,14 +6,13 @@
 
 typedef struct {
 
+	uint32_t id;
+
 	uint32_t inicioVirtual;	//Estos son los que cree el programa
 	uint32_t finVirtual;
 
 	uint32_t inicioReal;	//Estos son los offset reales respecto al memoria
 	uint32_t finReal;
-
-	uint32_t ocupado;
-
 
 } Segmento;
 

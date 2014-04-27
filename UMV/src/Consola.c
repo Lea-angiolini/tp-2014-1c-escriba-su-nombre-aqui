@@ -74,7 +74,7 @@ void printSegmentosHeaders(){
 }
 
 void printSegmento( Segmento * segmento ) {
-	printf(">>>\t\t%d\t\t%d\t\t%d\n", segmento->inicioReal, segmento->finReal, segmento->finReal - segmento->inicioReal );
+	printf(">>>\t\t%d\t\t%d\t\t%d\n", segmento->inicioReal, segmento->finReal, segmento->finReal - segmento->inicioReal + 1 );
 }
 
 

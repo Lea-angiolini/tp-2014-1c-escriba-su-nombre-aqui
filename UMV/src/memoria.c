@@ -1,8 +1,10 @@
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "Segmento.h"
 #include "memoria.h"
+#include "Consola.h"
 
 #include "commons/collections/list.h"
 #include "commons/log.h"
@@ -12,78 +14,93 @@ extern t_list * tabla_segmentos;
 extern uint32_t memoria_size;
 extern t_log * logger;
 
-uint32_t crearSegmento( uint32_t tamanio ) {
+Segmento * crearSegmento( uint32_t tamanio ) {
 
 	log_info( logger, "Creando segmento, ahora hay %d", list_size( tabla_segmentos ) );
-	//crearListaEspacioDisponible();
+
 	Segmento * elNuevo = NULL;
 
 	if( list_size( tabla_segmentos ) == 0 && memoria_size > tamanio ){
 
 		elNuevo = new_Segmento( 0, tamanio );
-		list_add( tabla_segmentos, elNuevo );
 
 	}else{
 
 		t_list * huequitos = crearListaEspacioDisponible();
-		crearSegmentoFistFit( huequitos,  tamanio ) ;
+		elNuevo = crearSegmentoWorstFit( huequitos,  tamanio ) ;
 		list_destroy( huequitos );
 
 	}
 
-	log_info( logger, "Termine de crear el segmento, ahora hay %d", list_size( tabla_segmentos ) );
-	return 0;
+	if( elNuevo != NULL ){
+		list_add( tabla_segmentos, elNuevo );
+	}
+
+	//log_info( logger, "Termine de crear el segmento, ahora hay %d", list_size( tabla_segmentos ) );
+	return elNuevo;
 
 }
 
 
-uint32_t crearSegmentoFistFit( t_list * huequitos, uint32_t tamanio ) {
+Segmento * crearSegmentoFistFit( t_list * huequitos, uint32_t tamanio ) {
 
-
-	int i = 0, creado = 0;
+	int i = 0;
 	Segmento * huequito = malloc( sizeof( Segmento ) );
 	for( i = 0; i <  list_size( huequitos ); i++ ) {
-
 		huequito = (Segmento*) list_get( huequitos, i );
-
-		if( ( huequito->finVirtual - huequito->inicioReal ) >= tamanio ){
-
+		if( ( huequito->finReal - huequito->inicioReal ) >= tamanio ){
 			//IUJU hay espacio :D
-			Segmento * elNuevo = new_Segmento( huequito->inicioVirtual, huequito->finVirtual + tamanio );
-			list_add( tabla_segmentos, elNuevo );
-			creado = 1;
-			break;
-
+			Segmento * elNuevo = new_Segmento( huequito->inicioReal, huequito->inicioReal + tamanio );
+			return elNuevo;
 		}
-
 	}
-
-	if( !creado ){
-		log_info( logger, "No se pudo hubicar un espacio en memoria, compactando!! Mentira, todavia no se compactar =( " );
-	}
-
 
 	free(huequito);
 
-	return 0;
+	return NULL;
+
+}
+
+Segmento * crearSegmentoWorstFit( t_list * huequitos, uint32_t tamanio ) {
+
+	int i = 0, tamanioMax = 0, tamanioHuequito = 0;
+	Segmento * nuevoSegmento = NULL;
+
+	for (i = 0; i < list_size( huequitos ); i++) {
+		Segmento * huequito = (Segmento*) list_get(huequitos, i);
+		tamanioHuequito = huequito->finReal - huequito->inicioReal + 1;
+		if ( tamanioHuequito >= tamanioMax && tamanioHuequito >= tamanio ) {
+			nuevoSegmento = huequito;
+			tamanioMax = tamanioHuequito;
+		}
+	}
+
+	if( tamanioMax >= tamanio ){
+		return new_Segmento( nuevoSegmento->inicioReal,  nuevoSegmento->inicioReal + tamanio );
+	}else{
+		return NULL;
+	}
 
 }
 
 
-uint32_t crearSegmentoWorstFit( t_list * huequitos, uint32_t tamanio ){
 
-	return 0;
 
+
+bool segmentoEsAnterior( void * seg1, void * seg2 ) {
+	Segmento * segmento1 = (Segmento * ) seg1;
+	Segmento * segmento2 = (Segmento * ) seg2;
+	return segmento1->inicioReal < segmento2->inicioReal;
 }
 
 
 
 /*
  * Ordena la tabla de segmentos segun su inicio
- *
+ *	TODO usar semaforo
  */
 void ordenarTablaSegmentos(){
-
+	list_sort( tabla_segmentos , &segmentoEsAnterior );
 }
 
 
@@ -115,10 +132,6 @@ t_list * crearListaEspacioDisponible() {
 
 		Segmento * primerSegmento = (Segmento *) list_get( tabla_segmentos, 0 );
 
-		if( primerSegmento == NULL ){
-			log_info( logger, "La concha de tu madre " );
-		}
-
 		if( primerSegmento->inicioReal != 0 ) {
 			Segmento * segmentoInicial = new_Segmento( 0, primerSegmento->inicioReal - 1 );
 			list_add( lista, segmentoInicial );
@@ -130,13 +143,16 @@ t_list * crearListaEspacioDisponible() {
 
 			Segmento * segmento1 = (Segmento *) list_get( tabla_segmentos, i );
 			Segmento * segmento2 = (Segmento *) list_get( tabla_segmentos, i + 1 );
-			Segmento * segmentoIntermedio = new_Segmento( segmento1->finReal + 1 , segmento2->inicioReal - 1 );
-			list_add( lista, segmentoIntermedio );
+
+			 //Si el espacio entre esos 2 segmentos no es contino no es contiguo...
+			if( segmento1->finReal != segmento2->inicioReal - 1 ) {
+				Segmento * segmentoIntermedio = new_Segmento( segmento1->finReal + 1 , segmento2->inicioReal );
+				list_add( lista, segmentoIntermedio );
+			}
 
 		}
 
 		Segmento * ultimoSegmento = (Segmento *) list_get( tabla_segmentos,  list_size( tabla_segmentos ) - 1 );
-
 		if( ultimoSegmento->finReal != memoria_size ) {
 			Segmento * segmentoFinal = new_Segmento( ultimoSegmento->finReal + 1, memoria_size );
 			list_add( lista, segmentoFinal );
@@ -144,16 +160,41 @@ t_list * crearListaEspacioDisponible() {
 
 	}
 
-	log_info( logger, "Devuelvo una lista con %d item/s", list_size( lista ) );
+	//printf("Mostrando tabla de segmentos y huequitos");
+	//printSegmentos( tabla_segmentos );
+	//printSegmentos( lista );
+
+	//log_info( logger, "Devuelvo una lista con %d item/s", list_size( lista ) );
 	return lista;
 
 }
 
+void borrarSegmento( Segmento * segmentoABorrar ) {
+	int i = 0;
+	for( i = 0; i < list_size( tabla_segmentos ); i++ ) {
+		Segmento * segmento = (Segmento *) list_get( tabla_segmentos, i );
+		if( segmento->id == segmentoABorrar->id ) {
+			list_remove( tabla_segmentos , i);
+			free( segmentoABorrar );
+			log_info( logger, "Se borro el segmento correctamente" );
+			return;
+		}
+	}
+	log_error( logger, "No pudo borrarse el segmento" );
+}
 
+uint32_t memoriaOcupada() {
+	int i = 0, sumador = 0;
+	for (i = 0; i < list_size(tabla_segmentos); i++) {
+		Segmento * segmento = (Segmento *) list_get(tabla_segmentos, i);
+		sumador += segmento->finReal - segmento->inicioReal + 1 ;
+	}
+	return sumador;
+}
 
-
-
-
+uint32_t memoriaLibre(){
+	return memoria_size - memoriaOcupada();
+}
 
 
 

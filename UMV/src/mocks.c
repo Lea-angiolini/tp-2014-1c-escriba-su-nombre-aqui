@@ -18,10 +18,19 @@ void ejecutar(){
 
 	//log_info( logger, "Creando un segmento de %d bytes", memoria_size);
 	crearSegmento( 1000 );
-	crearSegmento( 2000 );
+	Segmento * seg = crearSegmento( 2000 );
 	crearSegmento( 5 );
-	crearSegmento( 900000 );
+	borrarSegmento( seg );
+	crearSegmento( 900 );
+	crearSegmento( 75 );
+	crearSegmento( 2000 );
+	crearSegmento( 1 );
+	crearSegmento( 1 );
+	crearSegmento( 1 );
+	crearSegmento( 10 );
 
+
+	printf("MOstrando la tabla terminada \n\n");
 	printTodosSegmentos();
 
 

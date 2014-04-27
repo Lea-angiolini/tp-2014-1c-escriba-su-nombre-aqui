@@ -1,3 +1,7 @@
+#include <stdbool.h>
+
+#include "Segmento.h"
+
 #include "commons/collections/list.h"
 
 
@@ -5,10 +9,18 @@
 #define MEMORIA_H_
 
 
-t_list * crearListaEspacioDisponible();
-uint32_t crearSegmento( uint32_t tamanio );
 
-uint32_t crearSegmentoFistFit( t_list * huequitos, uint32_t tamanio );
+bool segmentoEsAnterior( void * seg1, void * seg2 );
+t_list * crearListaEspacioDisponible();
+
+Segmento * crearSegmento		( uint32_t tamanio );
+Segmento * crearSegmentoFistFit	( t_list * huequitos, uint32_t tamanio );
+Segmento * crearSegmentoWorstFit( t_list * huequitos, uint32_t tamanio );
+
+
+void borrarSegmento( Segmento * segmentoABorrar );
+uint32_t memoriaOcupada();
+uint32_t memoriaLibre();
 
 
 #endif /* MEMORIA_H_ */
