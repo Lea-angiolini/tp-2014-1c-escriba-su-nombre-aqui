@@ -20,5 +20,4 @@ typedef struct {
 	int socketPrograma;
 } cpu_info_t;
 
-
 #endif /* PCP_H_ */

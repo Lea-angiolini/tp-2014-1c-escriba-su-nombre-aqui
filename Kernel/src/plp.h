@@ -7,7 +7,6 @@
 #include "commons/pcb.h"
 
 void *IniciarPlp(void *arg);
-void *Loader(void *arg);
 
 void MoverNewAReady();
 bool sjnAlgorithm(pcb_t *a, pcb_t *b);

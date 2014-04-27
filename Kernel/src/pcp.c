@@ -17,9 +17,9 @@ extern uint8_t multiprogramacion;
 extern pthread_mutex_t multiprogramacionMutex;
 
 pthread_cond_t dispatcherCond = PTHREAD_COND_INITIALIZER;
-extern pthread_cond_t loaderCond;
 
 t_queue *cpuReadyQueue, *cpuExecQueue;
+
 
 //char** semaforos = config_get_array_value(config, "SEMAFOROS");
 //char** valor_semaforos = config_get_array_value(config, "VALOR_SEMAFORO");
@@ -101,10 +101,10 @@ void conexionCPU(int socket)
 {
 	log_info(logpcp, "Se ha conectado un CPU");
 
-	//Poner el socket en la cola de cpuReady
-	int *socketCPU = malloc(sizeof(int));
-	*socketCPU = socket;
-	queue_push(cpuReadyQueue, socketCPU);
+	//Agregandolo a la cpuReadyQueue
+	cpu_info_t *cpuInfo = malloc(sizeof(cpu_info_t));
+	cpuInfo->socketCPU = socket;
+	queue_push(cpuReadyQueue, cpuInfo);
 
 	/*
 	 * Hay que mandar QUANTUM y RETARDO al CPU
@@ -121,9 +121,6 @@ void bajarNivelMultiprogramacion()
 	pthread_mutex_lock(&multiprogramacionMutex);
 	multiprogramacion--;
 	pthread_mutex_unlock(&multiprogramacionMutex);
-
-	//Avisandole al loader del PLP que bajo el grado de multiprogramacion
-	pthread_cond_signal(&loaderCond);
 }
 
 void desconexionCPU(int socket)
@@ -148,7 +145,7 @@ void desconexionCPU(int socket)
 		log_info(logpcp, "Moviendo PCB de la cola EXEC a EXIT");
 		queue_push(exitQueue, list_remove_by_condition(execQueue, limpiarPcb));
 
-		log_info(logpcp, "Informandole a Programa que el script no se pudo concluir su ejecucion");
+		log_info(logpcp, "Informandole a Programa que el script no pudo concluir su ejecucion");
 		socket_msg msg;
 		strcpy(msg.msg, "El script no pudo concluir su ejecucion debido a la desconexion de un CPU");
 		send(cpuInfo->socketPrograma, &msg, sizeof(msg), 0);
