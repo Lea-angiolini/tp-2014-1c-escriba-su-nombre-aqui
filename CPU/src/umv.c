@@ -1,9 +1,13 @@
 #include <stdint.h>
+
 #include "commons/log.h"
 #include "commons/sockets.h"
 
 extern int conexionUMV;
 extern t_log * logger;
+
+
+
 
 
 /*
@@ -34,11 +38,6 @@ char * solicitarLineaPrograma( uint32_t programCounter ) {
     return array;
 
 }
-
-
-
-
-
 
 
 
@@ -82,6 +81,70 @@ int enviarFinQuantum( uint32_t pid ){
 
 	return 1;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+int escribirMemoria( uint32_t offset, void * valor ) {
+
+	return 1;
+}
+
+
+
+
+
+
+int armarDiccionarioVariablesDelStack() {
+	return 1;
+}
+
+
+
+int obtenerContextStack() {
+	return 1;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -19,6 +19,9 @@ typedef struct {
 
 Segmento * new_Segmento( uint32_t inicio, uint32_t fin ) ;
 
+void * memCopi( Segmento * segmento, uint32_t offset, void * valor, uint32_t length );
+void * memLeer( Segmento * segmento, void * destino, uint32_t offset, uint32_t length );
+
 
 #endif /* SEGMENTO_H_ */
 

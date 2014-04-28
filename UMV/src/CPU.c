@@ -35,6 +35,30 @@ int procesarSolicitudDeLinea( CPU * cpu, socket_obtenerLineaCodigo * solicitud )
 
 
 
+
+//En estos dos casos tiene que hacer los siguientes pasos
+// 1. Buscar el programa que esta procesando
+// 2. Obtener el segmento correspondiente al offset solicitado
+// 3. Teniendo el socket delegarle la operacion
+// 4. Responder dependiendo del estado
+
+int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud ) {
+
+	return 1;
+}
+
+
+
+
+int procesarSolicitudEscrituraMemoria( CPU * cpu, socket_guardarEnMemoria * solicitud ) {
+
+	return 1;
+}
+
+
+
+
+
 int recibirYProcesarMensajesCpu( CPU * cpu ) {
 
 	int todoSaleBien = 1;
@@ -55,7 +79,10 @@ int recibirYProcesarMensajesCpu( CPU * cpu ) {
 				todoSaleBien = procesarSolicitudDeLinea( cpu, (socket_obtenerLineaCodigo *) paquete );
 				break;
 			case 'b':
-				todoSaleBien = procesarSolicitudDeLinea( cpu, (socket_obtenerLineaCodigo *) paquete );
+				todoSaleBien = procesarSolicitudLecturaMemoria( cpu, (socket_leerMemoria *) paquete );
+				break;
+			case 'c':
+				todoSaleBien = procesarSolicitudEscrituraMemoria( cpu, (socket_guardarEnMemoria *) paquete );
 				break;
 			default:
 				//TODO decidir que hacer aca
