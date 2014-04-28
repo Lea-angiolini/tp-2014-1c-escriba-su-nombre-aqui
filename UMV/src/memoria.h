@@ -21,6 +21,10 @@ Segmento * crearSegmentoWorstFit( t_list * huequitos, uint32_t tamanio );
 void borrarSegmento( Segmento * segmentoABorrar );
 uint32_t memoriaOcupada();
 uint32_t memoriaLibre();
+void compactar();
+void moverSegmento(Segmento * segmento, int tamanio, int posicion);
+int tamanioSegmento(Segmento * segmento);
+
 
 
 #endif /* MEMORIA_H_ */

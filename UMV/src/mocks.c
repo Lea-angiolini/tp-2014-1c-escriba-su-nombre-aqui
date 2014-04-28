@@ -21,17 +21,23 @@ void ejecutar(){
 	Segmento * seg = crearSegmento( 2000 );
 	crearSegmento( 5 );
 	borrarSegmento( seg );
-	crearSegmento( 900 );
+	Segmento * seg2 = crearSegmento( 900 );
+	borrarSegmento( seg2 );
 	crearSegmento( 75 );
 	crearSegmento( 2000 );
 	crearSegmento( 1 );
-	crearSegmento( 1 );
+	Segmento * seg3 = crearSegmento( 30 );
+	borrarSegmento( seg3 );
 	crearSegmento( 1 );
 	crearSegmento( 10 );
 
 
+
 	printf("MOstrando la tabla terminada \n\n");
 	printTodosSegmentos();
+	printf("Mostrando la tabla compactada \n\n");
+	compactar();
+
 
 
 }
