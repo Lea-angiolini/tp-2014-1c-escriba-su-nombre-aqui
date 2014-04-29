@@ -8,11 +8,14 @@
 
 #include "commons/collections/list.h"
 #include "commons/log.h"
+#include "sockets.h"
 
 
 extern t_list * tabla_segmentos;
 extern uint32_t memoria_size;
 extern t_log * logger;
+
+Segmento * crearYllenarSegmento( uint32_t tamanio, segmento ); //TODO Habria que agregarle un id de tipo al segmento
 
 Segmento * crearSegmento( uint32_t tamanio ) {
 
@@ -230,7 +233,6 @@ void moverSegmento(Segmento * segmento, int tamanio, int posicion){
 int tamanioSegmento(Segmento * segmento){
 		return (segmento->finReal - segmento->inicioReal);
 }
-
 
 
 

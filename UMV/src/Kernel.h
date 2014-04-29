@@ -1,6 +1,7 @@
+#include "sockets.h"
+
 #ifndef KERNEL_H_
 #define KERNEL_H_
-
 
 typedef struct {
 
@@ -10,7 +11,10 @@ typedef struct {
 
 
 void * fnKernelConectado( void * socketPtr );
-int procesarMenssajeKernel( Kernel * kernel, char * mensaje );
+int procesarMenssajeKernel( Kernel * kernel, socket_pedirMemoria * segmentosAreservar );
+int recibirYProcesarMensajesKernel(Kernel * kernel);
+int tamanioSegmentos( socket_pedirMemoria * segmentosAreservar);
+
 
 
 
