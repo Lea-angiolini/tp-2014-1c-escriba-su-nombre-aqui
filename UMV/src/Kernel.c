@@ -35,15 +35,12 @@ int recibirYProcesarMensajesKernel(Kernel * kernel) {
 		} else {
 
 			break;
-
+			}
 		}
-
-	}
 
 	free(buffer);
 
 	return -1;
-
 }
 
 
@@ -73,42 +70,32 @@ int procesarMenssajeKernel( Kernel * kernel, socket_pedirMemoria * segmentosAres
 			int tamanioScript, tamanioEtiquetas, tamanioInstrucciones;
 			int tamanioStack = config_get_int_value(umvConfig, "TAMANIOSTACK");
 
-			datosSegmentosCreados->stackSegment = crearSegmento( tamanioStack );
+			tamanioScript = rcv( kernel->socket, &script, BUFF_SIZE, 0 );
+			tamanioEtiquetas = rcv( kernel->socket, &etiquetas, BUFF_SIZE, 0);
+			tamanioInstrucciones = rcv( kernel->socket, &instrucciones, BUFF_SIZE, 0);
 
-			if((tamanioScript = rcv( kernel->socket, &script, BUFF_SIZE, 0 )) < 0){
-				datosSegmentosCreados->codeSegment = crearYllenarSegmento( tamanioScript, script );
-				}
+			if( tamanioScript < 0 || tamanioEtiquetas < 0 || tamanioInstrucciones < 0){
+				datosSegmentosCreados->stackSegment = crearSegmento( tamanioStack);
+				datosSegmentosCreados->codeSegment = crearYllenarSegmento( tamanioScript, &script );
+				datosSegmentosCreados->etiquetaIndex = crearYllenarSegmento( tamanioEtiquetas, &etiquetas );
+				datosSegmentosCreados->codeIndex = crearYllenarSegmento( tamanioInstrucciones, &instrucciones );
+
+				if(send( kernel->socket, &datosSegmentosCreados, sizeof(datosSegmentosCreados), 0) < 0){
+							log_error( logger, "No se ha podido enviar los datos de los segmentos creados correctamente al Kernel");
+						}
 					else{
-						log_error(logger, "No se recibio el Script correctamente");
-						return -1;
+						log_info(logger, "Se ha enviado los datos de los segmentos creados correctamente al Kernel");
+						return 1;
+						}
 					}
-
-			if((tamanioEtiquetas = rcv( kernel->socket, &etiquetas, BUFF_SIZE, 0)) < 0){
-				datosSegmentosCreados->etiquetaIndex = crearYllenarSegmento( tamanioEtiquetas, etiquetas );
 				}
-					else{
-						log_error(logger, "No se recibio el Indice de Etiquetas correctamente");
-						return -1;
-						}
-
-			if((tamanioInstrucciones = rcv( kernel->socket, &instrucciones, BUFF_SIZE, 0)) < 0){
-				datosSegmentosCreados->codeIndex = crearYllenarSegmento( tamanioInstrucciones, instrucciones );
-				}
-					else{
-						log_error(logger, "No se recibio el Indice de Instrucciones correctamente");
-						return -1;
-						}
-			if(send( kernel->socket, &datosSegmentosCreados, sizeof(datosSegmentosCreados), 0) < 0){
-				log_error( logger, "No se ha podido enviar los datos de los segmentos creados correctamente al Kernel");
-			}
-		}
-
 		return 1;
-}
+	}
 
 
 int tamanioSegmentos( socket_pedirMemoria * segmentosAreservar){
-	return(segmentosAreservar->codeSegmentSize + segmentosAreservar->etiquetasSegmentSize + segmentosAreservar->instruccionesSegmentSize);
+	int tamanioStack = config_get_int_value(umvConfig, "TAMANIOSTACK");
+	return(segmentosAreservar->codeSegmentSize + segmentosAreservar->etiquetasSegmentSize + segmentosAreservar->instruccionesSegmentSize, tamanioStack);
 }
 
 

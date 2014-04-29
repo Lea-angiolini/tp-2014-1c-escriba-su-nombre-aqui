@@ -15,7 +15,13 @@ extern t_list * tabla_segmentos;
 extern uint32_t memoria_size;
 extern t_log * logger;
 
-Segmento * crearYllenarSegmento( uint32_t tamanio, segmento ); //TODO Habria que agregarle un id de tipo al segmento
+Segmento * crearYllenarSegmento( uint32_t tamanio, char * segmento ){ //TODO Habria que agregarle un id de tipo al segmento
+		Segmento * segmentoAllenar = crearSegmento( tamanio);
+		memcpy( segmentoAllenar, segmento, tamanio);
+		return segmentoAllenar;
+}
+
+
 
 Segmento * crearSegmento( uint32_t tamanio ) {
 
