@@ -1,10 +1,15 @@
-#include "commons/parser/parser.h"
-#include "commons/log.h"
-
+#include "stack.h"
 #include "primitivas.h"
 
 
+#include "commons/log.h"
+#include "commons/parser/parser.h"
+
+#include <stdint.h>
+
+
 extern t_log * logger;
+extern Stack * stackCache;
 
 
 //TODO crear ansisopKernel funciones
@@ -38,22 +43,24 @@ AnSISOP_funciones * crearAnSISOP_funciones() {
 
 t_puntero definirVariable(t_nombre_variable identificador_variable) {
 	log_debug( logger, "Llamada a definirVariable" );
-	return 32;
+	return apilarVariable( stackCache, (char *) &identificador_variable );
 }
 
 
 t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable) {
 	log_debug( logger, "Llamada a obtenerPosicionVariable" );
-	return 0;
+	return (t_puntero) obtenerOffsetVarible( stackCache, (char *) &identificador_variable );
 }
+
 
 t_valor_variable dereferenciar(t_puntero direccion_variable) {
 	log_debug( logger, "Llamada a dereferenciar" );
-	return 1;
+	return obtenerValor( stackCache, (uint32_t) direccion_variable ) ;
 }
 
 void asignar(t_puntero direccion_variable, t_valor_variable valor) {
 	log_debug( logger, "Llamada a asignar" );
+	 modificarVariable( stackCache, (uint32_t) direccion_variable, (uint32_t) valor );
 }
 
 

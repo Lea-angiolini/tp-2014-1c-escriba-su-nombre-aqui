@@ -4,9 +4,9 @@
 
 
 int escucharYEjecutarInstruccionesKernel();
-int responder_orden_ejecucion( int socket );
+int responder_orden_ejecucion( );
 int procesarMenssajeKernel( int socket, socket_header header );
-int orden_ejecucion( int socket, socket_header header ) ;
+int orden_ejecucion() ;
 
 
 #endif /* KERNEL_H_ */

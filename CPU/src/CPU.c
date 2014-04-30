@@ -19,6 +19,7 @@
 #include "commons/parser/parser.h"
 #include "commons/pcb.h"
 
+#include "stack.h"
 #include "ejecucion.h"
 #include "mocks.h"
 #include "primitivas.h"
@@ -38,6 +39,8 @@ AnSISOP_funciones * ansisop_funciones;
 pcb_t * PCB_enEjecucion;
 
 t_config * cpuConfig;
+
+Stack * stackCache;
 
 
 
@@ -93,14 +96,12 @@ int crearConexiones() {
 int main(void) {
 
 
-	logger = log_create( "log.txt", "CPU", 1, LOG_LEVEL_TRACE );
-
-	log_info( logger, "Iniciando CPU");
-	//TODO verificar errores
-	log_debug( logger, "Setando primitivas");
-	ansisop_funciones = crearAnSISOP_funciones();
-	PCB_enEjecucion = malloc( sizeof( pcb_t ) );
-
+	logger				= log_create( "log.txt", "CPU", 1, LOG_LEVEL_TRACE );
+	log_info			( logger, "Iniciando CPU");
+	log_debug			( logger, "Setando primitivas");
+	ansisop_funciones	= crearAnSISOP_funciones();
+	PCB_enEjecucion		= malloc( sizeof( pcb_t ) );
+	stackCache			= malloc( sizeof( Stack ) );
 
 	//if( leerConfig() < 0 || crearConexiones() < 0 || recibirYProcesarMensajesKernel() < 0 ) {
 	//if( leerConfig() < 0 || crearConexiones() < 0 || ejecutarPrueba() < 0 ) {
@@ -117,7 +118,7 @@ int main(void) {
 	config_destroy( cpuConfig );
 	free( PCB_enEjecucion );
 	free( ansisop_funciones );
-
+	free( stackCache );
 
 	return 0;
 

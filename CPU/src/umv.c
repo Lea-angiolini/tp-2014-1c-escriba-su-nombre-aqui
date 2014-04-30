@@ -85,34 +85,35 @@ int enviarFinQuantum( uint32_t pid ){
 
 
 
-
-
-
-
-
-
-
-
-int escribirMemoria( uint32_t offset, void * valor ) {
-
+/*
+ * Guarda en la umv el stack con el que estabamos trabajando
+ */
+int sincronizarStack(){
 	return 1;
 }
 
 
 
-
-
-
-int armarDiccionarioVariablesDelStack() {
-	return 1;
-}
-
-
-
+/*
+ * Le solicita a la UMV los datos del stack desde el contexto actual
+ * y los almacena en la "cache" del cpu.
+ */
 int obtenerContextStack() {
 	return 1;
 }
 
+
+
+/*
+ * Esto es para el caso que se llame al retorno de una funcion
+ * Necesito conseguir todos los datos del contexto anterior, entonces
+ * lo pido con esta funcion
+ *
+ */
+int obtenerContextStackAnterior(){
+	//Tiene que hacer 2 llamadas a la umv
+	return 1;
+}
 
 
 

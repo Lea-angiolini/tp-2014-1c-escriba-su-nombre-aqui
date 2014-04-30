@@ -1,3 +1,5 @@
+#include "commons/parser/parser.h"
+
 #ifndef PRIMITIVAS_H_
 #define PRIMITIVAS_H_
 

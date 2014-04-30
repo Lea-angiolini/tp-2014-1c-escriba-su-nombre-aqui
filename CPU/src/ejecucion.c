@@ -15,15 +15,16 @@ pcb_t * ejecutar () {
 
 	char a[] = "varibles a";
 	char b[] = "a=5";
-	char c[] = "print a";
-	analizadorLinea( a, ansisop_funciones, NULL );
-	//analizadorLinea( b, ansisop_funciones, NULL );
-	//analizadorLinea( c, ansisop_funciones, NULL );
+	char c[] = "imprimir a";
+	//analizadorLinea( a, ansisop_funciones, NULL );
+	analizadorLinea( b, ansisop_funciones, NULL );
+	analizadorLinea( c, ansisop_funciones, NULL );
 
 	//enviarCambioContexto( PCB_enEjecucion->id );
+	//solicitarStack()
 
 /*
-	//while( 1 ){
+	//while( quantum > 0 ){
 
 		log_debug( logger, "Solicitando linea del programa a la umv" );
 		char * instruccion = solicitarLineaPrograma( PCB_enEjecucion->programCounter );
@@ -35,6 +36,8 @@ pcb_t * ejecutar () {
 	//}
 
 */
+
+	//sincronizarStack()
 	//enviarFinQuantum( PCB_enEjecucion->id );
 
 	return PCB_enEjecucion;
