@@ -50,29 +50,44 @@ typedef struct {
 /*******************************************************************/
 
 //CPU->UMV
-typedef struct {
-	socket_header header;
-	t_nombre_variable identificador_variable;
-	t_valor_variable valor;
-}  __attribute__((packed)) socket_guardarVariable ;
 
 
 typedef struct {
 	socket_header header;
-	t_nombre_variable identificador_variable;
-}  __attribute__((packed)) socket_definirVariable ;
+	uint32_t offset;
+	uint32_t length;
+	char data[100];
+}  __attribute__((packed)) socket_guardarEnMemoria;
 
 
 typedef struct {
 	socket_header header;
-	t_nombre_variable obtenerPosicionVariable;
-	t_puntero direccion_variable;
-}  __attribute__((packed)) socket_obtenerPosicionVariable ;
+	uint32_t status;
+}  __attribute__((packed)) socket_RespuestaGuardarEnMemoria;
+
+
+typedef struct {
+	socket_header header;
+	uint32_t offset;
+	uint32_t length;
+}  __attribute__((packed)) socket_leerMemoria;
+
+
+typedef struct {
+	socket_header header;
+	uint32_t status;
+	char data[100];
+}  __attribute__((packed)) socket_RespuestaLeerMemoria;
+
+
+
+
 
 typedef struct {
 	socket_header header;
 	uint32_t numero_linea_Codigo;
 }  __attribute__((packed)) socket_obtenerLineaCodigo;
+
 
 typedef struct {
 	socket_header header;

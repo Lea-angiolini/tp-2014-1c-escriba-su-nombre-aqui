@@ -8,11 +8,20 @@
 
 #include "commons/collections/list.h"
 #include "commons/log.h"
+#include "sockets.h"
 
 
 extern t_list * tabla_segmentos;
 extern uint32_t memoria_size;
 extern t_log * logger;
+
+Segmento * crearYllenarSegmento( uint32_t tamanio, char * segmento ){ //TODO Habria que agregarle un id de tipo al segmento
+		Segmento * segmentoAllenar = crearSegmento( tamanio);
+		memcpy( segmentoAllenar, segmento, tamanio);
+		return segmentoAllenar;
+}
+
+
 
 Segmento * crearSegmento( uint32_t tamanio ) {
 
@@ -199,15 +208,37 @@ uint32_t memoriaLibre(){
 
 
 
-int compactar(){
+void compactar(){
+		ordenarTablaSegmentos();
 
-	return 1;
-
+		int tamanio;
+		Segmento * primerSegmento = (Segmento *) list_get (tabla_segmentos, 0);
+		if(primerSegmento-> inicioReal != 0){
+			tamanio = tamanioSegmento(primerSegmento);
+			moverSegmento(primerSegmento, tamanio, 0 );
+		}
+		int i = 0;
+		for(i=0; i < list_size(tabla_segmentos) - 1; i++){
+			int tamanio;
+			Segmento * segmentoMovido = (Segmento *) list_get (tabla_segmentos,i);
+			Segmento * segmentoAmover = (Segmento *) list_get( tabla_segmentos, i + 1 );
+		    tamanio = tamanioSegmento(segmentoAmover);
+			moverSegmento(segmentoAmover, tamanio, segmentoMovido->finReal + 1 );
+		}
+		log_info(logger, "Se ha compactado correctamente");
+		printTodosSegmentos();
+		return ;
 }
 
+void moverSegmento(Segmento * segmento, int tamanio, int posicion){
+	segmento->inicioReal = posicion;
+	segmento->finReal = (posicion + tamanio);
+	return;
+}
 
-
-
+int tamanioSegmento(Segmento * segmento){
+		return (segmento->finReal - segmento->inicioReal);
+}
 
 
 

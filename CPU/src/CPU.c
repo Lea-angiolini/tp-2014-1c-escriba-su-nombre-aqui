@@ -8,22 +8,23 @@
  ============================================================================
  */
 
+#include <string.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/socket.h>
 
 #include "commons/sockets.h"
 #include "commons/log.h"
 #include "commons/config.h"
 #include "commons/parser/parser.h"
 #include "commons/pcb.h"
+
 #include "ejecucion.h"
 #include "mocks.h"
-
 #include "primitivas.h"
-
 #include "kernel.h"
-#include <string.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/socket.h>
+
+
 
 
 int conexionKernel;
@@ -43,7 +44,7 @@ t_config * cpuConfig;
 int leerConfig(){
 
 	log_debug( logger, "Leyendo archivo de configuracion" );
-	cpuConfig = config_create("resources/config.cfg");
+	cpuConfig = config_create("config.cfg");
 
 	if ( !config_has_property(cpuConfig, "IPKERNEL")
 			|| !config_has_property(cpuConfig, "PUERTOKERNEL")
@@ -53,7 +54,7 @@ int leerConfig(){
 		log_error(logger, "Archivo de configuracion no valido");
 		return -1;
 	}
-
+	log_debug( logger, "Se termino de leer el archivo de configuraciones" );
 	return 1;
 }
 
@@ -102,7 +103,8 @@ int main(void) {
 
 
 	//if( leerConfig() < 0 || crearConexiones() < 0 || recibirYProcesarMensajesKernel() < 0 ) {
-	if( leerConfig() < 0 || crearConexiones() < 0 || ejecutarPrueba() < 0 ) {
+	//if( leerConfig() < 0 || crearConexiones() < 0 || ejecutarPrueba() < 0 ) {
+	if( leerConfig() < 0 || ejecutarPrueba() < 0 ) {
 		log_error( logger, "Hubo un error en el programa, finalizando :( " );
 		return -1;
 	}else{

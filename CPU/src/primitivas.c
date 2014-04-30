@@ -1,6 +1,7 @@
 #include "commons/parser/parser.h"
-#include "primitivas.h"
 #include "commons/log.h"
+
+#include "primitivas.h"
 
 
 extern t_log * logger;
@@ -32,6 +33,9 @@ AnSISOP_funciones * crearAnSISOP_funciones() {
 
 
 
+/************************************************************************************/
+
+
 t_puntero definirVariable(t_nombre_variable identificador_variable) {
 	log_debug( logger, "Llamada a definirVariable" );
 	return 32;
@@ -40,18 +44,22 @@ t_puntero definirVariable(t_nombre_variable identificador_variable) {
 
 t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable) {
 	log_debug( logger, "Llamada a obtenerPosicionVariable" );
-	return 32;
+	return 0;
 }
 
 t_valor_variable dereferenciar(t_puntero direccion_variable) {
 	log_debug( logger, "Llamada a dereferenciar" );
-	return 32;
+	return 1;
 }
 
 void asignar(t_puntero direccion_variable, t_valor_variable valor) {
 	log_debug( logger, "Llamada a asignar" );
-
 }
+
+
+
+
+/************************************************************************************/
 
 t_valor_variable obtenerValorCompartida(t_nombre_compartida variable) {
 	log_debug( logger, "Llamada a obtenerValorCompartida" );
@@ -63,11 +71,14 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
 	return 32;
 }
 
+/************************************************************************************/
 
 void irAlLabel(t_nombre_etiqueta t_nombre_etiqueta) {
 	log_debug( logger, "Llamada a irAlLabel" );
 
 }
+
+/************************************************************************************/
 
 void llamarSinRetorno(t_nombre_etiqueta etiqueta) {
 	log_debug( logger, "Llamada a llamarSinRetorno" );
@@ -89,12 +100,16 @@ void retornar(t_valor_variable retorno) {
 
 }
 
+/************************************************************************************/
+
 void imprimir(t_valor_variable valor_mostrar) {
 	log_debug( logger, "Llamada a imprimir" );
+	printf("\nANSISOP DICE: %d\n	\n", valor_mostrar);
 }
 
 void imprimirTexto(char* texto) {
 	log_debug( logger, "Llamada a imprimirTexto" );
+	printf("\nANSISOP DICE: %s\n\n", texto);
 }
 
 void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo) {
