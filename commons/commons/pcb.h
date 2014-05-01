@@ -19,9 +19,4 @@ typedef struct {
 	uint32_t lastErrorCode;	//Se guarda el codigo del error de la ultima instruccion ejecutada, 0 si no hay error
 } pcb_t;
 
-typedef struct {
-	socket_header header;
-	pcb_t pcb;
-} socket_pcb;
-
 #endif /* PCB_H_ */

@@ -41,11 +41,58 @@ typedef struct {
 	uint32_t stackSegment;
 	uint32_t codeIndex;
 	uint32_t etiquetaIndex;
-
-	//pcb->contextSize = ;
 }  __attribute__((packed)) socket_umvpcb ;
 
 
+
+/*******************************************************************/
+
+//KernelPCP->CPU
+typedef struct {
+	socket_header header; //header.code = 'c'
+	uint32_t quantum;
+	uint32_t retardo;
+}  __attribute__((packed)) socket_cpucfg ;
+
+//KernelPCP<->CPU
+typedef struct {
+	socket_header header; //header.code = 'p'
+	pcb_t pcb;
+}  __attribute__((packed)) socket_pcb;
+
+//System Calls (sc)
+//CPU<->KernelPCP
+typedef struct {
+	socket_header header; //header.code = 'o'
+	char identificador[100];
+	uint32_t valor; //Se llena solo para la respuesta
+}  __attribute__((packed)) socket_scObtenerValor;
+
+//CPU->KernelPCP (necesita respuesta del kernel?)
+typedef struct {
+	socket_header header; //header.code = 'g'
+	char identificador[100];
+	uint32_t valor;
+}  __attribute__((packed)) socket_scGrabarValor;
+
+//CPU->KernelPCP
+typedef struct {
+	socket_header header; //header.code = 'w'
+	char identificador[100];
+}  __attribute__((packed)) socket_scWait;
+
+//CPU->KernelPCP
+typedef struct {
+	socket_header header; //header.code = 's'
+	char identificador[100];
+}  __attribute__((packed)) socket_scSignal;
+
+//CPU->KernelPCP
+typedef struct {
+	socket_header header; //header.code = 'i'
+	char identificador[100];
+	uint32_t unidades;
+}  __attribute__((packed)) socket_scIO;
 
 /*******************************************************************/
 
