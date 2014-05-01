@@ -1,7 +1,7 @@
 #ifndef KERNEL_H_
 #define KERNEL_H_
 
-
+#include "commons/sockets.h"
 
 int escucharYEjecutarInstruccionesKernel();
 int responder_orden_ejecucion( );

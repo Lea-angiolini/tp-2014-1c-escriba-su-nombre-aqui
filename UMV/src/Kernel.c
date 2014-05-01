@@ -1,10 +1,13 @@
-#include "commons/log.h"
 #include "Kernel.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+
 #include "memoria.h"
-#include "sockets.h"
+
+#include "commons/log.h"
+#include "commons/sockets.h"
 
 #define BUFF_SIZE 1024
 

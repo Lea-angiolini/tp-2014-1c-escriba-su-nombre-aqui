@@ -1,5 +1,7 @@
 #include "umv.h"
 
+#include "commons/log.h"
+
 #include "commons/pcb.h"
 #include "commons/parser/parser.h"
 
