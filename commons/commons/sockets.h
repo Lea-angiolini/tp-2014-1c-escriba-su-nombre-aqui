@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include "log.h"
 #include "parser/parser.h"
+#include "pcb.h"
 
 /////////////////////////////////////////////////////////////////
 // PAQUETES DE DATOS PARA COMUNICACION ENTRE PROGRAMAS

@@ -2,7 +2,6 @@
 #define PCB_H_
 
 #include <stdint.h>
-#include "sockets.h"
 
 typedef struct {
 	uint32_t id;
