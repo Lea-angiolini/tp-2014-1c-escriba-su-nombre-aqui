@@ -83,16 +83,20 @@ void *Dispatcher(void *arg)
 
 			//Mandando informacion necesaria para que la CPU pueda empezar a trabajar
 			socket_pcb spcb;
-			spcb.header.size = sizeof(spcb);
+
+			spcb.header.code = 'p';
+			spcb.header.size = sizeof(socket_pcb);
 			spcb.pcb = *pcb;
 
-			send(cpuInfo->socketCPU, &spcb, sizeof(pcb_t), 0);
+			send(cpuInfo->socketCPU, &spcb, sizeof(socket_pcb), 0);
 
 			queue_push(cpuExecQueue, cpuInfo);
 		}
 	}
 
 	pthread_mutex_unlock(&readyQueueMutex);
+
+	log_info(logpcp, "Dispatcher Thread concluido");
 
 	return NULL;
 }
@@ -106,11 +110,16 @@ void conexionCPU(int socket)
 	cpuInfo->socketCPU = socket;
 	queue_push(cpuReadyQueue, cpuInfo);
 
-	/*
-	 * Hay que mandar QUANTUM y RETARDO al CPU
-	 */
-	//config_get_int_value(config, "QUANTUM");
-	//config_get_int_value(config, "RETARDO");
+	//Hay que mandar QUANTUM y RETARDO al CPU
+	socket_cpucfg cpucfg;
+
+	cpucfg.header.code = 'c';
+	cpucfg.header.size = sizeof(socket_cpucfg);
+
+	cpucfg.quantum = config_get_int_value(config, "QUANTUM");
+	cpucfg.retardo = config_get_int_value(config, "RETARDO");
+
+	send(socket, &cpucfg, sizeof(socket_cpucfg), 0);
 
 	//Llamanda a dispatcher para ver si hay algun trabajo pendiente para darle al CPU nuevo.
 	pthread_cond_signal(&dispatcherCond);
@@ -187,7 +196,7 @@ bool recibirYprocesarPedido(int socket, socket_header header)
 {
 	switch(header.code)
 	{
-	case 'c': //Conectado
+	case 'h': //Conectado
 		conexionCPU(socket);
 		break;
 	}
