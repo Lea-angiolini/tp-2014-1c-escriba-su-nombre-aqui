@@ -8,16 +8,16 @@
 
 #include "commons/collections/list.h"
 #include "commons/log.h"
-#include "sockets.h"
+#include "commons/sockets.h"
 
 
 extern t_list * tabla_segmentos;
 extern uint32_t memoria_size;
 extern t_log * logger;
 
-Segmento * crearYllenarSegmento( uint32_t tamanio, char * segmento ){ //TODO Habria que agregarle un id de tipo al segmento
+Segmento * crearYllenarSegmento( uint32_t tamanio, void * segmento ){ //TODO Habria que agregarle un id de tipo al segmento
 		Segmento * segmentoAllenar = crearSegmento( tamanio);
-		memcpy( segmentoAllenar, segmento, tamanio);
+		memCopi(segmentoAllenar, 0, segmento, tamanio);
 		return segmentoAllenar;
 }
 

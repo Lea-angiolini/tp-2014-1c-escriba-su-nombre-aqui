@@ -7,16 +7,11 @@ typedef struct {
 
 	int socket;
 
-} Kernel ;
+} Kernel;
 
-
-void * fnKernelConectado( void * socketPtr );
-int procesarMenssajeKernel( Kernel * kernel, socket_pedirMemoria * segmentosAreservar );
+void * fnKernelConectado(void * socketPtr);
+int procesarMenssajeKernel(Kernel * kernel,	socket_pedirMemoria * segmentosAreservar);
 int recibirYProcesarMensajesKernel(Kernel * kernel);
-int tamanioSegmentos( socket_pedirMemoria * segmentosAreservar);
-
-
-
-
+int tamanioSegmentos(socket_pedirMemoria * segmentosAreservar);
 
 #endif /* KERNEL_H_ */

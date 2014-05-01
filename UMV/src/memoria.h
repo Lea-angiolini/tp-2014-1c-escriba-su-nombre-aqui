@@ -13,7 +13,7 @@
 bool segmentoEsAnterior( void * seg1, void * seg2 );
 t_list * crearListaEspacioDisponible();
 
-Segmento * crearYllenarSegmento( uint32_t tamanio, Segmento * segmento );
+Segmento * crearYllenarSegmento( uint32_t tamanio, void * segmento );
 Segmento * crearSegmento		( uint32_t tamanio );
 Segmento * crearSegmentoFistFit	( t_list * huequitos, uint32_t tamanio );
 Segmento * crearSegmentoWorstFit( t_list * huequitos, uint32_t tamanio );
