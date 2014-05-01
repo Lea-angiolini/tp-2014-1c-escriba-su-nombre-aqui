@@ -4,18 +4,23 @@
 extern t_list * programas;
 extern t_config * umvConfig;
 
-socket_umvpcb  new_Program(uint32_t pid, void * script, void * etiquetas,
-		void * instrucciones_serializado,
-		socket_pedirMemoria * tamanioSegmentos) {
 
-	Programa * programa = malloc( sizeof(Programa));
+
+Programa *  crearPrograma(uint32_t pid, void * script, void * etiquetas,
+		void * instrucciones_serializado,
+		socket_pedirMemoria * segmentosAreservar){
+
+
+	Programa * programa = malloc( sizeof( Programa));
+
+
 	programa->pid = pid;
 
 	uint32_t tamanioStack, tamanioScript, tamanioEtiquetas,tamanioInstrucciones;
 	tamanioStack = config_get_int_value(umvConfig, "TAMANIOSTACK");
-	tamanioScript = tamanioSegmentos->codeSegmentSize;
-	tamanioEtiquetas = tamanioSegmentos->etiquetasSegmentSize;
-	tamanioInstrucciones = tamanioSegmentos->instruccionesSegmentSize;
+	tamanioScript = segmentosAreservar->codeSegmentSize;
+	tamanioEtiquetas = segmentosAreservar->etiquetasSegmentSize;
+	tamanioInstrucciones = segmentosAreservar->instruccionesSegmentSize;
 
 	programa->stack = crearSegmento(tamanioStack);
 	programa->stack->inicioVirtual = 0;
@@ -36,15 +41,20 @@ socket_umvpcb  new_Program(uint32_t pid, void * script, void * etiquetas,
 
 	list_add(programas, programa);
 
-	socket_umvpcb datosSegmentos;
-	datosSegmentos.stackSegment = programa->stack->inicioVirtual;
-	datosSegmentos.codeSegment = programa->script->inicioVirtual;
-	datosSegmentos.etiquetaIndex = programa->etiquetas->inicioVirtual;
-	datosSegmentos.codeIndex = programa->instrucciones->inicioVirtual;
+	return programa;
 
-	free(programa);
-	return datosSegmentos;
+}
 
+socket_umvpcb crearEstructuraParaPCB( Programa * programa){
+
+	    socket_umvpcb datosSegmentos;
+
+		datosSegmentos.stackSegment = programa->stack->inicioVirtual;
+		datosSegmentos.codeSegment = programa->script->inicioVirtual;
+		datosSegmentos.etiquetaIndex = programa->etiquetas->inicioVirtual;
+		datosSegmentos.codeIndex = programa->instrucciones->inicioVirtual;
+
+		return datosSegmentos;
 }
 
 Segmento * crearDireccionesVirtuales(Segmento * segmento, uint32_t tamanioSegmento, uint32_t finVirtualDelAnterior) {

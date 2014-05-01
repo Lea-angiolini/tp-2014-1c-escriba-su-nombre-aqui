@@ -103,8 +103,8 @@ int procesarMenssajeKernel(Kernel * kernel,
 			return -1;
 		}
 
-		datosSegmentos = new_Program(*pid, script, etiquetas, instrucciones,
-				segmentosAreservar);
+		Programa * programa = crearPrograma(*pid, script, etiquetas, instrucciones, segmentosAreservar);
+		datosSegmentos = crearEstructuraParaPCB( programa);
 
 		free(script);
 		free(etiquetas);
