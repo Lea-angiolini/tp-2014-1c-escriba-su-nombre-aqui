@@ -9,7 +9,6 @@
 void *IniciarPlp(void *arg);
 
 void MoverNewAReady();
-bool sjnAlgorithm(pcb_t *a, pcb_t *b);
 void puedoMoverNewAReady();
 
 bool nuevoMensaje(int socket);

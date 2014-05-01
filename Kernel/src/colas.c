@@ -10,11 +10,11 @@ pthread_mutex_t blockQueueMutex = PTHREAD_MUTEX_INITIALIZER;
 
 void crearColas()
 {
-	queue_create(newQueue);
-	queue_create(readyQueue);
-	queue_create(execQueue);
-	queue_create(exitQueue);
-	queue_create(blockQueue);
+	newQueue = queue_create();
+	readyQueue = queue_create();
+	execQueue = queue_create();
+	exitQueue = queue_create();
+	blockQueue = queue_create();
 }
 
 void destruirColas()

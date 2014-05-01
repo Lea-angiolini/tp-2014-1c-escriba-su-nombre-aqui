@@ -142,7 +142,7 @@ void desconexionCPU(int socket)
 	}
 
 	log_info(logpcp, "Verificando si el CPU desconectado estaba corriendo algun programa");
-	cpu_info_t *cpuInfo = list_remove_by_condition(cpuExecQueue, limpiarCpuExec);
+	cpu_info_t *cpuInfo = list_remove_by_condition(cpuExecQueue->elements, limpiarCpuExec);
 	if( cpuInfo != NULL )
 	{
 		log_error(logpcp, "La CPU desconectada estaba en ejecucion, abortando ejecucion de programa");
@@ -152,7 +152,7 @@ void desconexionCPU(int socket)
 		}
 
 		log_info(logpcp, "Moviendo PCB de la cola EXEC a EXIT");
-		queue_push(exitQueue, list_remove_by_condition(execQueue, limpiarPcb));
+		queue_push(exitQueue, list_remove_by_condition(execQueue->elements, limpiarPcb));
 
 		log_info(logpcp, "Informandole a Programa que el script no pudo concluir su ejecucion");
 		socket_msg msg;
@@ -169,7 +169,7 @@ void desconexionCPU(int socket)
 		bool limpiarCpuReady(cpu_info_t *cpuInfo) {
 			return cpuInfo->socketCPU == socket;
 		}
-		list_remove_and_destroy_by_condition(cpuReadyQueue, limpiarCpuReady, free);
+		list_remove_and_destroy_by_condition(cpuReadyQueue->elements, limpiarCpuReady, free);
 	}
 }
 

@@ -55,7 +55,12 @@ void *IniciarPlp(void *arg) {
 void MoverNewAReady()
 {
 	log_info(logplp, "Ordenando la cola NEW segun algoritmo de planificacion SJN");
-	list_sort(newQueue, sjnAlgorithm);
+
+	bool sjnAlgorithm(pcb_t *a, pcb_t *b)
+	{
+		return a->prioridad < b->prioridad;
+	}
+	list_sort(newQueue->elements, sjnAlgorithm);
 
 	log_info(logplp, "Moviendo PCB de la cola NEW a READY");
 	pthread_mutex_lock(&readyQueueMutex);
@@ -73,14 +78,9 @@ void puedoMoverNewAReady()
 {
 	log_info(logplp, "Verificando grado de multiprogramacion");
 
-	if(multiprogramacion < config_get_int_value(config, "MULTIPROGRAMACION")) {
+	if(multiprogramacion < config_get_int_value(config, "MULTIPROGRAMACION") && !queue_is_empty(newQueue)) {
 		MoverNewAReady();
 	}
-}
-
-bool sjnAlgorithm(pcb_t *a, pcb_t *b)
-{
-	return a->prioridad < b->prioridad;
 }
 
 void desconexionCliente()
@@ -110,7 +110,10 @@ bool nuevoMensaje(int socket) {
 
 bool recibirYprocesarScript(int socket, socket_header header) {
 	int scriptSize = header.size - sizeof(header);
-	char *script = malloc(scriptSize * sizeof(char));
+
+	char *script = malloc(scriptSize + 1);
+	memset(script, 0x00, scriptSize + 1);
+
 	int ret;
 
 	log_info(logplp, "Esperando a recibir un script ansisop");
@@ -120,9 +123,8 @@ bool recibirYprocesarScript(int socket, socket_header header) {
 		if(ret == 0) //Desconexion
 			return false;
 	} while(ret != scriptSize);
-	log_info(logplp, "Script ansisop recibido");
 
-	log_info(logplp, "Nuevo script: %d\n%.*s\n", header.size, scriptSize, script);
+	log_info(logplp, "Script ansisop recibido");
 
 	//ansisop preprocesador
 	t_medatada_program *scriptMedatada = metadatada_desde_literal(script);
@@ -131,9 +133,9 @@ bool recibirYprocesarScript(int socket, socket_header header) {
 	socket_pedirMemoria pedirMemoria;
 	pedirMemoria.header.size = sizeof(pedirMemoria);
 
-	pedirMemoria.codeSegmentSize = strlen(script);
+	pedirMemoria.codeSegmentSize = scriptSize + 1;
 	pedirMemoria.etiquetasSegmentSize = scriptMedatada->etiquetas_size;
-	pedirMemoria.instruccionesSegmentSize = scriptMedatada->instrucciones_size;
+	pedirMemoria.instruccionesSegmentSize = scriptMedatada->instrucciones_size * sizeof(t_intructions);
 
 #ifdef UMV_ENABLE
 	send(socketUMV, &pedirMemoria, sizeof(pedirMemoria), 0);
@@ -145,15 +147,17 @@ bool recibirYprocesarScript(int socket, socket_header header) {
 	recv(socketUMV, &respuesta, sizeof(respuesta), 0);
 #endif
 
+	respuesta.valor = true;
 	if(respuesta.valor == true)
 	{
 		log_info(logplp, "La UMV informo que pudo alojar la memoria necesaria para el script ansisop");
 		log_info(logplp, "Enviando a la UMV los datos a guardar en los segmentos");
 
 #ifdef UMV_ENABLE
-		send(socketUMV, script, sizeof(script), 0);
-		send(socketUMV, scriptMedatada->etiquetas, scriptMedatada->etiquetas_size, 0);
-		send(socketUMV, scriptMedatada->instrucciones_serializado, scriptMedatada->instrucciones_size * sizeof(t_intructions), 0);
+		send(socketUMV, &nextProcessId, sizeof(nextProcessId), 0);
+		send(socketUMV, script, pedirMemoria.codeSegmentSize, 0);
+		send(socketUMV, scriptMedatada->etiquetas, pedirMemoria.etiquetasSegmentSize, 0);
+		send(socketUMV, scriptMedatada->instrucciones_serializado, pedirMemoria.instruccionesSegmentSize, 0);
 #endif
 
 		socket_umvpcb umvpcb;
