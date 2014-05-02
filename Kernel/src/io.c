@@ -70,8 +70,6 @@ io_t *crear_registro(char* hioId, char* hioRetardo){
 	nuevo_registro->nombre = hioId;
 	nuevo_registro->cola = queue_create();
 	nuevo_registro->retardo = atoi(hioRetardo);
-	nuevo_registro->mutex = (pthread_mutex_t) PTHREAD_MUTEX_INITIALIZER;
-	nuevo_registro->condition = (pthread_cond_t) PTHREAD_COND_INITIALIZER;
 	pthread_mutex_init(&nuevo_registro->mutex,NULL);
 	pthread_cond_init(&nuevo_registro->condition,NULL);
 	pthread_create(&(nuevo_registro->thread), NULL, &hilo_io,(void *)nuevo_registro);
