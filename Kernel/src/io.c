@@ -18,15 +18,15 @@ void *hilo_io(void *ptr){
 			pthread_cond_wait(&parametros->condition,&parametros->mutex);
 
 	//saco el primer elemento de la cola para activarlo
-	data_cola_t *elemento_activo = queue_pop(parametros->cola);
+	//data_cola_t *elemento_activo = queue_pop(parametros->cola);
 
 	//hay que ver el tiempo ese, porque es en segundos!!!!
-	sleep(elemento_activo->tiempo);
+	//sleep(elemento_activo->tiempo);
 
 	//Saco el pcb de la cola de bloqueados y la pongo en la cola de ready
-	pcb_t pcb_blocked_to_ready = list_find(BlockedQueue,condicion);
-	list_remove(BlockedQueue, indexComoSeBusque);
-	queue_push(ReadyQueue,pcb_blocked_to_ready);
+	//pcb_t pcb_blocked_to_ready = list_find(BlockedQueue,condicion);
+	//list_remove(BlockedQueue, indexComoSeBusque);
+	//queue_push(ReadyQueue,pcb_blocked_to_ready);
 
 	pthread_mutex_unlock(&parametros->mutex);
 
