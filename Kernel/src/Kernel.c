@@ -7,11 +7,14 @@
 #include "colas.h"
 
 #include "commons/config.h"
+//#include "commons/collections/list.h"
 
 #include <stdint.h>
 #include <stdbool.h>
 
 t_config *config;
+//t_list *dispositivos_io;
+
 const char cofig_properties[][25] = {
 	"PUERTO_PROG", "PUERTO_CPU", "QUANTUM", "RETARDO",
 	"MULTIPROGRAMACION", "SEMAFOROS", "VALOR_SEMAFORO",
@@ -47,6 +50,11 @@ int main(int argc, char *argv[]) {
 		return EXIT_SUCCESS;
 	}
 
+	//char** hioId = config_get_array_value(config, "ID_HIO");
+	//char** hioRetardo = config_get_array_value(config, "HIO");
+
+	//dispositivos_io = armar_lista_dispositivos(hioId,hioRetardo);
+
 	crearColas();
 
 	pthread_t plpThread, pcpThread;
@@ -56,9 +64,6 @@ int main(int argc, char *argv[]) {
 
 	pthread_join(plpThread, NULL);
 	pthread_join(pcpThread, NULL);
-
-	//char** hio = config_get_array_value(config, "HIO");
-	//char** hioId = config_get_array_value(config, "ID_HIO");
 
 
 	destruirColas();
