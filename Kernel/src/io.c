@@ -4,7 +4,7 @@
 #include <unistd.h>
 
 #include "io.h"
-#include "colas.c"
+#include "colas.h"
 #include "commons/pcb.h"
 
 struct data_cola{
