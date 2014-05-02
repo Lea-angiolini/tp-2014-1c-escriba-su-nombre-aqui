@@ -19,8 +19,10 @@
 	typedef struct io io_t;
 
 	t_list *armar_lista_dispositivos(char** hioId, char** hio);
+	//estos eran para probar algo
 	char* id_dispositivo(io_t *registro);
-	int ret_dispositivo(io_t *registro);
+	int ret_dispositivo(io_t *registro
+	//
 	void *hilo_io(void *ptr);
 	io_t *crear_registro(char* hioId, char* hioRetardo);
 
