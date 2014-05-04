@@ -13,6 +13,6 @@ void puedoMoverNewAReady();
 
 bool nuevoMensaje(int socket);
 void desconexionCliente();
-bool recibirYprocesarScript(int socket, socket_header header);
+bool recibirYprocesarScript(int socket);
 
 #endif /* PLP_H_ */

@@ -91,16 +91,7 @@ void desconexionCliente()
 
 
 bool nuevoMensaje(int socket) {
-	socket_header header;
-	int rc = recv(socket, &header, sizeof(header), 0);
-
-	if (rc < 0) {
-		if (errno != EWOULDBLOCK) {
-			return false;
-		}
-	}
-
-	if (rc == 0 || recibirYprocesarScript(socket, header) == false) {
+	if (recibirYprocesarScript(socket) == false) {
 		desconexionCliente();
 		return false;
 	}
@@ -108,21 +99,21 @@ bool nuevoMensaje(int socket) {
 	return true;
 }
 
-bool recibirYprocesarScript(int socket, socket_header header) {
+bool recibirYprocesarScript(int socket) {
+	socket_header header;
+
+	if( recv(socket, &header, sizeof(header), MSG_WAITALL) <= 0 )
+		return false;
+
 	int scriptSize = header.size - sizeof(header);
 
 	char *script = malloc(scriptSize + 1);
 	memset(script, 0x00, scriptSize + 1);
 
-	int ret;
-
 	log_info(logplp, "Esperando a recibir un script ansisop");
-	do {
-		ret = recv(socket, script, scriptSize, 0);
 
-		if(ret == 0) //Desconexion
-			return false;
-	} while(ret != scriptSize);
+	if( recv(socket, script, scriptSize, MSG_WAITALL) <= 0 )
+		return false;
 
 	log_info(logplp, "Script ansisop recibido");
 
