@@ -1,29 +1,25 @@
 #ifndef IO_H_
 #define IO_H_
 
-	#include <pthread.h>
-	#include "commons/collections/list.h"
-	#include "commons/collections/queue.h"
+#include <pthread.h>
+#include "commons/collections/list.h"
+#include "commons/collections/queue.h"
 
 
 
-	 struct io{
-		char* nombre;
-		int retardo;
-		pthread_t thread;
-		t_queue *cola;
-		pthread_mutex_t mutex;
-		pthread_cond_t condition;
-	};
+ struct io{
+	char* nombre;
+	int retardo;
+	pthread_t thread;
+	t_queue *cola;
+	pthread_mutex_t mutex;
+	pthread_cond_t condition;
+};
 
-	typedef struct io io_t;
+typedef struct io io_t;
 
-	t_list *armar_lista_dispositivos(char** hioId, char** hio);
-	//estos eran para probar algo
-	char* id_dispositivo(io_t *registro);
-	int ret_dispositivo(io_t *registro);
-	//
-	void *hilo_io(void *ptr);
-	io_t *crear_registro(char* hioId, char* hioRetardo);
+t_list *armar_lista_dispositivos(char** hioId, char** hio);
+void *hilo_io(void *ptr);
+io_t *crear_registro(char* hioId, char* hioRetardo);
 
 #endif /* IO_H_ */
