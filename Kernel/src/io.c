@@ -7,11 +7,8 @@
 #include "colas.h"
 #include "commons/pcb.h"
 
-struct data_cola{
-	uint32_t pid;
-	uint32_t tiempo;
-};
-typedef struct data_cola data_cola_t;
+extern t_config *config;
+t_list *lista_dispositivos;
 
 void *hilo_io(void *ptr){
 	io_t *parametros = (io_t *) ptr;
@@ -46,26 +43,21 @@ void *hilo_io(void *ptr){
 	}
 	pthread_mutex_unlock(&parametros->mutex);
 
-	return(0);
+	return 0;
 }
 
-t_list *armar_lista_dispositivos (char** hioId, char** hioRetardo){
+void armar_lista_dispositivos() {
+	char** hioId = config_get_array_value(config, "ID_HIO");
+	char** hioRetardo = config_get_array_value(config, "HIO");
 
-	t_list *lista_dispositivos;
 	lista_dispositivos = list_create();
 
-	int i ;
+	int i;
 
-	for(i=0;hioId[i] != NULL;i++){
+	for(i = 0; hioId[i] != NULL; i++) {
 		io_t *registro_hio = crear_registro(hioId[i], hioRetardo[i]);
 		list_add(lista_dispositivos,registro_hio);
 	}
-
-
-
-
-
-	return (lista_dispositivos);
 }
 
 
@@ -79,9 +71,10 @@ io_t *crear_registro(char* hioId, char* hioRetardo){
 	nuevo_registro->nombre = hioId;
 	nuevo_registro->cola = queue_create();
 	nuevo_registro->retardo = atoi(hioRetardo);
-	pthread_mutex_init(&nuevo_registro->mutex,NULL);
-	pthread_cond_init(&nuevo_registro->condition,NULL);
-	pthread_create(&(nuevo_registro->thread), NULL, &hilo_io,(void *)nuevo_registro);
+
+	pthread_mutex_init(&nuevo_registro->mutex, NULL);
+	pthread_cond_init(&nuevo_registro->condition, NULL);
+	pthread_create(&(nuevo_registro->thread), NULL, &hilo_io, (void *)nuevo_registro);
 
 	return nuevo_registro;
 }

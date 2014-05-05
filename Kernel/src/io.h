@@ -2,23 +2,27 @@
 #define IO_H_
 
 #include <pthread.h>
+#include "commons/config.h"
 #include "commons/collections/list.h"
 #include "commons/collections/queue.h"
 
-
-
- struct io{
+ typedef struct {
 	char* nombre;
 	int retardo;
 	pthread_t thread;
 	t_queue *cola;
 	pthread_mutex_t mutex;
 	pthread_cond_t condition;
-};
+} io_t;
 
-typedef struct io io_t;
+typedef struct {
+	uint32_t pid;
+	uint32_t tiempo;
+} data_cola_t;
 
-t_list *armar_lista_dispositivos(char** hioId, char** hio);
+extern t_list *lista_dispositivos;
+
+void armar_lista_dispositivos();
 void *hilo_io(void *ptr);
 io_t *crear_registro(char* hioId, char* hioRetardo);
 

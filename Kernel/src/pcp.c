@@ -13,7 +13,7 @@
 t_log *logpcp;
 extern t_config *config;
 
-extern uint8_t multiprogramacion;
+extern uint32_t multiprogramacion;
 extern pthread_mutex_t multiprogramacionMutex;
 
 pthread_cond_t dispatcherCond = PTHREAD_COND_INITIALIZER;

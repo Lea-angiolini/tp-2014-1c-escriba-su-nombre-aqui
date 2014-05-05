@@ -19,7 +19,7 @@ extern t_config *config;
 extern pthread_cond_t dispatcherCond;
 
 uint32_t nextProcessId = 1;
-uint8_t multiprogramacion = 0;
+uint32_t multiprogramacion = 0;
 pthread_mutex_t multiprogramacionMutex = PTHREAD_MUTEX_INITIALIZER;
 
 int socketUMV;
@@ -100,6 +100,7 @@ bool nuevoMensaje(int socket) {
 }
 
 bool recibirYprocesarScript(int socket) {
+	//Pidiendo script ansisop
 	socket_header header;
 
 	if( recv(socket, &header, sizeof(header), MSG_WAITALL) <= 0 )
@@ -121,6 +122,7 @@ bool recibirYprocesarScript(int socket) {
 	t_medatada_program *scriptMedatada = metadatada_desde_literal(script);
 
 	log_info(logplp, "Pidiendole memoria a la UMV para que pueda correr el script ansisop");
+
 	socket_pedirMemoria pedirMemoria;
 	pedirMemoria.header.size = sizeof(pedirMemoria);
 
@@ -180,6 +182,7 @@ bool recibirYprocesarScript(int socket) {
 	} else {
 		log_error(logplp, "La UMV informo que no pudo alojar la memoria necesaria para el script ansisop");
 		log_info(logplp, "Informandole a Programa que el script no se puede procesar por el momento");
+
 		socket_msg msg;
 		strcpy(msg.msg, "No hay memoria suficiente en este momento para ejecutar este script. Intentelo mas tarde");
 		send(socket, &msg, sizeof(msg), 0);
