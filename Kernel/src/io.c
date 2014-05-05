@@ -19,23 +19,27 @@ void *hilo_io(void *ptr){
 
 	while(1){
 
-	pthread_cond_wait(&parametros->condition,&parametros->mutex);
+		pthread_cond_wait(&parametros->condition,&parametros->mutex);
 
-	//saco el primer elemento de la cola del dispositivo para activarlo
-	data_cola_t *orden_activa = queue_pop(parametros->cola);
+		//saco el primer elemento de la cola del dispositivo para activarlo
+		data_cola_t *orden_activa = queue_pop(parametros->cola);
 
-	//aplico el retardo
-	usleep((orden_activa->tiempo) * (parametros->retardo));
+		//aplico el retardo
+		usleep((orden_activa->tiempo) * (parametros->retardo));
 
-	//funcion usada como condicion para buscar el pcb correspondiente en la blockQueue
-	bool matchearPCB (pcb_t *pcb){
-		return (pcb->id == orden_activa->pid);
-	}
+		//funcion usada como condicion para buscar el pcb correspondiente en la blockQueue
+		bool matchearPCB (pcb_t *pcb){
+			return (pcb->id == orden_activa->pid);
+		}
+	
+		//Saco el pcb de la cola de bloqueados y la pongo en la cola de ready
+		pthread_mutex_lock(&blockQueueMutex);
+		pcb_t *pcb_blocked_to_ready = list_remove_by_condition(blockQueue->elements,matchearPCB);
+		pthread_mutex_unlock(&blockQueueMutex);
 
-	//Saco el pcb de la cola de bloqueados y la pongo en la cola de ready
-	pcb_t *pcb_blocked_to_ready = list_remove_by_condition(blockQueue->elements,matchearPCB);
-
-	queue_push(readyQueue,pcb_blocked_to_ready);
+		pthread_mutex_lock(&readyQueueMutex);
+		queue_push(readyQueue,pcb_blocked_to_ready);
+		pthread_mutex_unlock(&readyQueueMutex);
 
 
 
@@ -45,28 +49,10 @@ void *hilo_io(void *ptr){
 	return(0);
 }
 
-char* id_dispositivo(io_t *registro){
-	return registro->nombre;
-}
-int ret_dispositivo(io_t *registro){
-	return registro->retardo;
-}
-
 t_list *armar_lista_dispositivos (char** hioId, char** hioRetardo){
 
 	t_list *lista_dispositivos;
 	lista_dispositivos = list_create();
-
-	//if(sizeof(hioId)){
-	//	int i = 0;
-
-	//	for(;i<(sizeof(hioId)-1);i++){
-	//		io_t *registro_hio = crear_registro(hioId[i], hioRetardo[i]);
-	//		list_add(lista_dispositivos,registro_hio);
-	//	}
-
-
-	//}
 
 	int i ;
 
@@ -88,7 +74,8 @@ io_t *crear_registro(char* hioId, char* hioRetardo){
 	//creo el registro del dispositivo io que va incluido en
 	//la lista de dispositivos
 	io_t *nuevo_registro = malloc(sizeof(io_t));
-
+	
+	//le asigno los datos al registro
 	nuevo_registro->nombre = hioId;
 	nuevo_registro->cola = queue_create();
 	nuevo_registro->retardo = atoi(hioRetardo);
