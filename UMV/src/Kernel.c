@@ -9,12 +9,12 @@
 
 #include "commons/log.h"
 #include "commons/sockets.h"
-#include "commons/config.h"
+
 
 #define BUFF_SIZE 1024
 
 extern t_log * logger;
-extern t_config * umvConfig;
+
 
 //TODO se podria reusar lo de cpu ??
 int recibirYProcesarMensajesKernel(Kernel * kernel) {
@@ -78,7 +78,7 @@ int procesarMenssajeKernel(Kernel * kernel,
 		tamanioEtiquetas = segmentosAreservar->etiquetasSegmentSize;
 		tamanioInstrucciones = segmentosAreservar->instruccionesSegmentSize;
 
-		char * script = malloc(tamanioScript);
+		void * script = malloc(tamanioScript);
 		void * etiquetas = malloc(tamanioEtiquetas);
 		void * instrucciones = malloc(tamanioInstrucciones);
 		uint32_t * pid = malloc(sizeof(uint32_t));
@@ -125,11 +125,9 @@ int procesarMenssajeKernel(Kernel * kernel,
 }
 
 int tamanioSegmentos(socket_pedirMemoria * segmentosAreservar) {
-	int tamanioStack;
-	tamanioStack = config_get_int_value(umvConfig, "TAMANIOSTACK");
 	return (segmentosAreservar->codeSegmentSize
 			+ segmentosAreservar->etiquetasSegmentSize
-			+ segmentosAreservar->instruccionesSegmentSize + tamanioStack);
+			+ segmentosAreservar->instruccionesSegmentSize + segmentosAreservar->stackSegmentSize);
 }
 
 void * fnKernelConectado(void * socketPtr) {

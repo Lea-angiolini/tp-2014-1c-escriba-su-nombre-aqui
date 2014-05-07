@@ -30,7 +30,8 @@ typedef struct {
 //KernelPLP->UMV
 typedef struct {
 	socket_header header;
-	uint32_t codeSegmentSize; //Segmento codigo literal ansisop
+	uint32_t codeSegmentSize;//Segmento codigo literal ansisop
+	uint32_t stackSegmentSize;
 	uint32_t etiquetasSegmentSize; //Segmento de indice de etiquetas
 	uint32_t instruccionesSegmentSize; //Segmento de indice de codigo
 }  __attribute__((packed)) socket_pedirMemoria ;
@@ -102,6 +103,7 @@ typedef struct {
 
 typedef struct {
 	socket_header header;
+	uint32_t pdi;
 	uint32_t offset;
 	uint32_t length;
 	char data[100];
@@ -110,12 +112,14 @@ typedef struct {
 
 typedef struct {
 	socket_header header;
+	uint32_t pdi;
 	uint32_t status;
 }  __attribute__((packed)) socket_RespuestaGuardarEnMemoria;
 
 
 typedef struct {
 	socket_header header;
+	uint32_t pdi;
 	uint32_t offset;
 	uint32_t length;
 }  __attribute__((packed)) socket_leerMemoria;
@@ -123,6 +127,7 @@ typedef struct {
 
 typedef struct {
 	socket_header header;
+	uint32_t pdi;
 	uint32_t status;
 	char data[100];
 }  __attribute__((packed)) socket_RespuestaLeerMemoria;
@@ -132,6 +137,7 @@ typedef struct {
 
 
 typedef struct {
+	uint32_t pdi;
 	socket_header header;
 	uint32_t numero_linea_Codigo;
 }  __attribute__((packed)) socket_obtenerLineaCodigo;
@@ -139,6 +145,7 @@ typedef struct {
 
 typedef struct {
 	socket_header header;
+	uint32_t pdi;
 	uint32_t numero_linea_Codigo;
 	char lineaCodigo[1024];
 }  __attribute__((packed)) socket_responderLineaCodigo;

@@ -2,7 +2,7 @@
 #include "memoria.h"
 
 extern t_list * programas;
-extern t_config * umvConfig;
+
 
 
 
@@ -17,8 +17,8 @@ Programa *  crearPrograma(uint32_t pid, void * script, void * etiquetas,
 	programa->pid = pid;
 
 	uint32_t tamanioStack, tamanioScript, tamanioEtiquetas,tamanioInstrucciones;
-	tamanioStack = config_get_int_value(umvConfig, "TAMANIOSTACK");
 	tamanioScript = segmentosAreservar->codeSegmentSize;
+	tamanioStack = segmentosAreservar->stackSegmentSize;
 	tamanioEtiquetas = segmentosAreservar->etiquetasSegmentSize;
 	tamanioInstrucciones = segmentosAreservar->instruccionesSegmentSize;
 
