@@ -7,7 +7,7 @@ t_log *logpcp;
 extern uint32_t multiprogramacion;
 extern pthread_mutex_t multiprogramacionMutex;
 
-pthread_cond_t dispatcherCond = PTHREAD_COND_INITIALIZER;
+sem_t dispatcherReady, dispatcherCpu;
 
 void *IniciarPcp(void *arg)
 {
@@ -29,18 +29,24 @@ void *IniciarPcp(void *arg)
 }
 
 /*
- * Para activar este hilo usar la siguiente instruccion
- * pthread_cond_signal(&dispatcherCond);
+ * Para activar este hilo usar las siguientes instrucciones
+ * sem_post(&dispatcherReady);
+ * sem_post(&dispatcherCpu);
  */
 void *Dispatcher(void *arg)
 {
 	log_info(logpcp, "Dispatcher Thread iniciado");
 
-	pthread_mutex_lock(&readyQueueMutex);
+	sem_init(&dispatcherReady, 0, 0);
+	sem_init(&dispatcherCpu, 0, 0);
 
 	while(1)
 	{
-		pthread_cond_wait(&dispatcherCond, &readyQueueMutex);
+		sem_wait(&dispatcherReady);
+		sem_wait(&dispatcherCpu);
+
+		pthread_mutex_lock(&readyQueueMutex);
+
 		log_info(logpcp, "Dispatcher invocado");
 
 		/*
@@ -70,9 +76,12 @@ void *Dispatcher(void *arg)
 
 			queue_push(cpuExecQueue, cpuInfo);
 		}
+
+		pthread_mutex_unlock(&readyQueueMutex);
 	}
 
-	pthread_mutex_unlock(&readyQueueMutex);
+	sem_destroy(&dispatcherReady);
+	sem_destroy(&dispatcherCpu);
 
 	log_info(logpcp, "Dispatcher Thread concluido");
 
@@ -100,7 +109,7 @@ void conexionCPU(int socket)
 	send(socket, &cpucfg, sizeof(socket_cpucfg), 0);
 
 	//Llamanda a dispatcher para ver si hay algun trabajo pendiente para darle al CPU nuevo.
-	pthread_cond_signal(&dispatcherCond);
+	sem_post(&dispatcherCpu);
 }
 
 void bajarNivelMultiprogramacion()

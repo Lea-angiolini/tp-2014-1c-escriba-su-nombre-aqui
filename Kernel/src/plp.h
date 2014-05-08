@@ -3,8 +3,9 @@
 
 #include <stdio.h>
 #include <stdbool.h>
-#include <pthread.h>
 #include <sys/socket.h>
+#include <pthread.h>
+#include <semaphore.h>
 
 #include "commons/log.h"
 #include "commons/config.h"

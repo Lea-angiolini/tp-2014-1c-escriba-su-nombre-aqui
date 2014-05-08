@@ -5,11 +5,12 @@
 #define CALCULAR_PRIORIDAD(e,f,t) (5 * e + 3 * f + t)
 
 t_log *logplp;
-extern pthread_cond_t dispatcherCond;
 
 uint32_t nextProcessId = 1;
 uint32_t multiprogramacion = 0;
 pthread_mutex_t multiprogramacionMutex = PTHREAD_MUTEX_INITIALIZER;
+
+extern sem_t dispatcherReady;
 
 int socketUMV;
 
@@ -59,7 +60,7 @@ void MoverNewAReady()
 	pthread_mutex_unlock(&readyQueueMutex);
 
 	//Llamada a dispatcher del PCP para avisar que hay un nuevo trabajo pendiente
-	pthread_cond_signal(&dispatcherCond);
+	sem_post(&dispatcherReady);
 }
 
 void puedoMoverNewAReady()

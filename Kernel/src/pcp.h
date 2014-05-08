@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <sys/socket.h>
 #include <pthread.h>
+#include <semaphore.h>
 
 #include "commons/sockets.h"
 #include "commons/pcb.h"
