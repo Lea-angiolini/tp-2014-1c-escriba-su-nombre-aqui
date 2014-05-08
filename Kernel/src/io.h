@@ -20,9 +20,6 @@ typedef struct {
 	uint32_t tiempo;
 } data_cola_t;
 
-extern t_list *lista_dispositivos;
-
-void armar_lista_dispositivos();
 void *hilo_io(void *ptr);
 io_t *crear_registro(char* hioId, char* hioRetardo);
 

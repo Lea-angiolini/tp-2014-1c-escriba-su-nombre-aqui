@@ -13,7 +13,10 @@ extern t_queue *blockQueue; //Las usa el PCP y el IO
 extern pthread_mutex_t readyQueueMutex;
 extern pthread_mutex_t blockQueueMutex;
 
-void crearColas();
-void destruirColas();
+extern t_queue *cpuReadyQueue;
+extern t_queue *cpuExecQueue;
+
+void crear_colas();
+void destruir_colas();
 
 #endif /* COLAS_H_ */

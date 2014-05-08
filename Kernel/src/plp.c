@@ -1,21 +1,10 @@
 #include "plp.h"
 #include "colas.h"
-#include <stdio.h>
-#include <stdbool.h>
-#include <sys/socket.h>
-#include <errno.h>
-#include <pthread.h>
-
-#include "commons/log.h"
-#include "commons/config.h"
-#include "commons/sockets.h"
-#include "commons/pcb.h"
-#include "commons/parser/metadata_program.h"
+#include "config.h"
 
 #define CALCULAR_PRIORIDAD(e,f,t) (5 * e + 3 * f + t)
 
 t_log *logplp;
-extern t_config *config;
 extern pthread_cond_t dispatcherCond;
 
 uint32_t nextProcessId = 1;
@@ -23,7 +12,6 @@ uint32_t multiprogramacion = 0;
 pthread_mutex_t multiprogramacionMutex = PTHREAD_MUTEX_INITIALIZER;
 
 int socketUMV;
-
 
 
 void *IniciarPlp(void *arg) {

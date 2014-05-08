@@ -5,10 +5,9 @@
 
 #include "io.h"
 #include "colas.h"
+#include "config.h"
 #include "commons/pcb.h"
 
-extern t_config *config;
-t_list *lista_dispositivos;
 
 void *hilo_io(void *ptr){
 	io_t *parametros = (io_t *) ptr;
@@ -45,21 +44,6 @@ void *hilo_io(void *ptr){
 
 	return 0;
 }
-
-void armar_lista_dispositivos() {
-	char** hioId = config_get_array_value(config, "ID_HIO");
-	char** hioRetardo = config_get_array_value(config, "HIO");
-
-	lista_dispositivos = list_create();
-
-	int i;
-
-	for(i = 0; hioId[i] != NULL; i++) {
-		io_t *registro_hio = crear_registro(hioId[i], hioRetardo[i]);
-		list_add(lista_dispositivos,registro_hio);
-	}
-}
-
 
 io_t *crear_registro(char* hioId, char* hioRetardo){
 

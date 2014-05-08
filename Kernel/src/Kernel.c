@@ -5,36 +5,7 @@
 #include "pcp.h"
 #include "io.h"
 #include "colas.h"
-
-#include "commons/config.h"
-
-#include <stdint.h>
-#include <stdbool.h>
-
-t_config *config;
-
-const char cofig_properties[][25] = {
-	"PUERTO_PROG", "PUERTO_CPU", "QUANTUM", "RETARDO",
-	"MULTIPROGRAMACION", "SEMAFOROS", "VALOR_SEMAFORO",
-	"HIO", "ID_HIO", "VARIABLES_COMPARTIDAS",
-	"IP_UMV", "PUERTO_UMV", "STACK_SIZE"
-};
-
-bool validar_configuracion()
-{
-	bool ret = true;
-	int elements = sizeof(cofig_properties)/sizeof(cofig_properties[0]);
-	int i;
-
-	for(i = 0; i < elements; i++) {
-		if( !config_has_property(config, &cofig_properties[i]) ) {
-			ret = false;
-			break;
-		}
-	}
-
-	return ret;
-}
+#include "config.h"
 
 int main(int argc, char *argv[]) {
 	if (argc != 2) {
@@ -42,15 +13,12 @@ int main(int argc, char *argv[]) {
 		return EXIT_SUCCESS;
 	}
 
-	config = config_create(argv[1]);
-	if( !validar_configuracion() ) {
+	if( !cargar_config(argv[1]) ) {
 		printf("Archivo de configuracion invalido\n");
 		return EXIT_SUCCESS;
 	}
 
-	armar_lista_dispositivos();
-
-	crearColas();
+	crear_colas();
 
 	pthread_t plpThread, pcpThread;
 
@@ -60,8 +28,8 @@ int main(int argc, char *argv[]) {
 	pthread_join(plpThread, NULL);
 	pthread_join(pcpThread, NULL);
 
-	destruirColas();
-	config_destroy(config);
+	destruir_colas();
+	destruir_config();
 
 	return EXIT_SUCCESS;
 }

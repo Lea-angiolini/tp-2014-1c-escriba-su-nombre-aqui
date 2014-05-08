@@ -1,37 +1,18 @@
 #include "pcp.h"
 #include "colas.h"
-
-#include <stdio.h>
-#include <sys/socket.h>
-#include <sys/errno.h>
-#include <pthread.h>
-
-#include "commons/log.h"
-#include "commons/config.h"
-
+#include "config.h"
 
 t_log *logpcp;
-extern t_config *config;
 
 extern uint32_t multiprogramacion;
 extern pthread_mutex_t multiprogramacionMutex;
 
 pthread_cond_t dispatcherCond = PTHREAD_COND_INITIALIZER;
 
-t_queue *cpuReadyQueue, *cpuExecQueue;
-
-
-//char** semaforos = config_get_array_value(config, "SEMAFOROS");
-//char** valor_semaforos = config_get_array_value(config, "VALOR_SEMAFORO");
-//char** variablesCompartidas = config_get_array_value(config, "VARIABLES_COMPARTIDAS");
-
 void *IniciarPcp(void *arg)
 {
 	logpcp = log_create("log_pcp.txt", "KernelPCP", 1, LOG_LEVEL_TRACE);
 	log_info(logpcp, "Thread iniciado");
-
-	cpuReadyQueue = queue_create();
-	cpuExecQueue = queue_create();
 
 	pthread_t dispatcherThread;
 	pthread_create(&dispatcherThread, NULL, &Dispatcher, NULL);
@@ -41,9 +22,6 @@ void *IniciarPcp(void *arg)
 	}
 
 	pthread_join(&dispatcherThread, NULL);
-
-	queue_destroy_and_destroy_elements(cpuReadyQueue, free);
-	queue_destroy_and_destroy_elements(cpuExecQueue, free);
 
 	log_info(logpcp, "Thread concluido");
 	log_destroy(logpcp);
