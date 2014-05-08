@@ -155,10 +155,12 @@ void desconexionCPU(int socket)
 		queue_push(exitQueue, list_remove_by_condition(execQueue->elements, limpiarPcb));
 
 		log_info(logpcp, "Informandole a Programa que el script no pudo concluir su ejecucion");
+
 		socket_msg msg;
+
 		strcpy(msg.msg, "El script no pudo concluir su ejecucion debido a la desconexion de un CPU");
 		send(cpuInfo->socketPrograma, &msg, sizeof(msg), 0);
-		close(cpuInfo->socketPrograma);
+		shutdown(cpuInfo->socketPrograma, SHUT_RDWR);
 
 		free(cpuInfo);
 		bajarNivelMultiprogramacion();
@@ -175,16 +177,8 @@ void desconexionCPU(int socket)
 
 
 bool nuevoMensajeCPU(int socket) {
-	socket_header header;
-	int rc = recv(socket, &header, sizeof(header), 0);
 
-	if (rc < 0) {
-		if (errno != EWOULDBLOCK) {
-			return false;
-		}
-	}
-
-	if (rc == 0 || recibirYprocesarPedido(socket, header) == false) {
+	if ( recibirYprocesarPedido(socket) == false ) {
 		desconexionCPU(socket);
 		return false;
 	}
@@ -192,8 +186,11 @@ bool nuevoMensajeCPU(int socket) {
 	return true;
 }
 
-bool recibirYprocesarPedido(int socket, socket_header header)
+bool recibirYprocesarPedido(int socket)
 {
+	socket_header header;
+	recv(socket, &header, sizeof(header), MSG_WAITALL | MSG_PEEK);
+
 	switch(header.code)
 	{
 	case 'h': //Conectado

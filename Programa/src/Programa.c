@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
 
 	socket_msg msg;
 
-	while (recv(sock, &msg, sizeof(msg), 0) > 0)
+	while (recv(sock, &msg, sizeof(msg), MSG_WAITALL) > 0)
 		log_info(log, "%s", msg.msg);
 
 	log_info(log, "Desconectado del servidor");

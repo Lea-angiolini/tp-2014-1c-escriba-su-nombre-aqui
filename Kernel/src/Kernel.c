@@ -17,7 +17,7 @@ const char cofig_properties[][25] = {
 	"PUERTO_PROG", "PUERTO_CPU", "QUANTUM", "RETARDO",
 	"MULTIPROGRAMACION", "SEMAFOROS", "VALOR_SEMAFORO",
 	"HIO", "ID_HIO", "VARIABLES_COMPARTIDAS",
-	"IP_UMV", "PUERTO_UMV"
+	"IP_UMV", "PUERTO_UMV", "STACK_SIZE"
 };
 
 bool validar_configuracion()

@@ -13,7 +13,7 @@ void bajarNivelMultiprogramacion();
 void conexionCPU(int socket);
 void desconexionCPU(int socket);
 bool nuevoMensajeCPU(int socket);
-bool recibirYprocesarPedido(int socket, socket_header header);
+bool recibirYprocesarPedido(int socket);
 
 typedef struct {
 	int socketCPU;

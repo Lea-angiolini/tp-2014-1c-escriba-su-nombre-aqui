@@ -127,6 +127,7 @@ bool recibirYprocesarScript(int socket) {
 	pedirMemoria.header.size = sizeof(pedirMemoria);
 
 	pedirMemoria.codeSegmentSize = scriptSize + 1;
+	pedirMemoria.stackSegmentSize = config_get_int_value(config, "STACK_SIZE");
 	pedirMemoria.etiquetasSegmentSize = scriptMedatada->etiquetas_size;
 	pedirMemoria.instruccionesSegmentSize = scriptMedatada->instrucciones_size * sizeof(t_intructions);
 
@@ -140,7 +141,9 @@ bool recibirYprocesarScript(int socket) {
 	recv(socketUMV, &respuesta, sizeof(respuesta), 0);
 #endif
 
+#ifndef UMV_ENABLE
 	respuesta.valor = true;
+#endif
 	if(respuesta.valor == true)
 	{
 		log_info(logplp, "La UMV informo que pudo alojar la memoria necesaria para el script ansisop");
