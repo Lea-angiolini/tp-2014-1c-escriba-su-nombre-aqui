@@ -30,7 +30,7 @@ void *hilo_io(void *ptr){
 	
 		//Saco el pcb de la cola de bloqueados y la pongo en la cola de ready
 		pthread_mutex_lock(&blockQueueMutex);
-		pcb_t *pcb_blocked_to_ready = list_remove_by_condition(blockQueue->elements,matchearPCB);
+		pcb_t *pcb_blocked_to_ready = list_remove_by_condition(blockQueue->elements, matchearPCB);
 		pthread_mutex_unlock(&blockQueueMutex);
 
 		pthread_mutex_lock(&readyQueueMutex);
@@ -56,7 +56,7 @@ io_t *crear_registro(char* hioRetardo){
 	nuevo_registro->cola = queue_create();
 
 	pthread_mutex_init(&nuevo_registro->mutex, NULL);
-	sem_init(&nuevo_registro->semaforo,0,0);
+	sem_init(&nuevo_registro->semaforo, 0, 0);
 	pthread_create(&(nuevo_registro->thread), NULL, &hilo_io, (void *)nuevo_registro);
 
 	return nuevo_registro;
