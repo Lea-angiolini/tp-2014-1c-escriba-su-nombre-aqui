@@ -85,7 +85,7 @@ void cargar_dispositivos() {
 
 	for(i = 0; hioId[i] != NULL; i++) {
 		io_t *registro_hio = crear_registro(hioRetardo[i]);
-		dictionary_put(dispositivos, hioId[i],registro_hio);
+		dictionary_put(dispositivos, hioId[i], registro_hio);
 	}
 }
 
