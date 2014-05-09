@@ -2,17 +2,17 @@
 #define IO_H_
 
 #include <pthread.h>
+#include <semaphore.h>
 #include "commons/config.h"
-#include "commons/collections/list.h"
+#include "commons/collections/dictionary.h"
 #include "commons/collections/queue.h"
 
  typedef struct {
-	char* nombre;
 	int retardo;
 	pthread_t thread;
 	t_queue *cola;
 	pthread_mutex_t mutex;
-	pthread_cond_t condition;
+	sem_t semaforo;
 } io_t;
 
 typedef struct {
@@ -21,6 +21,6 @@ typedef struct {
 } data_cola_t;
 
 void *hilo_io(void *ptr);
-io_t *crear_registro(char* hioId, char* hioRetardo);
+io_t *crear_registro(char* hioRetardo);
 
 #endif /* IO_H_ */

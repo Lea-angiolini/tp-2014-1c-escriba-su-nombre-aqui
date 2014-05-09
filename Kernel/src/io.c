@@ -8,6 +8,7 @@
 #include "config.h"
 #include "commons/pcb.h"
 
+t_dictionary *diccionarIo;
 
 void *hilo_io(void *ptr){
 	io_t *parametros = (io_t *) ptr;
@@ -15,7 +16,7 @@ void *hilo_io(void *ptr){
 
 	while(1){
 
-		pthread_cond_wait(&parametros->condition,&parametros->mutex);
+		sem_wait(&parametros->semaforo);
 
 		//saco el primer elemento de la cola del dispositivo para activarlo
 		data_cola_t *orden_activa = queue_pop(parametros->cola);
@@ -45,19 +46,18 @@ void *hilo_io(void *ptr){
 	return 0;
 }
 
-io_t *crear_registro(char* hioId, char* hioRetardo){
+io_t *crear_registro(char* hioRetardo){
 
 	//creo el registro del dispositivo io que va incluido en
 	//la lista de dispositivos
 	io_t *nuevo_registro = malloc(sizeof(io_t));
 	
 	//le asigno los datos al registro
-	nuevo_registro->nombre = hioId;
-	nuevo_registro->cola = queue_create();
 	nuevo_registro->retardo = atoi(hioRetardo);
+	nuevo_registro->cola = queue_create();
 
 	pthread_mutex_init(&nuevo_registro->mutex, NULL);
-	pthread_cond_init(&nuevo_registro->condition, NULL);
+	sem_init(&nuevo_registro->semaforo,0,0);
 	pthread_create(&(nuevo_registro->thread), NULL, &hilo_io, (void *)nuevo_registro);
 
 	return nuevo_registro;

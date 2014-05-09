@@ -3,8 +3,7 @@
 
 t_config *config;
 
-t_dictionary *semaforos, *variablesCompartidas;
-t_list *dispositivos;
+t_dictionary *semaforos, *variablesCompartidas, *dispositivos;
 
 const char cofig_properties[][25] = {
 	"PUERTO_PROG", "PUERTO_CPU", "QUANTUM", "RETARDO",
@@ -80,13 +79,13 @@ void cargar_dispositivos() {
 	char** hioId = config_get_array_value(config, "ID_HIO");
 	char** hioRetardo = config_get_array_value(config, "HIO");
 
-	dispositivos = list_create();
+	dispositivos = dictionary_create();
 
 	int i;
 
 	for(i = 0; hioId[i] != NULL; i++) {
-		io_t *registro_hio = crear_registro(hioId[i], hioRetardo[i]);
-		list_add(dispositivos, registro_hio);
+		io_t *registro_hio = crear_registro(hioRetardo[i]);
+		dictionary_put(dispositivos, hioId[i],registro_hio);
 	}
 }
 
@@ -95,7 +94,7 @@ void destruir_config()
 	dictionary_destroy_and_destroy_elements(semaforos, free);
 	dictionary_destroy_and_destroy_elements(variablesCompartidas, free);
 
-	list_destroy_and_destroy_elements(dispositivos, free);
+	dictionary_destroy_and_destroy_elements(dispositivos, free);
 
 	config_destroy(config);
 }

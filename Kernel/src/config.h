@@ -21,6 +21,5 @@ void cargar_dispositivos();
 void destruir_config();
 
 extern t_config *config;
-extern t_dictionary *semaforos, *variablesCompartidas;
-extern t_list *dispositivos;
+extern t_dictionary *semaforos, *variablesCompartidas, *dispositivos;
 #endif
