@@ -8,7 +8,6 @@
 #include "config.h"
 #include "commons/pcb.h"
 
-t_dictionary *diccionarIo;
 
 void *hilo_io(void *ptr){
 	io_t *parametros = (io_t *) ptr;
