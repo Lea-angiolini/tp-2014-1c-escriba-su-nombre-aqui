@@ -49,6 +49,8 @@ int procesarMenssajeKernel( Kernel * kernel, socket_pedirMemoria * segmentosAres
 		return -1;
 	}
 
+	if(respuesta == false)
+			return 1;
 
 
 		uint32_t datosPid, datosScript, datosEtiquetas, datosInstrucciones;
