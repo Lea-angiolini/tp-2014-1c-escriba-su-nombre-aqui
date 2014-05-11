@@ -18,22 +18,15 @@ extern t_log * logger;
 //TODO se podria reusar lo de cpu ??
 int recibirYProcesarMensajesKernel( Kernel * kernel ) {
 
-	int tamanioRecibido;
 	socket_pedirMemoria * buffer = malloc(sizeof(socket_pedirMemoria));
 
-	while (1) {
+	while (sizeof(socket_pedirMemoria) == recv(kernel->socket, buffer, sizeof(socket_pedirMemoria), MSG_WAITALL) ) {
 
-		tamanioRecibido = recv(kernel->socket, &buffer, sizeof(socket_pedirMemoria), 0);
-
-		if (tamanioRecibido == sizeof(socket_pedirMemoria)) {
 			log_info(logger, "Procesando mensaje del Kernel");
 			procesarMenssajeKernel(kernel, buffer);
 		}
-			else{
-			free(buffer);
-			break;
-		}
-	}
+
+	free(buffer);
 	return 1;
 }
 
