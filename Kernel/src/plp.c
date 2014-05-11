@@ -4,6 +4,8 @@
 
 #define CALCULAR_PRIORIDAD(e,f,t) (5 * e + 3 * f + t)
 
+#define UMV_ENABLE
+
 t_log *logplp;
 
 uint32_t nextProcessId = 1;
@@ -127,7 +129,7 @@ bool recibirYprocesarScript(int socket) {
 	socket_respuesta respuesta;
 
 #ifdef UMV_ENABLE
-	recv(socketUMV, &respuesta, sizeof(respuesta), 0);
+	recv(socketUMV, &respuesta, sizeof(respuesta), MSG_WAITALL);
 #endif
 
 #ifndef UMV_ENABLE
@@ -147,7 +149,7 @@ bool recibirYprocesarScript(int socket) {
 
 		socket_umvpcb umvpcb;
 #ifdef UMV_ENABLE
-		recv(socketUMV, &socket_umvpcb, sizeof(socket_umvpcb), 0);
+		recv(socketUMV, &umvpcb, sizeof(socket_umvpcb), MSG_WAITALL);
 #endif
 
 		pcb_t *pcb = malloc(sizeof(pcb_t));
