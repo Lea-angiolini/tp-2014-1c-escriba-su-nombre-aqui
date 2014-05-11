@@ -11,7 +11,6 @@
 #include "commons/sockets.h"
 
 
-#define BUFF_SIZE 1024
 
 extern t_log * logger;
 
@@ -23,12 +22,12 @@ int recibirYProcesarMensajesKernel(Kernel * kernel) {
 
 	while (1) {
 
-		nbytesRecibidos = recv(kernel->socket, &buffer, BUFF_SIZE, 0);
+		nbytesRecibidos = recv(kernel->socket, &buffer, sizeof(socket_pedirMemoria), 0);
 
 		if (nbytesRecibidos > 0) {
 
 			procesarMenssajeKernel(kernel, buffer);
-			memset(buffer, 0x0000, BUFF_SIZE);
+			memset(buffer, 0x0000, sizeof(socket_pedirMemoria));
 
 		} else if (nbytesRecibidos == 0) {
 
@@ -83,11 +82,11 @@ int procesarMenssajeKernel(Kernel * kernel,
 		void * instrucciones = malloc(tamanioInstrucciones);
 		uint32_t * pid = malloc(sizeof(uint32_t));
 
-		datosPid = recv(kernel->socket, pid, sizeof(int), 0);
-		datosScript = recv(kernel->socket, script, tamanioScript, 0);
-		datosEtiquetas = recv(kernel->socket, etiquetas, tamanioEtiquetas, 0);
+		datosPid = recv(kernel->socket, pid, sizeof(uint32_t), MSG_WAITALL);
+		datosScript = recv(kernel->socket, script, tamanioScript, MSG_WAITALL);
+		datosEtiquetas = recv(kernel->socket, etiquetas, tamanioEtiquetas, MSG_WAITALL);
 		datosInstrucciones = recv(kernel->socket, instrucciones,
-				tamanioInstrucciones, 0);
+				tamanioInstrucciones, MSG_WAITALL);
 
 		if (datosPid != (sizeof(int)) || datosScript != tamanioScript
 				|| datosEtiquetas != tamanioEtiquetas

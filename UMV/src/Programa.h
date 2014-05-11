@@ -25,3 +25,7 @@ Segmento * crearDireccionesVirtuales(Segmento * segmento,
 		uint32_t tamanioSegmento, uint32_t finVirtualDelAnterior);
 
 socket_umvpcb crearEstructuraParaPCB( Programa * programa);
+
+Programa * buscarPrograma( uint32_t pdi);
+
+Segmento * buscarSegmentoEnPrograma( Programa * programa, uint32_t offset);

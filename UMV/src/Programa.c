@@ -1,6 +1,7 @@
 #include "Programa.h"
 #include "memoria.h"
 
+
 extern t_list * programas;
 
 
@@ -65,3 +66,33 @@ Segmento * crearDireccionesVirtuales(Segmento * segmento, uint32_t tamanioSegmen
 	return segmento;
 }
 
+Programa * buscarPrograma( uint32_t pdi){
+
+	uint32_t tamanioProgramas;
+	tamanioProgramas = list_size( programas);
+	int i = 0;
+	for(i = 0; i <= tamanioProgramas; i++){
+		Programa * programa = list_get(programas, i);
+		if(programa->pid == pdi)
+			return programa;
+	}
+	return NULL;
+}
+
+Segmento * buscarSegmentoEnPrograma( Programa * programa, uint32_t offset){
+
+	if( (offset >= programa->stack->inicioVirtual) && (offset <= programa->stack->finVirtual))
+		return programa->stack;
+
+	if( (offset >= programa->script->inicioVirtual) && (offset <= programa->script->finVirtual))
+			return programa->script;
+
+	if( (offset >= programa->etiquetas->inicioVirtual) && (offset <= programa->etiquetas->finVirtual))
+			return programa->etiquetas;
+
+	if( (offset >= programa->instrucciones->inicioVirtual) && (offset <= programa->instrucciones->finVirtual))
+			return programa->instrucciones;
+	else{
+		return NULL;
+	}
+}

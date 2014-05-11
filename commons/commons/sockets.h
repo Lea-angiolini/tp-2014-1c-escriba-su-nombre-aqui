@@ -104,6 +104,7 @@ typedef struct {
 typedef struct {
 	socket_header header;
 	uint32_t pdi;
+	uint32_t base;
 	uint32_t offset;
 	uint32_t length;
 	char data[100];
@@ -120,6 +121,7 @@ typedef struct {
 typedef struct {
 	socket_header header;
 	uint32_t pdi;
+	uint32_t base;
 	uint32_t offset;
 	uint32_t length;
 }  __attribute__((packed)) socket_leerMemoria;

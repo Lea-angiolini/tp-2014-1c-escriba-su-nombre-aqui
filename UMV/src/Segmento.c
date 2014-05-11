@@ -6,8 +6,8 @@
 
 #include "commons/log.h"
 
-extern t_log * logger;
-extern memoria;
+
+extern void * memoria;
 
 uint32_t contadorId = 0;
 
