@@ -31,6 +31,8 @@
 int conexionKernel;
 int conexionUMV;
 
+int quantumPorEjecucion;
+int retardo;
 int quantumRestante;
 t_log * logger;
 
@@ -64,17 +66,19 @@ int leerConfig(){
 
 
 int crearConexionKernel() {
-	log_info( logger, "Conectando al Kernel");
+	log_info( logger, "Conectando al Kernel en: %s : %d", config_get_string_value(cpuConfig, "IPKERNEL") , config_get_int_value(cpuConfig, "PUERTOKERNEL"));
 	conexionKernel = conectar(config_get_string_value(cpuConfig, "IPKERNEL"), config_get_int_value(cpuConfig, "PUERTOKERNEL"), logger);
 	if (conexionKernel < 0) {
-		log_error(logger, "No se pudo conectar al Kernel");
+		log_error(logger, "No se pudo conectar al Kernel | CPU/src/CPU.c -> crearConexionKernel");
 		return -1;
 	}
-	return 1;
+
+	return enviarHandshake();
+
 }
 
 int crearConexionUMV() {
-	log_info( logger, "Conectando a la UMV");
+	log_info( logger, "Conectando a la UMV en %s : %d", config_get_string_value(cpuConfig, "IPUMV") ,  config_get_int_value(cpuConfig, "PUERTOUMV") );
 	conexionUMV = conectar(config_get_string_value(cpuConfig, "IPUMV"), config_get_int_value(cpuConfig, "PUERTOUMV"), logger);
 	if (conexionUMV < 0) {
 		close(conexionKernel);
@@ -86,8 +90,11 @@ int crearConexionUMV() {
 
 
 int crearConexiones() {
-	return crearConexionUMV();
-	//return crearConexionKernel() && crearConexionUMV();
+	//return crearConexionUMV();
+	if( crearConexionKernel() < 0 || crearConexionUMV() < 0 ){
+		return -1;
+	}
+	return 1;
 }
 
 

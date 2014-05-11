@@ -231,7 +231,7 @@ int crearServidorNoBloqueante(int puerto, bool (*fn_nuevo_mensaje)(void *socket)
 
 void * enviarYRecibirPaquete( int socket, void * mensaje, uint32_t sizeSend, uint32_t sizeReceive, char sendCode, char receiveCode, t_log * logger ) {
 
-	if( enviarPaquete( socket,  mensaje,  sizeSend, sendCode, logger ) < 0 ){
+	if( enviarPaquete( socket,  mensaje,  sizeSend, sendCode, logger ) < 0 ) {
 		return NULL;
 	}
 	return recibirPaquete( socket, sizeReceive, receiveCode, logger );
@@ -257,33 +257,18 @@ int enviarPaquete( int socket, void * mensaje, uint32_t sizeSend, char sendCode,
 void * recibirPaquete( int socket, t_size sizeReceive, char receiveCode, t_log * logger ) {
 
 	socket_header headerRespuesta;
-	int tamRecibido = recv( socket, &headerRespuesta, sizeof(socket_header), 0);
+	//int tamRecibido = recv( socket, &headerRespuesta, sizeof(socket_header), 0);
+	int tamRecibido = recv( socket, &headerRespuesta, sizeof(socket_header), MSG_PEEK);
 	if ( tamRecibido < 0 ){
-		//log_error( logger, "Se recibio mal un paquete");
 		return NULL;
 	}else if (tamRecibido == 0)  {
 		return NULL;
 	}
 
-	//log_info( logger, "Se recibio un paquete" );
-	/*
-	if( sizeReceive != NULL && (headeRespuesta.size) != sizeReceive ){
-		return NULL;
-	}
-
-	if( receiveCode != NULL && (headeRespuesta.code) != receiveCode ){
-		return NULL;
-	}
-	*/
-
-	//log_info( logger, "Reservando el espacio de memoria..." );
 	void * paqueteRespuesta = malloc( headerRespuesta.size );
-	//Aritmetica de punteros !!!!!!
-	//log_info( logger, "Leyendo el paquete de tamaño: %d", headerRespuesta.size );
-	recv( socket, ( paqueteRespuesta + sizeof( socket_header ) ), headerRespuesta.size, 0);
-	//recv( socket, ( &paqueteRespuesta + sizeof( socket_header ) ), headerRespuesta.size, 0);
-	//log_info( logger, "Se leyo el paquete y se va a agregarle el header" );
-	memcpy( paqueteRespuesta, &headerRespuesta, sizeof( socket_header ) );
+	//recv( socket, ( paqueteRespuesta + sizeof( socket_header ) ), headerRespuesta.size, 0);
+	//memcpy( paqueteRespuesta, &headerRespuesta, sizeof( socket_header ) );
+	recv( socket, paqueteRespuesta, headerRespuesta.size, MSG_WAITALL);
 
 	return paqueteRespuesta;
 

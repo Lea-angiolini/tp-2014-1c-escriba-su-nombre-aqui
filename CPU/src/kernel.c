@@ -13,6 +13,8 @@ extern int conexionKernel;
 extern t_log * logger;
 extern pcb_t * PCB_enEjecucion;
 
+extern int quantumPorEjecucion;
+extern int retardo;
 
 
 
@@ -41,30 +43,53 @@ int responder_orden_ejecucion() {
 
 
 
-uint32_t solcitarVariableCompartidaAKernel(){
+uint32_t solcitarVariableCompartidaAKernel() {
 	return 1;
 }
 
 
-int enviarAKernelNuevoValorVariableCompartida(){
+int enviarAKernelNuevoValorVariableCompartida() {
 	return 1;
 }
 
 
-int enviarAKernelImprimir(){
+int enviarAKernelImprimir() {
 	return 1;
 }
 
-int enviarAKernelImprimirTexto(){
+int enviarAKernelImprimirTexto() {
 	return 1;
 }
 
-int enviarAKernelEntradaSalida(){
+int enviarAKernelEntradaSalida() {
 	return 1;
 }
 
 
 
+
+int enviarHandshake() {
+
+	socket_header cod;
+	cod.code = 'h';
+	cod.size = sizeof( socket_header );
+
+	if ( send( conexionKernel, &cod, cod.size, 0 ) < 0 ) {
+		return -1;
+	}
+
+	socket_cpucfg * cpucfg = (socket_cpucfg *) recibirPaquete( conexionKernel, 0, 'h', logger );
+	if( cpucfg == NULL ) {
+		log_error(logger, "No se pudo leer el la configuracion que envio el Kernel | CPU/src/CPU.c -> crearConexionKernel");
+		return -1;
+	}
+
+	quantumPorEjecucion = cpucfg->quantum;
+	retardo = cpucfg->retardo;
+	log_info( logger, "El quantum que envio el kernel es: %d y el retardo: %d", quantumPorEjecucion, retardo );
+
+	return 1;
+}
 
 
 
