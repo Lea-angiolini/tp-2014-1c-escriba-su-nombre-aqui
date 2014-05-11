@@ -105,7 +105,7 @@ int startThreads() {
 	pthread_create(&threadKernel, NULL, iniciarServidorKernel, NULL);
 	pthread_create(&threadCpus, NULL, iniciarServidorCpu, NULL);
 
-	if (pthread_join(threadConsola, NULL) || pthread_join(threadKernel, NULL) || pthread_join(threadCpus, NULL)) {
+	if ( pthread_join(threadConsola, NULL) || pthread_join(threadKernel, NULL) || pthread_join(threadCpus, NULL) ) {
 		log_error(logger, "Hubo un error esperando a algun hilo");
 		return -1;
 	}
@@ -120,8 +120,9 @@ int main(void) {
 	log_info(logger, "Iniciando UMV...");
 
 	setUp();
-	//startThreads();
 	ejecutar();
+	startThreads();
+
 
 	free(memoria);
 	config_destroy(umvConfig);

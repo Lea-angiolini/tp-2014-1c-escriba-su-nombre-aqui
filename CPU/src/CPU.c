@@ -104,8 +104,8 @@ int main(void) {
 	stackCache			= malloc( sizeof( Stack ) );
 
 	//if( leerConfig() < 0 || crearConexiones() < 0 || recibirYProcesarMensajesKernel() < 0 ) {
-	//if( leerConfig() < 0 || crearConexiones() < 0 || ejecutarPrueba() < 0 ) {
-	if( leerConfig() < 0 || ejecutarPrueba() < 0 ) {
+	if( leerConfig() < 0 || crearConexiones() < 0 || ejecutarPrueba() < 0 ) {
+	//if( leerConfig() < 0 || ejecutarPrueba() < 0 ) {
 		log_error( logger, "Hubo un error en el programa, finalizando :( " );
 		return -1;
 	}else{

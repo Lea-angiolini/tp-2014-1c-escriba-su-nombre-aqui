@@ -2,6 +2,7 @@
 
 #include "memoria.h"
 #include "Consola.h"
+#include "Programa.h"
 
 #include "commons/collections/list.h"
 #include "commons/log.h"
@@ -16,7 +17,12 @@ extern uint32_t memoria_size;
 
 void ejecutar(){
 
-	//log_info( logger, "Creando un segmento de %d bytes", memoria_size);
+
+	log_info( logger, "Creando un programa para que la cpu pueda acceder. ");
+	crearPrograma( 1, malloc(1), malloc(1), malloc(1), 1, 1, 1, 1024 );
+
+
+	/*
 	crearSegmento( 1000 );
 	Segmento * seg = crearSegmento( 2000 );
 	crearSegmento( 5 );
@@ -37,7 +43,7 @@ void ejecutar(){
 	printTodosSegmentos();
 	printf("Mostrando la tabla compactada \n\n");
 	compactar();
-
-
+	printTodosSegmentos();
+	*/
 
 }

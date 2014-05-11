@@ -13,6 +13,7 @@
 
 extern t_list * tabla_segmentos;
 extern uint32_t memoria_size;
+extern void * memoria;
 extern t_log * logger;
 
 Segmento * crearYllenarSegmento( uint32_t tamanio, void * segmento ){ //TODO Habria que agregarle un id de tipo al segmento
@@ -215,7 +216,7 @@ void compactar(){
 		Segmento * primerSegmento = (Segmento *) list_get (tabla_segmentos, 0);
 		if(primerSegmento-> inicioReal != 0){
 			tamanio = tamanioSegmento(primerSegmento);
-			moverSegmento(primerSegmento, tamanio, 0 );
+			moverSegmento(primerSegmento, 0 );
 		}
 		int i = 0;
 		for(i=0; i < list_size(tabla_segmentos) - 1; i++){
@@ -223,21 +224,31 @@ void compactar(){
 			Segmento * segmentoMovido = (Segmento *) list_get (tabla_segmentos,i);
 			Segmento * segmentoAmover = (Segmento *) list_get( tabla_segmentos, i + 1 );
 		    tamanio = tamanioSegmento(segmentoAmover);
-			moverSegmento(segmentoAmover, tamanio, segmentoMovido->finReal + 1 );
+			moverSegmento(segmentoAmover, segmentoMovido->finReal + 1 );
 		}
 		log_info(logger, "Se ha compactado correctamente");
 		printTodosSegmentos();
 		return ;
 }
 
-void moverSegmento(Segmento * segmento, int tamanio, int posicion){
-	segmento->inicioReal = posicion;
-	segmento->finReal = (posicion + tamanio);
+
+void moverSegmento(Segmento * segmento, uint32_t posicion) {
+
+	uint32_t tamanio = tamanioSegmento( segmento );
+	uint32_t nuevoInicio = posicion;
+	uint32_t nuevoFin = posicion + tamanio;
+
+	//TODO
+	//memcpy( memoria + nuevoInicio, segmento->inicioReal, tamanio );
+
+	segmento->inicioReal = nuevoInicio;
+	segmento->finReal = nuevoFin;
 	return;
+
 }
 
-int tamanioSegmento(Segmento * segmento){
-		return (segmento->finReal - segmento->inicioReal);
+int tamanioSegmento(Segmento * segmento) {
+	return (segmento->finReal - segmento->inicioReal);
 }
 
 

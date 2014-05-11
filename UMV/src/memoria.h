@@ -19,7 +19,7 @@ Segmento * crearSegmentoFistFit	( t_list * huequitos, uint32_t tamanio );
 Segmento * crearSegmentoWorstFit( t_list * huequitos, uint32_t tamanio );
 
 void borrarSegmento( Segmento * segmentoABorrar );
-void moverSegmento(Segmento * segmento, int tamanio, int posicion);
+void moverSegmento(Segmento * segmento, uint32_t posicion) ;
 int tamanioSegmento(Segmento * segmento);
 
 void compactar();

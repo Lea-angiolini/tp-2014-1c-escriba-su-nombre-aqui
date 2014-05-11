@@ -88,8 +88,27 @@ int enviarFinQuantum( uint32_t pid ){
 /*
  * Guarda en la umv el stack con el que estabamos trabajando
  */
-int sincronizarStack(){
-	return 1;
+//TODO
+int guardarStack(){
+
+	socket_guardarEnMemoria * paquete = malloc( sizeof( socket_guardarEnMemoria ) );
+
+	paquete->offset = 0;
+	paquete->pdi = 1;
+	paquete->length = 10;
+	char data[100] = "probando ";
+	memcpy( paquete->data, data, 10 ) ;
+
+	socket_RespuestaGuardarEnMemoria * respuesta = (socket_RespuestaGuardarEnMemoria*) enviarYRecibirPaquete( conexionUMV, paquete, sizeof(socket_guardarEnMemoria) , 45, 'c', 'a', logger );
+	if( respuesta == NULL || respuesta->status ) {
+		printf( "La umv me cago\n");
+		return -1;
+	}else{
+		printf( "La umv respondio\n" );
+		return 1;
+	}
+
+
 }
 
 
@@ -98,8 +117,24 @@ int sincronizarStack(){
  * Le solicita a la UMV los datos del stack desde el contexto actual
  * y los almacena en la "cache" del cpu.
  */
+//TODO
 int obtenerContextStack() {
-	return 1;
+
+	socket_leerMemoria * paquete = malloc(sizeof( socket_leerMemoria ) );
+
+	paquete->offset = 2;
+	paquete->pdi = 1;
+	paquete->length = 4;
+
+	socket_RespuestaLeerMemoria * respuesta = (socket_RespuestaLeerMemoria*) enviarYRecibirPaquete( conexionUMV, paquete, sizeof(socket_leerMemoria), 45, 'b', 'a', logger );
+	if( respuesta == NULL || respuesta->status == false ) {
+		printf( "La umv me cago\n");
+		return -1;
+	}else{
+		printf( "La umv respondio: %s\n", respuesta->data );
+		return 1;
+	}
+
 }
 
 

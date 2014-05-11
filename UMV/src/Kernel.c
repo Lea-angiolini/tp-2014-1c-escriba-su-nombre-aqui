@@ -16,7 +16,7 @@ extern t_log * logger;
 
 
 //TODO se podria reusar lo de cpu ??
-int recibirYProcesarMensajesKernel(Kernel * kernel) {
+int recibirYProcesarMensajesKernel( Kernel * kernel ) {
 	int nbytesRecibidos;
 	socket_pedirMemoria * buffer = malloc(sizeof(socket_pedirMemoria));
 
@@ -45,8 +45,7 @@ int recibirYProcesarMensajesKernel(Kernel * kernel) {
 	return -1;
 }
 
-int procesarMenssajeKernel(Kernel * kernel,
-		socket_pedirMemoria * segmentosAreservar) {
+int procesarMenssajeKernel( Kernel * kernel, socket_pedirMemoria * segmentosAreservar ) {
 
 	bool respuesta = true;
 	int memoriaDisponible;
@@ -60,39 +59,40 @@ int procesarMenssajeKernel(Kernel * kernel,
 	respuestaSegmentos.header.size = sizeof(respuestaSegmentos);
 	respuestaSegmentos.valor = respuesta;
 
-	if (send(kernel->socket, &respuestaSegmentos, sizeof(respuestaSegmentos), 0)
-			== -1) {
-		log_error(logger,
-				"No se ha podido enviar respuesta de reservación de segmentos al Kernel");
+	if (send(kernel->socket, &respuestaSegmentos, sizeof(respuestaSegmentos), 0) == -1) {
+		log_error(logger, "No se ha podido enviar respuesta de reservación de segmentos al Kernel");
+		return -1;
 	}
 
-	if (respuesta == true) {
+
 
 		uint32_t datosPid, datosScript, datosEtiquetas, datosInstrucciones;
-
 		socket_umvpcb  datosSegmentos;
-		uint32_t tamanioScript, tamanioEtiquetas, tamanioInstrucciones;
 
-		tamanioScript = segmentosAreservar->codeSegmentSize;
-		tamanioEtiquetas = segmentosAreservar->etiquetasSegmentSize;
-		tamanioInstrucciones = segmentosAreservar->instruccionesSegmentSize;
+		uint32_t tamanioScript, tamanioEtiquetas, tamanioInstrucciones, tamanioStack;
+		tamanioScript			= segmentosAreservar->codeSegmentSize;
+		tamanioEtiquetas		= segmentosAreservar->etiquetasSegmentSize;
+		tamanioInstrucciones	= segmentosAreservar->instruccionesSegmentSize;
+		tamanioStack			= segmentosAreservar->stackSegmentSize;
 
-		void * script = malloc(tamanioScript);
-		void * etiquetas = malloc(tamanioEtiquetas);
-		void * instrucciones = malloc(tamanioInstrucciones);
-		uint32_t * pid = malloc(sizeof(uint32_t));
+		void * script			= malloc(tamanioScript);
+		void * etiquetas		= malloc(tamanioEtiquetas);
+		void * instrucciones	= malloc(tamanioInstrucciones);
+		uint32_t * pid			= malloc(sizeof(uint32_t));
 
-		datosPid = recv(kernel->socket, pid, sizeof(uint32_t), MSG_WAITALL);
-		datosScript = recv(kernel->socket, script, tamanioScript, MSG_WAITALL);
-		datosEtiquetas = recv(kernel->socket, etiquetas, tamanioEtiquetas, MSG_WAITALL);
-		datosInstrucciones = recv(kernel->socket, instrucciones,
-				tamanioInstrucciones, MSG_WAITALL);
+		datosPid				= recv(kernel->socket, pid, sizeof(uint32_t), MSG_WAITALL);
+		datosScript				= recv(kernel->socket, script, tamanioScript, MSG_WAITALL);
+		datosEtiquetas			= recv(kernel->socket, etiquetas, tamanioEtiquetas, MSG_WAITALL);
+		datosInstrucciones		= recv(kernel->socket, instrucciones, tamanioInstrucciones, MSG_WAITALL);
 
-		if (datosPid != (sizeof(int)) || datosScript != tamanioScript
+
+		if (
+				datosPid != ( sizeof( uint32_t ) )
+				|| datosScript != tamanioScript
 				|| datosEtiquetas != tamanioEtiquetas
-				|| datosInstrucciones != tamanioInstrucciones) {
-			log_error(logger,
-					"No se recibieron los datos de los segmentos correctamente");
+				|| datosInstrucciones != tamanioInstrucciones ) {
+
+			log_error(logger, "No se recibieron los datos de los segmentos correctamente");
 
 			free(script);
 			free(etiquetas);
@@ -102,25 +102,23 @@ int procesarMenssajeKernel(Kernel * kernel,
 			return -1;
 		}
 
-		Programa * programa = crearPrograma(*pid, script, etiquetas, instrucciones, segmentosAreservar);
-		datosSegmentos = crearEstructuraParaPCB( programa);
+
+		Programa * programa = crearPrograma( *pid, script, etiquetas, instrucciones, tamanioScript, tamanioEtiquetas, tamanioInstrucciones, tamanioStack );
+		datosSegmentos		= crearEstructuraParaPCB( programa );
 
 		free(script);
 		free(etiquetas);
 		free(instrucciones);
 		free(pid);
 
-		if (send(kernel->socket, &datosSegmentos, sizeof(datosSegmentos), 0)
-				< 0) {
-			log_error(logger,
-					"No se ha podido enviar los datos de los segmentos creados correctamente al Kernel");
+		if ( send(kernel->socket, &datosSegmentos, sizeof(datosSegmentos), 0) < 0 ) {
+			log_error( logger, "No se ha podido enviar los datos de los segmentos creados correctamente al Kernel" );
+			return -1;
 		} else {
-			log_info(logger,
-					"Se ha enviado los datos de los segmentos creados correctamente al Kernel");
+			log_info( logger,"Se ha enviado los datos de los segmentos creados correctamente al Kernel" );
 			return 1;
 		}
-	}
-	return 1;
+
 }
 
 int tamanioSegmentos(socket_pedirMemoria * segmentosAreservar) {

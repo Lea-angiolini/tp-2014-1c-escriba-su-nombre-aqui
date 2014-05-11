@@ -13,8 +13,15 @@ extern pcb_t * PCB_enEjecucion;
 //TODO no esta hecho todavia, es semi pseudocodigo
 pcb_t * ejecutar () {
 
-	printf("Ejecutando........\n\n");
 
+	printf("Ejecutando........\n\n");
+	printf("Guardando\n");
+	guardarStack();
+	printf("Intentando leer...\n");
+	obtenerContextStack();
+
+
+	/*
 	char a[] = "varibles a";
 	char b[] = "a=5";
 	char c[] = "imprimir a";
@@ -25,7 +32,7 @@ pcb_t * ejecutar () {
 	//enviarCambioContexto( PCB_enEjecucion->id );
 	//solicitarStack()
 
-/*
+
 	//while( quantum > 0 ){
 
 		log_debug( logger, "Solicitando linea del programa a la umv" );

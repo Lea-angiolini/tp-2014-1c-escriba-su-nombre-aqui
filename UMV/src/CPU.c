@@ -44,48 +44,48 @@ int procesarSolicitudDeLinea( CPU * cpu, socket_obtenerLineaCodigo * solicitud )
 
 int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud ) {
 
-	if( cpu->pidProcesando != solicitud->pdi){
-		log_error(logger, "El pedido de memoria no puede ser procesado");
+	/*if( cpu->pidProcesando != solicitud->pdi) {
+		log_error(logger, "La cpu solicito un pedido de memoria de un pid que no esta procesando UMV/src/CPU.c -> procesarSolicitudLecturaMemoria ");
+		return -1;
+	}*/
+
+	Programa * programa;
+	programa = buscarPrograma( solicitud->pdi );
+	Segmento * segmento;
+	segmento = buscarSegmentoEnPrograma( programa, solicitud->offset);
+
+	if( segmento == NULL ) {
+		log_error(logger, "No se encuentra el segmento especificado | UMV/src/cpu.c -> procesarSolicitudLecturaMemoria");
 		return -1;
 	}
 
-			Programa * programa;
-			programa = buscarPrograma( solicitud->pdi);
-			Segmento * segmento;
-			segmento = buscarSegmentoEnPrograma( programa, solicitud->offset);
+	uint32_t tamanioParaOperar;
+	tamanioParaOperar = segmento->finReal - (segmento->inicioReal + solicitud->offset);
 
-			if( segmento == NULL){
-						log_error(logger, "No se encuentra el segmento especificado");
-						return -1;
-					}
+	socket_RespuestaLeerMemoria * respuesta = malloc(sizeof (socket_RespuestaLeerMemoria));
+	respuesta->header.size = sizeof(socket_RespuestaLeerMemoria);
 
-		uint32_t tamanioParaOperar;
-		tamanioParaOperar = segmento->finReal - (segmento->inicioReal + solicitud->offset);
+	if(	solicitud->length > tamanioParaOperar ) {
+		log_error(logger, "Violación de Segmento debido al tamaño con el que se quiere operar | UMV/src/cpu.c -> procesarSolicitudLecturaMemoria");
+		respuesta->status = false;
+	}else{
+		respuesta->status = true;
+		memLeer( segmento, respuesta->data, solicitud->offset, solicitud->length);
+		log_info( logger, "Se leyo la data: %s", respuesta->data );
+	}
 
-		socket_RespuestaLeerMemoria * respuesta = malloc(sizeof (socket_RespuestaLeerMemoria));
-		respuesta->header.size = sizeof(socket_RespuestaLeerMemoria);
+	uint32_t enviado;
+	enviado = send(cpu->socket, respuesta, sizeof(socket_RespuestaLeerMemoria), 0);
 
-		if(	solicitud->length > tamanioParaOperar){
-			log_error(logger, "Violación de Segmento debido al tamaño con el que se quiere operar");
-					respuesta->status = false;
-		}
-		else{
-			respuesta->status = true;
-			memLeer( segmento, respuesta->data, solicitud->offset, solicitud->length);
-		}
-		uint32_t enviado;
-		enviado = send(cpu->socket, respuesta, sizeof(socket_RespuestaLeerMemoria), 0);
+	if( enviado == -1 ) {
+		log_error(logger, "La respuesta a lectura de memoria no se ha realizado con exito | UMV/src/cpu.c -> procesarSolicitudLecturaMemoria");
+		return -1;
+	}
 
-		if(enviado == -1){
-			log_error(logger, "La respuesta a lectura de memoria no se ha realizado con exito");
-					return -1;
-		}
-
-		log_info(logger, "La respuesta a lectura de memoria se ha realizado con exito");
-
-
+	log_info(logger, "La respuesta a lectura de memoria se ha realizado con exito");
 
 	return 1;
+
 }
 
 
@@ -94,44 +94,45 @@ int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud )
 int procesarSolicitudEscrituraMemoria( CPU * cpu, socket_guardarEnMemoria * solicitud ) {
 
 
-	if( cpu->pidProcesando != solicitud->pdi){
-		log_error(logger, "El pedido de memoria no puede ser procesado");
+	/*if( cpu->pidProcesando != solicitud->pdi){
+		log_error(logger, "La cpu solicito un pedido de memoria de un pid que no esta procesando  UMV/src/CPU.c -> procesarSolicitudEscrituraMemoria ");
+		return -1;
+	}*/
+
+	Programa * programa;
+	programa = buscarPrograma( solicitud->pdi);
+	Segmento * segmento;
+	segmento = buscarSegmentoEnPrograma( programa, solicitud->offset);
+
+	if( segmento == NULL ) {
+		log_error(logger, "No se encuentra el segmento especificado | UMV/src/cpu.c -> procesarSolicitudEscrituraMemoria");
 		return -1;
 	}
 
-			Programa * programa;
-			programa = buscarPrograma( solicitud->pdi);
-			Segmento * segmento;
-			segmento = buscarSegmentoEnPrograma( programa, solicitud->offset);
+	uint32_t tamanioParaOperar;
+	tamanioParaOperar = segmento->finReal - (segmento->inicioReal + solicitud->offset);
 
-			if( segmento == NULL){
-				log_error(logger, "No se encuentra el segmento especificado");
-				return -1;
-			}
+	socket_RespuestaGuardarEnMemoria * respuesta = malloc(sizeof (socket_RespuestaGuardarEnMemoria));
+	respuesta->header.size = sizeof(socket_RespuestaGuardarEnMemoria);
 
-		uint32_t tamanioParaOperar;
-		tamanioParaOperar = segmento->finReal - (segmento->inicioReal + solicitud->offset);
+	if(	solicitud->length > tamanioParaOperar ) {
+		log_error(logger, "Violación de Segmento debido al tamaño con el que se quiere operar | UMV/src/cpu.c -> procesarSolicitudEscrituraMemoria");
+		respuesta->status = false;
+	}else{
+		respuesta->status = true;
+		memCopi( segmento, solicitud->offset, solicitud->data, solicitud->length );
+		log_info( logger, "Se guardo la data: %s", solicitud->data );
+	}
 
-		socket_RespuestaGuardarEnMemoria * respuesta = malloc(sizeof (socket_RespuestaGuardarEnMemoria));
-		respuesta->header.size = sizeof(socket_RespuestaGuardarEnMemoria);
+	uint32_t enviado;
+	enviado = send( cpu->socket, respuesta, sizeof( socket_RespuestaGuardarEnMemoria ), 0 );
 
-		if(	solicitud->length > tamanioParaOperar){
-			log_error(logger, "Violación de Segmento debido al tamaño con el que se quiere operar");
-					respuesta->status = false;
-		}
-		else{
-			respuesta->status = true;
-			memCopi( segmento, solicitud->offset, solicitud->data, solicitud->length );
-		}
-		uint32_t enviado;
-		enviado = send(cpu->socket, respuesta, sizeof(socket_RespuestaGuardarEnMemoria), 0);
+	if( enviado == -1 ) {
+		log_error(logger, "La respuesta a escribir en memoria no se ha realizado con exito | UMV/src/cpu.c -> procesarSolicitudEscrituraMemoria");
+		return -1;
+	}
 
-		if(enviado == -1){
-			log_error(logger, "La respuesta a escribir en memoria no se ha realizado con exito");
-					return -1;
-		}
-
-		log_info(logger, "La respuesta a escribir en memoria se ha realizado con exito");
+	log_info(logger, "La respuesta a escribir en memoria se ha realizado con exito");
 
 	return 1;
 }
@@ -166,7 +167,7 @@ int recibirYProcesarMensajesCpu( CPU * cpu ) {
 				break;
 			default:
 				//TODO decidir que hacer aca
-				log_error( logger, "La CPU ID: %d envio un mensaje que no pude entender... ???", cpu->cpuId );
+				log_error( logger, "La CPU ID: %d envio un mensaje que no se entiende... ???", cpu->cpuId );
 				break;
 
 		}
