@@ -1,6 +1,7 @@
 #include "pcp.h"
 #include "colas.h"
 #include "config.h"
+#include "io.h"
 
 t_log *logpcp;
 
@@ -173,6 +174,34 @@ bool nuevoMensajeCPU(int socket) {
 	return true;
 }
 
+void syscallIO(int socket)
+{
+	socket_scIO io;
+	socket_pcb spcb;
+
+	recv(socket, &io, sizeof(socket_scIO), MSG_WAITALL);
+	recv(socket, &spcb, sizeof(socket_pcb), MSG_WAITALL);
+
+	io_t *disp = dictionary_get(dispositivos, io.identificador);
+	data_cola_t *pedido = malloc(sizeof(data_cola_t));
+
+	pedido->pid = spcb.pcb.id;
+	pedido->tiempo = io.unidades;
+
+	bool limpiarPcb(pcb_t *pcb) {
+		return pcb->id == spcb.pcb.id;
+	}
+
+	pthread_mutex_lock(&blockQueueMutex);
+	pthread_mutex_lock(&disp->mutex);
+	queue_push(blockQueue, list_remove_by_condition(execQueue->elements, limpiarPcb));
+	queue_push(disp->cola, pedido);
+	pthread_mutex_unlock(&disp->mutex);
+	pthread_mutex_unlock(&blockQueueMutex);
+
+	sem_post(&disp->semaforo);
+}
+
 bool recibirYprocesarPedido(int socket)
 {
 	socket_header header;
@@ -182,6 +211,9 @@ bool recibirYprocesarPedido(int socket)
 	{
 	case 'h': //Conectado
 		conexionCPU(socket);
+		break;
+	case 'i': //SC: IO
+		syscallIO(socket);
 		break;
 	}
 	return true;
