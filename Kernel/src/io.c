@@ -11,36 +11,32 @@
 
 void *hilo_io(void *ptr){
 	io_t *parametros = (io_t *) ptr;
-	pthread_mutex_lock(&parametros->mutex);
 
 	while(1){
-
 		sem_wait(&parametros->semaforo);
 
 		//saco el primer elemento de la cola del dispositivo para activarlo
+		pthread_mutex_lock(&parametros->mutex);
 		data_cola_t *orden_activa = queue_pop(parametros->cola);
+		pthread_mutex_unlock(&parametros->mutex);
 
 		//aplico el retardo
 		usleep((orden_activa->tiempo) * (parametros->retardo));
 
 		//funcion usada como condicion para buscar el pcb correspondiente en la blockQueue
 		bool matchearPCB (pcb_t *pcb){
-			return (pcb->id == orden_activa->pid);
+			return pcb->id == orden_activa->pid;
 		}
 	
 		//Saco el pcb de la cola de bloqueados y la pongo en la cola de ready
 		pthread_mutex_lock(&blockQueueMutex);
-		pcb_t *pcb_blocked_to_ready = list_remove_by_condition(blockQueue->elements, matchearPCB);
-		pthread_mutex_unlock(&blockQueueMutex);
-
 		pthread_mutex_lock(&readyQueueMutex);
-		queue_push(readyQueue,pcb_blocked_to_ready);
+		queue_push(readyQueue, list_remove_by_condition(blockQueue->elements, matchearPCB));
+		pthread_mutex_unlock(&blockQueueMutex);
 		pthread_mutex_unlock(&readyQueueMutex);
 
-
-
+		free(orden_activa);
 	}
-	pthread_mutex_unlock(&parametros->mutex);
 
 	return 0;
 }
