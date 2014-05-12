@@ -17,7 +17,7 @@ void *Dispatcher(void *arg);
 
 void bajarNivelMultiprogramacion();
 
-void conexionCPU(int socket);
+bool conexionCPU(int socket);
 void desconexionCPU(int socket);
 bool nuevoMensajeCPU(int socket);
 bool recibirYprocesarPedido(int socket);

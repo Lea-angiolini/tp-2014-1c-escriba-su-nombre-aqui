@@ -7,8 +7,12 @@
 t_queue *newQueue, *readyQueue, *execQueue, *exitQueue, *blockQueue;
 pthread_mutex_t readyQueueMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t blockQueueMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t execQueueMutex = PTHREAD_MUTEX_INITIALIZER;
 
 t_queue *cpuReadyQueue, *cpuExecQueue;
+
+pthread_mutex_t cpuReadyQueueMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t cpuExecQueueMutex = PTHREAD_MUTEX_INITIALIZER;
 
 void crear_colas()
 {

@@ -73,9 +73,10 @@ void *Dispatcher(void *arg)
 			spcb.header.size = sizeof(socket_pcb);
 			spcb.pcb = *pcb;
 
-			send(cpuInfo->socketCPU, &spcb, sizeof(socket_pcb), 0);
-
 			queue_push(cpuExecQueue, cpuInfo);
+
+			if( send(cpuInfo->socketCPU, &spcb, sizeof(socket_pcb), 0) <= 0 )
+				desconexionCPU(cpuInfo->socketCPU);
 		}
 
 		pthread_mutex_unlock(&readyQueueMutex);
@@ -89,7 +90,7 @@ void *Dispatcher(void *arg)
 	return NULL;
 }
 
-void conexionCPU(int socket)
+bool conexionCPU(int socket)
 {
 	log_info(logpcp, "Se ha conectado un CPU");
 
@@ -107,10 +108,13 @@ void conexionCPU(int socket)
 	cpucfg.quantum = config_get_int_value(config, "QUANTUM");
 	cpucfg.retardo = config_get_int_value(config, "RETARDO");
 
-	send(socket, &cpucfg, sizeof(socket_cpucfg), 0);
+	if( send(socket, &cpucfg, sizeof(socket_cpucfg), 0) <= 0 )
+		return false;
 
 	//Llamanda a dispatcher para ver si hay algun trabajo pendiente para darle al CPU nuevo.
 	sem_post(&dispatcherCpu);
+
+	return true;
 }
 
 void bajarNivelMultiprogramacion()
@@ -124,13 +128,13 @@ void desconexionCPU(int socket)
 {
 	log_info(logpcp, "Se ha desconectado un CPU");
 
-	bool limpiarCpuExec(cpu_info_t *cpuInfo)
+	bool limpiarCpu(cpu_info_t *cpuInfo)
 	{
 		return cpuInfo->socketCPU == socket;
 	}
 
 	log_info(logpcp, "Verificando si el CPU desconectado estaba corriendo algun programa");
-	cpu_info_t *cpuInfo = list_remove_by_condition(cpuExecQueue->elements, limpiarCpuExec);
+	cpu_info_t *cpuInfo = list_remove_by_condition(cpuExecQueue->elements, limpiarCpu);
 	if( cpuInfo != NULL )
 	{
 		log_error(logpcp, "La CPU desconectada estaba en ejecucion, abortando ejecucion de programa");
@@ -155,11 +159,8 @@ void desconexionCPU(int socket)
 	}
 	else
 	{
-		//La cpu no estaba en ejecucion, hay que borrarla de la cpuReadyQueue
-		bool limpiarCpuReady(cpu_info_t *cpuInfo) {
-			return cpuInfo->socketCPU == socket;
-		}
-		list_remove_and_destroy_by_condition(cpuReadyQueue->elements, limpiarCpuReady, free);
+		log_info(logpcp, "La CPU desconectada no se encontraba en ejecucion");
+		list_remove_and_destroy_by_condition(cpuReadyQueue->elements, limpiarCpu, free);
 	}
 }
 
@@ -174,13 +175,16 @@ bool nuevoMensajeCPU(int socket) {
 	return true;
 }
 
-void syscallIO(int socket)
+bool syscallIO(int socket)
 {
 	socket_scIO io;
 	socket_pcb spcb;
 
-	recv(socket, &io, sizeof(socket_scIO), MSG_WAITALL);
-	recv(socket, &spcb, sizeof(socket_pcb), MSG_WAITALL);
+	if( recv(socket, &io, sizeof(socket_scIO), MSG_WAITALL) != sizeof(socket_scIO) )
+		return false;
+
+	if( recv(socket, &spcb, sizeof(socket_pcb), MSG_WAITALL) != sizeof(socket_pcb) )
+		return false;
 
 	io_t *disp = dictionary_get(dispositivos, io.identificador);
 	data_cola_t *pedido = malloc(sizeof(data_cola_t));
@@ -200,21 +204,22 @@ void syscallIO(int socket)
 	pthread_mutex_unlock(&blockQueueMutex);
 
 	sem_post(&disp->semaforo);
+
+	return true;
 }
 
 bool recibirYprocesarPedido(int socket)
 {
 	socket_header header;
-	recv(socket, &header, sizeof(header), MSG_WAITALL | MSG_PEEK);
+	if( recv(socket, &header, sizeof(header), MSG_WAITALL | MSG_PEEK) != sizeof(header) )
+		return false;
 
 	switch(header.code)
 	{
 	case 'h': //Conectado
-		conexionCPU(socket);
-		break;
+		return conexionCPU(socket);
 	case 'i': //SC: IO
-		syscallIO(socket);
-		break;
+		return syscallIO(socket);
 	}
 	return true;
 }
