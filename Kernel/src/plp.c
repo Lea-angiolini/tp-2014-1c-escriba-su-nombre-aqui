@@ -110,7 +110,7 @@ bool recibirYprocesarScript(int socket) {
 	log_info(logplp, "Script ansisop recibido");
 
 	//ansisop preprocesador
-	t_medatada_program *scriptMedatada = metadatada_desde_literal(script);
+	t_metadata_program *scriptMetadata = metadata_desde_literal(script);
 
 	log_info(logplp, "Pidiendole memoria a la UMV para que pueda correr el script ansisop");
 
@@ -119,8 +119,8 @@ bool recibirYprocesarScript(int socket) {
 
 	pedirMemoria.codeSegmentSize = scriptSize + 1;
 	pedirMemoria.stackSegmentSize = config_get_int_value(config, "STACK_SIZE");
-	pedirMemoria.etiquetasSegmentSize = scriptMedatada->etiquetas_size;
-	pedirMemoria.instruccionesSegmentSize = scriptMedatada->instrucciones_size * sizeof(t_intructions);
+	pedirMemoria.etiquetasSegmentSize = scriptMetadata->etiquetas_size;
+	pedirMemoria.instruccionesSegmentSize = scriptMetadata->instrucciones_size * sizeof(t_intructions);
 
 #ifdef UMV_ENABLE
 	send(socketUMV, &pedirMemoria, sizeof(pedirMemoria), 0);
@@ -143,8 +143,8 @@ bool recibirYprocesarScript(int socket) {
 #ifdef UMV_ENABLE
 		send(socketUMV, &nextProcessId, sizeof(nextProcessId), 0);
 		send(socketUMV, script, pedirMemoria.codeSegmentSize, 0);
-		send(socketUMV, scriptMedatada->etiquetas, pedirMemoria.etiquetasSegmentSize, 0);
-		send(socketUMV, scriptMedatada->instrucciones_serializado, pedirMemoria.instruccionesSegmentSize, 0);
+		send(socketUMV, scriptMetadata->etiquetas, pedirMemoria.etiquetasSegmentSize, 0);
+		send(socketUMV, scriptMetadata->instrucciones_serializado, pedirMemoria.instruccionesSegmentSize, 0);
 #endif
 
 		socket_umvpcb umvpcb;
@@ -162,11 +162,11 @@ bool recibirYprocesarScript(int socket) {
 		pcb->codeIndex = umvpcb.codeIndex;
 		pcb->etiquetaIndex = umvpcb.etiquetaIndex;
 
-		pcb->programCounter = scriptMedatada->instruccion_inicio;
+		pcb->programCounter = scriptMetadata->instruccion_inicio;
 		pcb->contextSize = 0;
 
 		pcb->programaSocket = socket;
-		pcb->prioridad = CALCULAR_PRIORIDAD(scriptMedatada->cantidad_de_etiquetas, scriptMedatada->cantidad_de_funciones, scriptMedatada->instrucciones_size);
+		pcb->prioridad = CALCULAR_PRIORIDAD(scriptMetadata->cantidad_de_etiquetas, scriptMetadata->cantidad_de_funciones, scriptMetadata->instrucciones_size);
 		pcb->lastErrorCode = 0;
 
 		queue_push(newQueue, pcb);
@@ -184,7 +184,7 @@ bool recibirYprocesarScript(int socket) {
 		return false;
 	}
 
-	metadata_destruir(scriptMedatada);
+	metadata_destruir(scriptMetadata);
 	free(script);
 
 	return true;
