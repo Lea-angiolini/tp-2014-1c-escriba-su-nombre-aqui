@@ -21,7 +21,7 @@ void *hilo_io(void *ptr){
 		pthread_mutex_unlock(&parametros->mutex);
 
 		//aplico el retardo
-		usleep((orden_activa->tiempo) * (parametros->retardo));
+		usleep((orden_activa->tiempo) * (parametros->retardo) * 1000);
 
 		//funcion usada como condicion para buscar el pcb correspondiente en la blockQueue
 		bool matchearPCB (pcb_t *pcb){
