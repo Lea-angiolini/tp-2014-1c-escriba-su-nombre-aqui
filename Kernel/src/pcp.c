@@ -175,6 +175,22 @@ bool nuevoMensajeCPU(int socket) {
 	return true;
 }
 
+bool recibirYprocesarPedido(int socket)
+{
+	socket_header header;
+	if( recv(socket, &header, sizeof(header), MSG_WAITALL | MSG_PEEK) != sizeof(header) )
+		return false;
+
+	switch(header.code)
+	{
+	case 'h': //Conectado
+		return conexionCPU(socket);
+	case 'i': //SC: IO
+		return syscallIO(socket);
+	}
+	return true;
+}
+
 bool syscallIO(int socket)
 {
 	socket_scIO io;
@@ -224,18 +240,3 @@ bool syscallObtenerValor(int socket)
 	return true;
 }
 
-bool recibirYprocesarPedido(int socket)
-{
-	socket_header header;
-	if( recv(socket, &header, sizeof(header), MSG_WAITALL | MSG_PEEK) != sizeof(header) )
-		return false;
-
-	switch(header.code)
-	{
-	case 'h': //Conectado
-		return conexionCPU(socket);
-	case 'i': //SC: IO
-		return syscallIO(socket);
-	}
-	return true;
-}
