@@ -20,6 +20,7 @@ void bajarNivelMultiprogramacion();
 bool conexionCPU(int socket);
 void desconexionCPU(int socket);
 bool nuevoMensajeCPU(int socket);
+bool syscallObtenerValor(int socket);
 bool recibirYprocesarPedido(int socket);
 
 typedef struct {
