@@ -240,3 +240,15 @@ bool syscallObtenerValor(int socket)
 	return true;
 }
 
+bool syscallGrabarValor(int socket)
+{
+	socket_scGrabarValor sGrabarValor;
+
+	if( recv(socket, &sGrabarValor, sizeof(socket_scGrabarValor), MSG_WAITALL) != sizeof(socket_scGrabarValor) )
+		return false;
+
+	uint32_t *valor = dictionary_get(variablesCompartidas,sGrabarValor->identificador);
+	*valor = sGrabarValor->valor;
+
+	return true;
+}
