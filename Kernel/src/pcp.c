@@ -208,6 +208,22 @@ bool syscallIO(int socket)
 	return true;
 }
 
+bool syscallObtenerValor(int socket)
+{
+	socket_scObtenerValor sObtenerValor;
+
+	if( recv(socket, &sObtenerValor, sizeof(socket_scObtenerValor), MSG_WAITALL) != sizeof(socket_scObtenerValor) )
+		return false;
+
+	uint32_t *valor = dictionary_get(variablesCompartidas,sObtenerValor->identificador);
+	sObtenerValor->valor = *valor;
+
+	if( send(socket,&sObtenerValor,sizeof(socket_scObtenerValor),0) != sizeof(socket_scObtenerValor) )
+		return false;
+
+	return true;
+}
+
 bool recibirYprocesarPedido(int socket)
 {
 	socket_header header;
