@@ -12,6 +12,11 @@
 #include "commons/log.h"
 #include "commons/config.h"
 
+typedef struct {
+	int socketCPU;
+	int socketPrograma;
+} cpu_info_t;
+
 void *IniciarPcp(void *arg);
 void *Dispatcher(void *arg);
 
@@ -20,12 +25,8 @@ void bajarNivelMultiprogramacion();
 bool conexionCPU(int socket);
 void desconexionCPU(int socket);
 bool nuevoMensajeCPU(int socket);
-bool syscallObtenerValor(int socket);
 bool recibirYprocesarPedido(int socket);
-
-typedef struct {
-	int socketCPU;
-	int socketPrograma;
-} cpu_info_t;
+bool syscallIO(int socket);
+bool syscallObtenerValor(int socket);
 
 #endif /* PCP_H_ */
