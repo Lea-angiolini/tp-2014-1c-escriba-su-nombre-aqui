@@ -28,5 +28,6 @@ bool nuevoMensajeCPU(int socket);
 bool recibirYprocesarPedido(int socket);
 bool syscallIO(int socket);
 bool syscallObtenerValor(int socket);
+bool syscallGrabarValor(int socket);
 
 #endif /* PCP_H_ */
