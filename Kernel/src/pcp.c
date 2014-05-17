@@ -46,8 +46,6 @@ void *Dispatcher(void *arg)
 		sem_wait(&dispatcherReady);
 		sem_wait(&dispatcherCpu);
 
-		pthread_mutex_lock(&readyQueueMutex);
-
 		log_info(logpcp, "Dispatcher invocado");
 
 		if( queue_is_empty(readyQueue) )
@@ -65,8 +63,6 @@ void *Dispatcher(void *arg)
 		}
 
 		MoverReadyAExec();
-
-		pthread_mutex_unlock(&readyQueueMutex);
 	}
 
 	sem_destroy(&dispatcherReady);
@@ -80,12 +76,20 @@ void *Dispatcher(void *arg)
 void MoverReadyAExec()
 {
 	log_info(logpcp, "Moviendo PCB de la cola READY a EXEC");
-	queue_push(execQueue, queue_pop(readyQueue));
 
 	//Iniciando proceso de ejecucion
+	pthread_mutex_lock(&readyQueueMutex);
 	pcb_t *pcb = queue_pop(readyQueue);
+	pthread_mutex_unlock(&readyQueueMutex);
 
+	pthread_mutex_lock(&execQueueMutex);
+	queue_push(execQueue, pcb);
+	pthread_mutex_unlock(&execQueueMutex);
+
+	pthread_mutex_lock(&cpuReadyQueueMutex);
 	cpu_info_t *cpuInfo = queue_pop(cpuReadyQueue);
+	pthread_mutex_unlock(&cpuReadyQueueMutex);
+
 	cpuInfo->socketPrograma = pcb->programaSocket;
 
 	//Mandando informacion necesaria para que la CPU pueda empezar a trabajar
@@ -95,7 +99,9 @@ void MoverReadyAExec()
 	spcb.header.size = sizeof(socket_pcb);
 	spcb.pcb = *pcb;
 
+	pthread_mutex_lock(&cpuExecQueueMutex);
 	queue_push(cpuExecQueue, cpuInfo);
+	pthread_mutex_unlock(&cpuExecQueueMutex);
 
 	if( send(cpuInfo->socketCPU, &spcb, sizeof(socket_pcb), 0) <= 0 )
 		desconexionCPU(cpuInfo->socketCPU);
@@ -108,7 +114,10 @@ bool conexionCPU(int socket)
 	//Agregandolo a la cpuReadyQueue
 	cpu_info_t *cpuInfo = malloc(sizeof(cpu_info_t));
 	cpuInfo->socketCPU = socket;
+
+	pthread_mutex_lock(&cpuReadyQueueMutex);
 	queue_push(cpuReadyQueue, cpuInfo);
+	pthread_mutex_unlock(&cpuReadyQueueMutex);
 
 	//Hay que mandar QUANTUM y RETARDO al CPU
 	socket_cpucfg cpucfg;
@@ -145,17 +154,21 @@ void desconexionCPU(int socket)
 	}
 
 	log_info(logpcp, "Verificando si el CPU desconectado estaba corriendo algun programa");
+
+	pthread_mutex_lock(&cpuExecQueueMutex);
 	cpu_info_t *cpuInfo = list_remove_by_condition(cpuExecQueue->elements, limpiarCpu);
+	pthread_mutex_unlock(&cpuExecQueueMutex);
+
 	if( cpuInfo != NULL )
 	{
 		log_error(logpcp, "La CPU desconectada estaba en ejecucion, abortando ejecucion de programa");
-		//La cpu estaba en ejecucion, hay que mover la pcb de EXEC a EXIT
+
 		bool limpiarPcb(pcb_t *pcb) {
 			return pcb->programaSocket == cpuInfo->socketPrograma;
 		}
 
 		log_info(logpcp, "Moviendo PCB de la cola EXEC a EXIT");
-		queue_push(exitQueue, list_remove_by_condition(execQueue->elements, limpiarPcb));
+		queue_push(exitQueue, cpuInfo);
 
 		log_info(logpcp, "Informandole a Programa que el script no pudo concluir su ejecucion");
 
@@ -165,13 +178,14 @@ void desconexionCPU(int socket)
 		send(cpuInfo->socketPrograma, &msg, sizeof(msg), 0);
 		shutdown(cpuInfo->socketPrograma, SHUT_RDWR);
 
-		free(cpuInfo);
 		bajarNivelMultiprogramacion();
 	}
 	else
 	{
 		log_info(logpcp, "La CPU desconectada no se encontraba en ejecucion");
+		pthread_mutex_lock(&cpuReadyQueueMutex);
 		list_remove_and_destroy_by_condition(cpuReadyQueue->elements, limpiarCpu, free);
+		pthread_mutex_unlock(&cpuReadyQueueMutex);
 	}
 }
 
@@ -223,12 +237,14 @@ bool syscallIO(int socket)
 		return pcb->id == spcb.pcb.id;
 	}
 
+	pthread_mutex_lock(&execQueueMutex);
 	pthread_mutex_lock(&blockQueueMutex);
 	pthread_mutex_lock(&disp->mutex);
 	queue_push(blockQueue, list_remove_by_condition(execQueue->elements, limpiarPcb));
 	queue_push(disp->cola, pedido);
 	pthread_mutex_unlock(&disp->mutex);
 	pthread_mutex_unlock(&blockQueueMutex);
+	pthread_mutex_unlock(&execQueueMutex);
 
 	sem_post(&disp->semaforo);
 
