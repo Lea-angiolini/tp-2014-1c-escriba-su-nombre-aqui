@@ -10,6 +10,11 @@
 #include "commons/collections/dictionary.h"
 #include "commons/collections/list.h"
 
+typedef struct {
+	t_queue *cola;
+	uint32_t valor;
+} semaforo_t;
+
 bool cargar_config(char *configFile);
 
 bool validar_configuracion();

@@ -51,10 +51,15 @@ void cargar_semaforos()
 	semaforos = dictionary_create();
 
 	int i;
+	semaforo_t *semaforo;
 
 	for(i = 0; semaforosArray[i] != NULL && valorSemaforosArray[i] != NULL; i++)
 	{
-		dictionary_put(semaforos, semaforosArray[i], valorSemaforosArray[i]);
+		semaforo = malloc(sizeof(semaforo_t));
+		semaforo->valor = valorSemaforosArray[i];
+		semaforo->cola = queue_create();
+
+		dictionary_put(semaforos, semaforosArray[i], semaforo);
 	}
 }
 
