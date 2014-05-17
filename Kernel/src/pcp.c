@@ -50,34 +50,21 @@ void *Dispatcher(void *arg)
 
 		log_info(logpcp, "Dispatcher invocado");
 
-		/*
-		 * Si hay un trabajo en READY y no hay CPU libre no hacer nada
-		 * Si no hay trabajos en READY y hay una CPU libre no hacer nada
-		 * Si hay un trabajo en READY y hay una CPU libre ponerla a trabajar
-		 */
-		if( !queue_is_empty(readyQueue) && !queue_is_empty(cpuReadyQueue) )
+		if( queue_is_empty(readyQueue) )
 		{
-			log_info(logpcp, "Moviendo PCB de la cola READY a EXEC");
-			queue_push(execQueue, queue_pop(readyQueue));
-
-			//Iniciando proceso de ejecucion
-			pcb_t *pcb = queue_pop(readyQueue);
-
-			cpu_info_t *cpuInfo = queue_pop(cpuReadyQueue);
-			cpuInfo->socketPrograma = pcb->programaSocket;
-
-			//Mandando informacion necesaria para que la CPU pueda empezar a trabajar
-			socket_pcb spcb;
-
-			spcb.header.code = 'p';
-			spcb.header.size = sizeof(socket_pcb);
-			spcb.pcb = *pcb;
-
-			queue_push(cpuExecQueue, cpuInfo);
-
-			if( send(cpuInfo->socketCPU, &spcb, sizeof(socket_pcb), 0) <= 0 )
-				desconexionCPU(cpuInfo->socketCPU);
+			log_error(logpcp, "Se llamo al dispatcher sin tener procesos en READY");
+			sem_post(&dispatcherCpu);
+			continue;
 		}
+
+		if( queue_is_empty(cpuReadyQueue) )
+		{
+			log_error(logpcp, "Se llamo al dispatcher sin tener una CPU disponible");
+			sem_post(&dispatcherReady);
+			continue;
+		}
+
+		MoverReadyAExec();
 
 		pthread_mutex_unlock(&readyQueueMutex);
 	}
@@ -88,6 +75,30 @@ void *Dispatcher(void *arg)
 	log_info(logpcp, "Dispatcher Thread concluido");
 
 	return NULL;
+}
+
+void MoverReadyAExec()
+{
+	log_info(logpcp, "Moviendo PCB de la cola READY a EXEC");
+	queue_push(execQueue, queue_pop(readyQueue));
+
+	//Iniciando proceso de ejecucion
+	pcb_t *pcb = queue_pop(readyQueue);
+
+	cpu_info_t *cpuInfo = queue_pop(cpuReadyQueue);
+	cpuInfo->socketPrograma = pcb->programaSocket;
+
+	//Mandando informacion necesaria para que la CPU pueda empezar a trabajar
+	socket_pcb spcb;
+
+	spcb.header.code = 'p';
+	spcb.header.size = sizeof(socket_pcb);
+	spcb.pcb = *pcb;
+
+	queue_push(cpuExecQueue, cpuInfo);
+
+	if( send(cpuInfo->socketCPU, &spcb, sizeof(socket_pcb), 0) <= 0 )
+		desconexionCPU(cpuInfo->socketCPU);
 }
 
 bool conexionCPU(int socket)
@@ -178,7 +189,7 @@ bool nuevoMensajeCPU(int socket) {
 bool recibirYprocesarPedido(int socket)
 {
 	socket_header header;
-	if( recv(socket, &header, sizeof(header), MSG_WAITALL | MSG_PEEK) != sizeof(header) )
+	if( recv(socket, &header, sizeof(header), MSG_WAITALL | MSG_PEEK) != sizeof(socket_header) )
 		return false;
 
 	switch(header.code)
@@ -231,10 +242,10 @@ bool syscallObtenerValor(int socket)
 	if( recv(socket, &sObtenerValor, sizeof(socket_scObtenerValor), MSG_WAITALL) != sizeof(socket_scObtenerValor) )
 		return false;
 
-	uint32_t *valor = dictionary_get(variablesCompartidas,sObtenerValor->identificador);
-	sObtenerValor->valor = *valor;
+	uint32_t *valor = dictionary_get(variablesCompartidas, sObtenerValor.identificador);
+	sObtenerValor.valor = *valor;
 
-	if( send(socket,&sObtenerValor,sizeof(socket_scObtenerValor),0) != sizeof(socket_scObtenerValor) )
+	if( send(socket, &sObtenerValor, sizeof(socket_scObtenerValor), 0) != sizeof(socket_scObtenerValor) )
 		return false;
 
 	return true;
@@ -247,8 +258,8 @@ bool syscallGrabarValor(int socket)
 	if( recv(socket, &sGrabarValor, sizeof(socket_scGrabarValor), MSG_WAITALL) != sizeof(socket_scGrabarValor) )
 		return false;
 
-	uint32_t *valor = dictionary_get(variablesCompartidas,sGrabarValor->identificador);
-	*valor = sGrabarValor->valor;
+	uint32_t *valor = dictionary_get(variablesCompartidas, sGrabarValor.identificador);
+	*valor = sGrabarValor.valor;
 
 	return true;
 }

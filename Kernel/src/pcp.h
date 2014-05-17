@@ -20,6 +20,8 @@ typedef struct {
 void *IniciarPcp(void *arg);
 void *Dispatcher(void *arg);
 
+void MoverReadyAExec();
+
 void bajarNivelMultiprogramacion();
 
 bool conexionCPU(int socket);

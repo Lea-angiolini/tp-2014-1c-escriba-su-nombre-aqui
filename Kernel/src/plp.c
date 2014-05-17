@@ -94,7 +94,7 @@ bool recibirYprocesarScript(int socket) {
 	//Pidiendo script ansisop
 	socket_header header;
 
-	if( recv(socket, &header, sizeof(header), MSG_WAITALL) <= 0 )
+	if( recv(socket, &header, sizeof(socket_header), MSG_WAITALL) != sizeof(socket_header) )
 		return false;
 
 	int scriptSize = header.size - sizeof(header);
@@ -104,7 +104,7 @@ bool recibirYprocesarScript(int socket) {
 
 	log_info(logplp, "Esperando a recibir un script ansisop");
 
-	if( recv(socket, script, scriptSize, MSG_WAITALL) <= 0 )
+	if( recv(socket, script, scriptSize, MSG_WAITALL) != scriptSize )
 		return false;
 
 	log_info(logplp, "Script ansisop recibido");
@@ -123,13 +123,13 @@ bool recibirYprocesarScript(int socket) {
 	pedirMemoria.instruccionesSegmentSize = scriptMetadata->instrucciones_size * sizeof(t_intructions);
 
 #ifdef UMV_ENABLE
-	send(socketUMV, &pedirMemoria, sizeof(pedirMemoria), 0);
+	send(socketUMV, &pedirMemoria, sizeof(socket_pedirMemoria), 0);
 #endif
 
 	socket_respuesta respuesta;
 
 #ifdef UMV_ENABLE
-	recv(socketUMV, &respuesta, sizeof(respuesta), MSG_WAITALL);
+	recv(socketUMV, &respuesta, sizeof(socket_respuesta), MSG_WAITALL);
 #endif
 
 #ifndef UMV_ENABLE
@@ -179,7 +179,7 @@ bool recibirYprocesarScript(int socket) {
 
 		socket_msg msg;
 		strcpy(msg.msg, "No hay memoria suficiente en este momento para ejecutar este script. Intentelo mas tarde");
-		send(socket, &msg, sizeof(msg), 0);
+		send(socket, &msg, sizeof(socket_msg), 0);
 
 		return false;
 	}

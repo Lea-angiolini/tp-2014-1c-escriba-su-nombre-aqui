@@ -49,14 +49,14 @@ int main(int argc, char *argv[]) {
 	socket_header header;
 	header.size = sizeof(header)+scriptSize;
 
-	if( send(sock, &header, sizeof(header), 0) < 0 || sendfile(sock, script->_fileno, &scriptBase, scriptSize) < 0) {
+	if( send(sock, &header, sizeof(socket_header), 0) != sizeof(socket_header) || sendfile(sock, script->_fileno, &scriptBase, scriptSize) != scriptSize ) {
 		log_error(log, "No se pudo enviar el archivo");
 		return EXIT_SUCCESS;
 	}
 
 	socket_msg msg;
 
-	while (recv(sock, &msg, sizeof(msg), MSG_WAITALL) > 0)
+	while (recv(sock, &msg, sizeof(socket_msg), MSG_WAITALL) == sizeof(socket_msg) )
 		log_info(log, "%s", msg.msg);
 
 	log_info(log, "Desconectado del servidor");
