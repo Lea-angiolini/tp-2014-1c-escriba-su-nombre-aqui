@@ -212,6 +212,14 @@ bool recibirYprocesarPedido(int socket)
 		return conexionCPU(socket);
 	case 'i': //SC: IO
 		return syscallIO(socket);
+	case 'o': //SC: Obtener valor
+		return syscallObtenerValor(socket);
+	case 'g': //SC: Grabar valor
+		return syscallGrabarValor(socket);
+	case 'w': //SC: Wait
+			return syscallWait(socket);
+	case 's': //SC: Signal
+			return syscallSignal(socket);
 	}
 	return true;
 }
@@ -277,5 +285,15 @@ bool syscallGrabarValor(int socket)
 	uint32_t *valor = dictionary_get(variablesCompartidas, sGrabarValor.identificador);
 	*valor = sGrabarValor.valor;
 
+	return true;
+}
+
+bool syscallWait(int socket)
+{
+	return true;
+}
+
+bool syscallSignal(int socket)
+{
 	return true;
 }

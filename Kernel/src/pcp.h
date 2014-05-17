@@ -31,5 +31,7 @@ bool recibirYprocesarPedido(int socket);
 bool syscallIO(int socket);
 bool syscallObtenerValor(int socket);
 bool syscallGrabarValor(int socket);
+bool syscallWait(int socket);
+bool syscallSignal(int socket);
 
 #endif /* PCP_H_ */
