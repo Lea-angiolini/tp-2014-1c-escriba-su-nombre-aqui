@@ -217,9 +217,9 @@ bool recibirYprocesarPedido(int socket)
 	case 'g': //SC: Grabar valor
 		return syscallGrabarValor(socket);
 	case 'w': //SC: Wait
-			return syscallWait(socket);
+		return syscallWait(socket);
 	case 's': //SC: Signal
-			return syscallSignal(socket);
+		return syscallSignal(socket);
 	}
 	return true;
 }
@@ -294,6 +294,37 @@ bool syscallWait(int socket)
 }
 
 bool syscallSignal(int socket)
+{
+	socket_scSignal sSignal;
+
+	if( recv(socket, &sSignal, sizeof(socket_scSignal), MSG_WAITALL) != sizeof(socket_scSignal) )
+		return false;
+
+	semaforo_t *semaforo = dictionary_get(semaforos, sSignal.identificador);
+	semaforo->valor += 1;
+
+	if (semaforo->valor <= 0)
+	{
+		//Saco el pcb de la cola de bloqueados y la pongo en la cola de ready
+
+		uint32_t *pid = queue_pop(semaforo->cola);
+
+		//funcion usada como condicion para buscar el PCB correspondiente a la PID en la blockQueue
+		bool matchearPCB (pcb_t *pcb){
+			return pcb->id == *pid;
+		}
+
+		pthread_mutex_lock(&blockQueueMutex);
+		pthread_mutex_lock(&readyQueueMutex);
+		queue_push(readyQueue, list_remove_by_condition(blockQueue->elements, matchearPCB));
+		pthread_mutex_unlock(&blockQueueMutex);
+		pthread_mutex_unlock(&readyQueueMutex);
+	}
+
+	return true;
+}
+
+bool terminoQuantumCPU(int socket)
 {
 	return true;
 }
