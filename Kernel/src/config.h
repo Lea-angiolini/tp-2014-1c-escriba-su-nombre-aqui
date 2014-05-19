@@ -9,6 +9,7 @@
 #include "commons/config.h"
 #include "commons/collections/dictionary.h"
 #include "commons/collections/list.h"
+#include "commons/collections/queue.h"
 
 typedef struct {
 	t_queue *cola;

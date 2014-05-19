@@ -220,6 +220,8 @@ bool recibirYprocesarPedido(int socket)
 		return syscallWait(socket);
 	case 's': //SC: Signal
 		return syscallSignal(socket);
+	case 'p': //Termino Quantum
+		return terminoQuantumCPU(socket);
 	}
 	return true;
 }
@@ -290,6 +292,73 @@ bool syscallGrabarValor(int socket)
 
 bool syscallWait(int socket)
 {
+	socket_scWait sWait;
+
+	if( recv(socket, &sWait, sizeof(socket_scWait), MSG_WAITALL) != sizeof(socket_scWait) )
+			return false;
+
+	semaforo_t *semaforo = dictionary_get(semaforos, sWait.identificador);
+	semaforo->valor -= 1;
+	socket_respuesta res;
+
+	if (semaforo->valor < 0)
+	{
+		//pedir a la cpu el pcb
+
+		socket_pcb spcb;
+		res.valor = false;
+
+		if( send(socket, &res, sizeof(socket_respuesta), 0) < 0 )
+			return false;
+
+		if( recv(socket, &spcb, sizeof(socket_pcb), MSG_WAITALL) != sizeof(socket_pcb) )
+		    return false;
+
+		uint32_t *id = malloc(sizeof(uint32_t));
+		*id = spcb.pcb.id;
+		queue_push(semaforo->cola, id);
+
+		//Funcion para obtener el PCB
+		bool limpiarPcb(pcb_t *pcb) {
+			return pcb->id == spcb.pcb.id;
+		}
+
+		pthread_mutex_lock(&execQueueMutex);
+		pcb_t *pcb = list_remove_by_condition(execQueue->elements, limpiarPcb);
+		pthread_mutex_unlock(&execQueueMutex);
+
+		*pcb = spcb.pcb;
+
+		pthread_mutex_lock(&blockQueueMutex);
+		queue_push(blockQueue, pcb);
+		pthread_mutex_unlock(&blockQueueMutex);
+
+		//Moviendo cpu de cpuExec a cpuReady
+
+		//Funcion para obtener el cpu
+		bool limpiarCpu(cpu_info_t *cpuInfo){
+			return cpuInfo->socketCPU == socket;
+		}
+
+		pthread_mutex_lock(&cpuExecQueueMutex);
+		pthread_mutex_lock(&cpuReadyQueueMutex);
+		queue_push(cpuReadyQueue, list_remove_by_condition(cpuExecQueue->elements, limpiarCpu));
+		pthread_mutex_unlock(&cpuExecQueueMutex);
+		pthread_mutex_unlock(&cpuReadyQueueMutex);
+
+		sem_post(&dispatcherCpu);
+
+	}
+	else
+	{
+		res.valor = true;
+
+		if( send(socket, &res, sizeof(socket_respuesta), 0) < 0 )
+			return false;
+	}
+
+
+
 	return true;
 }
 
@@ -305,12 +374,12 @@ bool syscallSignal(int socket)
 
 	if (semaforo->valor <= 0)
 	{
-		//Saco el pcb de la cola de bloqueados y la pongo en la cola de ready
+		//Saco el pcb de la cola de bloqueados y lo pongo en la cola de ready
 
 		uint32_t *pid = queue_pop(semaforo->cola);
 
 		//funcion usada como condicion para buscar el PCB correspondiente a la PID en la blockQueue
-		bool matchearPCB (pcb_t *pcb){
+		bool matchearPCB(pcb_t *pcb){
 			return pcb->id == *pid;
 		}
 
@@ -319,6 +388,8 @@ bool syscallSignal(int socket)
 		queue_push(readyQueue, list_remove_by_condition(blockQueue->elements, matchearPCB));
 		pthread_mutex_unlock(&blockQueueMutex);
 		pthread_mutex_unlock(&readyQueueMutex);
+
+		sem_post(&dispatcherReady);
 	}
 
 	return true;
@@ -326,5 +397,40 @@ bool syscallSignal(int socket)
 
 bool terminoQuantumCPU(int socket)
 {
+	socket_pcb spcb;
+
+	if( recv(socket, &spcb, sizeof(socket_pcb), MSG_WAITALL) != sizeof(socket_pcb) )
+		return false;
+
+	//Sacar cpu de la cpuExecQueue y pasarla a cpuReadyQueue
+	bool matchearCPU(cpu_info_t *cpuInfo){
+		return cpuInfo->socketCPU == socket;
+	}
+
+	pthread_mutex_lock(&cpuExecQueueMutex);
+	pthread_mutex_lock(&cpuReadyQueueMutex);
+	queue_push(cpuReadyQueue, list_remove_by_condition(cpuExecQueue->elements, matchearCPU));
+	pthread_mutex_unlock(&cpuExecQueueMutex);
+	pthread_mutex_unlock(&cpuReadyQueueMutex);
+
+	sem_post(&dispatcherCpu);
+
+
+	bool matchearPCB(pcb_t *pcb) {
+		return spcb.pcb.id == pcb->id;
+	}
+
+	pthread_mutex_lock(&execQueueMutex);
+	pcb_t *pcb = list_remove_by_condition(execQueue->elements, matchearPCB);
+	pthread_mutex_unlock(&execQueueMutex);
+
+	*pcb = spcb.pcb;
+
+	pthread_mutex_lock(&readyQueueMutex);
+	queue_push(readyQueue, pcb);
+	pthread_mutex_unlock(&readyQueueMutex);
+
+	sem_post(&dispatcherReady);
+
 	return true;
 }
