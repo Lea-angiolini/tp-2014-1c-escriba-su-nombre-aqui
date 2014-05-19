@@ -148,7 +148,7 @@ void desconexionCPU(int socket)
 {
 	log_info(logpcp, "Se ha desconectado un CPU");
 
-	bool limpiarCpu(cpu_info_t *cpuInfo)
+	bool matchearCPU(cpu_info_t *cpuInfo)
 	{
 		return cpuInfo->socketCPU == socket;
 	}
@@ -156,14 +156,14 @@ void desconexionCPU(int socket)
 	log_info(logpcp, "Verificando si el CPU desconectado estaba corriendo algun programa");
 
 	pthread_mutex_lock(&cpuExecQueueMutex);
-	cpu_info_t *cpuInfo = list_remove_by_condition(cpuExecQueue->elements, limpiarCpu);
+	cpu_info_t *cpuInfo = list_remove_by_condition(cpuExecQueue->elements, matchearCPU);
 	pthread_mutex_unlock(&cpuExecQueueMutex);
 
 	if( cpuInfo != NULL )
 	{
 		log_error(logpcp, "La CPU desconectada estaba en ejecucion, abortando ejecucion de programa");
 
-		bool limpiarPcb(pcb_t *pcb) {
+		bool matchearPCB(pcb_t *pcb) {
 			return pcb->programaSocket == cpuInfo->socketPrograma;
 		}
 
@@ -184,7 +184,7 @@ void desconexionCPU(int socket)
 	{
 		log_info(logpcp, "La CPU desconectada no se encontraba en ejecucion");
 		pthread_mutex_lock(&cpuReadyQueueMutex);
-		list_remove_and_destroy_by_condition(cpuReadyQueue->elements, limpiarCpu, free);
+		list_remove_and_destroy_by_condition(cpuReadyQueue->elements, matchearCPU, free);
 		pthread_mutex_unlock(&cpuReadyQueueMutex);
 	}
 }
@@ -243,20 +243,41 @@ bool syscallIO(int socket)
 	pedido->pid = spcb.pcb.id;
 	pedido->tiempo = io.unidades;
 
-	bool limpiarPcb(pcb_t *pcb) {
+	bool matchearPCB(pcb_t *pcb) {
 		return pcb->id == spcb.pcb.id;
 	}
 
 	pthread_mutex_lock(&execQueueMutex);
-	pthread_mutex_lock(&blockQueueMutex);
-	pthread_mutex_lock(&disp->mutex);
-	queue_push(blockQueue, list_remove_by_condition(execQueue->elements, limpiarPcb));
-	queue_push(disp->cola, pedido);
-	pthread_mutex_unlock(&disp->mutex);
-	pthread_mutex_unlock(&blockQueueMutex);
+	pcb_t *pcb = list_remove_by_condition(execQueue->elements, matchearPCB);
 	pthread_mutex_unlock(&execQueueMutex);
 
+	*pcb = spcb.pcb;
+
+	pthread_mutex_lock(&blockQueueMutex);
+	queue_push(blockQueue, pcb);
+	pthread_mutex_unlock(&blockQueueMutex);
+
+
+	pthread_mutex_lock(&disp->mutex);
+	queue_push(disp->cola, pedido);
+	pthread_mutex_unlock(&disp->mutex);
+
+
 	sem_post(&disp->semaforo);
+
+	//Moviendo cpu de cpuExec a cpuReady
+
+	bool matchearCPU(cpu_info_t *cpuInfo){
+		return cpuInfo->socketCPU == socket;
+	}
+
+	pthread_mutex_lock(&cpuExecQueueMutex);
+	pthread_mutex_lock(&cpuReadyQueueMutex);
+	queue_push(cpuReadyQueue, list_remove_by_condition(cpuExecQueue->elements, matchearCPU));
+	pthread_mutex_unlock(&cpuExecQueueMutex);
+	pthread_mutex_unlock(&cpuReadyQueueMutex);
+
+	sem_post(&dispatcherCpu);
 
 	return true;
 }
@@ -303,7 +324,7 @@ bool syscallWait(int socket)
 
 	if (semaforo->valor < 0)
 	{
-		//pedir a la cpu el pcb
+		//Pedir a la cpu el pcb
 
 		socket_pcb spcb;
 		res.valor = false;
@@ -318,13 +339,12 @@ bool syscallWait(int socket)
 		*id = spcb.pcb.id;
 		queue_push(semaforo->cola, id);
 
-		//Funcion para obtener el PCB
-		bool limpiarPcb(pcb_t *pcb) {
+		bool matchearPCB(pcb_t *pcb) {
 			return pcb->id == spcb.pcb.id;
 		}
 
 		pthread_mutex_lock(&execQueueMutex);
-		pcb_t *pcb = list_remove_by_condition(execQueue->elements, limpiarPcb);
+		pcb_t *pcb = list_remove_by_condition(execQueue->elements, matchearPCB);
 		pthread_mutex_unlock(&execQueueMutex);
 
 		*pcb = spcb.pcb;
@@ -335,14 +355,13 @@ bool syscallWait(int socket)
 
 		//Moviendo cpu de cpuExec a cpuReady
 
-		//Funcion para obtener el cpu
-		bool limpiarCpu(cpu_info_t *cpuInfo){
+		bool matchearCPU(cpu_info_t *cpuInfo){
 			return cpuInfo->socketCPU == socket;
 		}
 
 		pthread_mutex_lock(&cpuExecQueueMutex);
 		pthread_mutex_lock(&cpuReadyQueueMutex);
-		queue_push(cpuReadyQueue, list_remove_by_condition(cpuExecQueue->elements, limpiarCpu));
+		queue_push(cpuReadyQueue, list_remove_by_condition(cpuExecQueue->elements, matchearCPU));
 		pthread_mutex_unlock(&cpuExecQueueMutex);
 		pthread_mutex_unlock(&cpuReadyQueueMutex);
 
