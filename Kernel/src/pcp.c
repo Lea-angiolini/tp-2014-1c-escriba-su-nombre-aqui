@@ -111,6 +111,11 @@ bool conexionCPU(int socket)
 {
 	log_info(logpcp, "Se ha conectado un CPU");
 
+	socket_header header;
+
+	if( recv(socket, &header, sizeof(socket_header), MSG_WAITALL) != sizeof(socket_header) )
+		return false;
+
 	//Agregandolo a la cpuReadyQueue
 	cpu_info_t *cpuInfo = malloc(sizeof(cpu_info_t));
 	cpuInfo->socketCPU = socket;
@@ -175,7 +180,7 @@ void desconexionCPU(int socket)
 		socket_msg msg;
 
 		strcpy(msg.msg, "El script no pudo concluir su ejecucion debido a la desconexion de un CPU");
-		send(cpuInfo->socketPrograma, &msg, sizeof(msg), 0);
+		send(cpuInfo->socketPrograma, &msg, sizeof(socket_msg), 0);
 		shutdown(cpuInfo->socketPrograma, SHUT_RDWR);
 
 		bajarNivelMultiprogramacion();
