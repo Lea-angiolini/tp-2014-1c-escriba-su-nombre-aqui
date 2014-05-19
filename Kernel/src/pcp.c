@@ -243,6 +243,24 @@ bool syscallIO(int socket)
 	pedido->pid = spcb.pcb.id;
 	pedido->tiempo = io.unidades;
 
+	//Moviendo cpu de cpuExec a cpuReady
+
+	bool matchearCPU(cpu_info_t *cpuInfo){
+		return cpuInfo->socketCPU == socket;
+	}
+
+	pthread_mutex_lock(&cpuExecQueueMutex);
+	cpu_info_t *cpuInfo = list_remove_by_condition(cpuExecQueue->elements, matchearCPU);
+	pthread_mutex_unlock(&cpuExecQueueMutex);
+
+	pthread_mutex_lock(&cpuReadyQueueMutex);
+	queue_push(cpuReadyQueue, cpuInfo);
+	pthread_mutex_unlock(&cpuReadyQueueMutex);
+
+	sem_post(&dispatcherCpu);
+
+	//Actualizando pcb y moviendolo a block
+
 	bool matchearPCB(pcb_t *pcb) {
 		return pcb->id == spcb.pcb.id;
 	}
@@ -257,27 +275,11 @@ bool syscallIO(int socket)
 	queue_push(blockQueue, pcb);
 	pthread_mutex_unlock(&blockQueueMutex);
 
-
 	pthread_mutex_lock(&disp->mutex);
 	queue_push(disp->cola, pedido);
 	pthread_mutex_unlock(&disp->mutex);
 
-
 	sem_post(&disp->semaforo);
-
-	//Moviendo cpu de cpuExec a cpuReady
-
-	bool matchearCPU(cpu_info_t *cpuInfo){
-		return cpuInfo->socketCPU == socket;
-	}
-
-	pthread_mutex_lock(&cpuExecQueueMutex);
-	pthread_mutex_lock(&cpuReadyQueueMutex);
-	queue_push(cpuReadyQueue, list_remove_by_condition(cpuExecQueue->elements, matchearCPU));
-	pthread_mutex_unlock(&cpuExecQueueMutex);
-	pthread_mutex_unlock(&cpuReadyQueueMutex);
-
-	sem_post(&dispatcherCpu);
 
 	return true;
 }
@@ -339,6 +341,24 @@ bool syscallWait(int socket)
 		*id = spcb.pcb.id;
 		queue_push(semaforo->cola, id);
 
+		//Moviendo cpu de cpuExec a cpuReady
+
+		bool matchearCPU(cpu_info_t *cpuInfo){
+			return cpuInfo->socketCPU == socket;
+		}
+
+		pthread_mutex_lock(&cpuExecQueueMutex);
+		cpu_info_t *cpuInfo = list_remove_by_condition(cpuExecQueue->elements, matchearCPU);
+		pthread_mutex_unlock(&cpuExecQueueMutex);
+
+		pthread_mutex_lock(&cpuReadyQueueMutex);
+		queue_push(cpuReadyQueue, cpuInfo);
+		pthread_mutex_unlock(&cpuReadyQueueMutex);
+
+		sem_post(&dispatcherCpu);
+
+		//Actualizando pcb y moviendolo a block
+
 		bool matchearPCB(pcb_t *pcb) {
 			return pcb->id == spcb.pcb.id;
 		}
@@ -352,20 +372,6 @@ bool syscallWait(int socket)
 		pthread_mutex_lock(&blockQueueMutex);
 		queue_push(blockQueue, pcb);
 		pthread_mutex_unlock(&blockQueueMutex);
-
-		//Moviendo cpu de cpuExec a cpuReady
-
-		bool matchearCPU(cpu_info_t *cpuInfo){
-			return cpuInfo->socketCPU == socket;
-		}
-
-		pthread_mutex_lock(&cpuExecQueueMutex);
-		pthread_mutex_lock(&cpuReadyQueueMutex);
-		queue_push(cpuReadyQueue, list_remove_by_condition(cpuExecQueue->elements, matchearCPU));
-		pthread_mutex_unlock(&cpuExecQueueMutex);
-		pthread_mutex_unlock(&cpuReadyQueueMutex);
-
-		sem_post(&dispatcherCpu);
 
 	}
 	else
@@ -395,20 +401,22 @@ bool syscallSignal(int socket)
 	{
 		//Saco el pcb de la cola de bloqueados y lo pongo en la cola de ready
 
-		uint32_t *pid = queue_pop(semaforo->cola);
+		uint32_t *id = queue_pop(semaforo->cola);
 
-		//funcion usada como condicion para buscar el PCB correspondiente a la PID en la blockQueue
 		bool matchearPCB(pcb_t *pcb){
-			return pcb->id == *pid;
+			return pcb->id == *id;
 		}
 
 		pthread_mutex_lock(&blockQueueMutex);
-		pthread_mutex_lock(&readyQueueMutex);
-		queue_push(readyQueue, list_remove_by_condition(blockQueue->elements, matchearPCB));
+		pcb_t *pcb = list_remove_by_condition(blockQueue->elements, matchearPCB);
 		pthread_mutex_unlock(&blockQueueMutex);
+
+		pthread_mutex_lock(&readyQueueMutex);
+		queue_push(readyQueue, pcb);
 		pthread_mutex_unlock(&readyQueueMutex);
 
 		sem_post(&dispatcherReady);
+		//  Liberar memoria de id??
 	}
 
 	return true;
@@ -427,9 +435,11 @@ bool terminoQuantumCPU(int socket)
 	}
 
 	pthread_mutex_lock(&cpuExecQueueMutex);
-	pthread_mutex_lock(&cpuReadyQueueMutex);
-	queue_push(cpuReadyQueue, list_remove_by_condition(cpuExecQueue->elements, matchearCPU));
+	cpu_info_t *cpuInfo = list_remove_by_condition(cpuExecQueue->elements, matchearCPU);
 	pthread_mutex_unlock(&cpuExecQueueMutex);
+
+	pthread_mutex_lock(&cpuReadyQueueMutex);
+	queue_push(cpuReadyQueue, cpuInfo);
 	pthread_mutex_unlock(&cpuReadyQueueMutex);
 
 	sem_post(&dispatcherCpu);
