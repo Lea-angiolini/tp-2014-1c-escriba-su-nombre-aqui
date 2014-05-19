@@ -25,14 +25,14 @@ typedef struct {
 	uint32_t dataLength;
 	char data[1000];
 
-} Stack;
+} __attribute__((packed)) Stack;
 
+Stack * new_Stack();
 
-uint32_t apilarVariable( Stack * stack, char * identificador );
-uint32_t obtenerOffsetVarible( Stack * stack, char * variable );
+uint32_t apilarVariable( Stack * stack, char identificador );
+uint32_t obtenerOffsetVarible( Stack * stack, char variable );
 uint32_t obtenerValor( Stack * stack, uint32_t pos );
 void modificarVariable( Stack * stack, uint32_t pos, uint32_t valor );
-
 
 
 #endif /* STACK_H_ */

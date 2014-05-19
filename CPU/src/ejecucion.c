@@ -9,31 +9,13 @@
 extern AnSISOP_funciones * ansisop_funciones;
 extern t_log * logger;
 extern pcb_t * PCB_enEjecucion;
+extern int quantumRestante;
 
 //TODO no esta hecho todavia, es semi pseudocodigo
 pcb_t * ejecutar () {
 
 
-	printf("Ejecutando........\n\n");
-	printf("Guardando\n");
-	guardarStack();
-	printf("Intentando leer...\n");
-	obtenerContextStack();
-
-
-	/*
-	char a[] = "varibles a";
-	char b[] = "a=5";
-	char c[] = "imprimir a";
-	//analizadorLinea( a, ansisop_funciones, NULL );
-	analizadorLinea( b, ansisop_funciones, NULL );
-	analizadorLinea( c, ansisop_funciones, NULL );
-
-	//enviarCambioContexto( PCB_enEjecucion->id );
-	//solicitarStack()
-
-
-	//while( quantum > 0 ){
+	while( quantumRestante > 0 ) {
 
 		log_debug( logger, "Solicitando linea del programa a la umv" );
 		char * instruccion = solicitarLineaPrograma( PCB_enEjecucion->programCounter );
@@ -42,12 +24,11 @@ pcb_t * ejecutar () {
 		log_debug( logger, "Ejecutando la intruccion !! " );
 		analizadorLinea( instruccion, ansisop_funciones, NULL );
 
-	//}
+	}
 
-*/
 
-	//sincronizarStack()
-	//enviarFinQuantum( PCB_enEjecucion->id );
+	//sincronizarStack();
+	enviarFinQuantum( PCB_enEjecucion->id );
 
 	return PCB_enEjecucion;
 

@@ -90,7 +90,7 @@ int crearConexionUMV() {
 
 
 int crearConexiones() {
-	//return crearConexionUMV();
+
 	if( crearConexionKernel() < 0 || crearConexionUMV() < 0 ){
 		return -1;
 	}
@@ -108,17 +108,15 @@ int main(void) {
 	log_debug			( logger, "Setando primitivas");
 	ansisop_funciones	= crearAnSISOP_funciones();
 	PCB_enEjecucion		= malloc( sizeof( pcb_t ) );
-	stackCache			= malloc( sizeof( Stack ) );
+	stackCache			= new_Stack();
 
 	//if( leerConfig() < 0 || crearConexiones() < 0 || recibirYProcesarMensajesKernel() < 0 ) {
 	if( leerConfig() < 0 || crearConexiones() < 0 || ejecutarPrueba() < 0 ) {
-	//if( leerConfig() < 0 || ejecutarPrueba() < 0 ) {
 		log_error( logger, "Hubo un error en el programa, finalizando :( " );
 		return -1;
 	}else{
 		log_info( logger, "El programa finalizo con exito !" );
 	}
-
 
 
 	log_destroy( logger );

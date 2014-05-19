@@ -3,9 +3,11 @@
 #include "commons/log.h"
 #include "commons/sockets.h"
 
+#include "stack.h"
+
 extern int conexionUMV;
 extern t_log * logger;
-
+extern Stack * stackCache;
 
 
 
@@ -38,8 +40,6 @@ char * solicitarLineaPrograma( uint32_t programCounter ) {
     return array;
 
 }
-
-
 
 
 
@@ -89,22 +89,20 @@ int enviarFinQuantum( uint32_t pid ){
  * Guarda en la umv el stack con el que estabamos trabajando
  */
 //TODO
-int guardarStack(){
+int guardarStack()
+{
 
 	socket_guardarEnMemoria * paquete = malloc( sizeof( socket_guardarEnMemoria ) );
 
 	paquete->offset = 0;
 	paquete->pdi = 1;
-	paquete->length = 10;
-	char data[100] = "probando ";
-	memcpy( paquete->data, data, 10 ) ;
+	paquete->length = 100;
+	memcpy( paquete->data, stackCache->data, 100 ) ;
 
-	socket_RespuestaGuardarEnMemoria * respuesta = (socket_RespuestaGuardarEnMemoria*) enviarYRecibirPaquete( conexionUMV, paquete, sizeof(socket_guardarEnMemoria) , 45, 'c', 'a', logger );
+	socket_RespuestaGuardarEnMemoria * respuesta = (socket_RespuestaGuardarEnMemoria*) enviarYRecibirPaquete( conexionUMV, paquete, sizeof(socket_guardarEnMemoria) , 0, 'c', 'a', logger );
 	if( respuesta == NULL || respuesta->status ) {
-		printf( "La umv me cago\n");
 		return -1;
 	}else{
-		printf( "La umv respondio\n" );
 		return 1;
 	}
 
@@ -117,21 +115,23 @@ int guardarStack(){
  * Le solicita a la UMV los datos del stack desde el contexto actual
  * y los almacena en la "cache" del cpu.
  */
-//TODO
-int obtenerContextStack() {
+//TODO leer parcialmente y manejar error
+int obtenerContextStack()
+{
 
-	socket_leerMemoria * paquete = malloc(sizeof( socket_leerMemoria ) );
+	socket_leerMemoria * paquete = malloc( sizeof( socket_leerMemoria ) );
 
-	paquete->offset = 2;
+	paquete->offset = 0;
 	paquete->pdi = 1;
-	paquete->length = 4;
+	paquete->length = 100;
 
 	socket_RespuestaLeerMemoria * respuesta = (socket_RespuestaLeerMemoria*) enviarYRecibirPaquete( conexionUMV, paquete, sizeof(socket_leerMemoria), 45, 'b', 'a', logger );
 	if( respuesta == NULL || respuesta->status == false ) {
-		printf( "La umv me cago\n");
+		log_error( logger, "Hubo un error al leer el stack" );
 		return -1;
 	}else{
-		printf( "La umv respondio: %s\n", respuesta->data );
+		memcpy( stackCache->data, respuesta->data, respuesta->header.size );
+		log_debug( logger, "Se leyo correctamente el stack desde la UMV" );
 		return 1;
 	}
 

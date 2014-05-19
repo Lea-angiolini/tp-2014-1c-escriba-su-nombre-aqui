@@ -11,7 +11,7 @@ int enviarFinPrograma( uint32_t pid );
 int enviarFinQuantum( uint32_t pid );
 
 
-int obtenerStack();
+int obtenerContextStack();
 int guardarStack();
 
 #endif /* UMV_H_ */

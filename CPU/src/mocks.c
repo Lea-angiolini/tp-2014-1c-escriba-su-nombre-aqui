@@ -4,10 +4,12 @@
 
 #include "commons/log.h"
 
+#include <string.h>
 #include <stdio.h>
 
 extern pcb_t * PCB_enEjecucion;
 extern t_log * logger;
+extern Stack * stackCache;
 
 
 const char lineasCodigo[][25] = {
@@ -20,31 +22,40 @@ const char lineasCodigo[][25] = {
 
 
 
-void testStack() {
-
-	Stack * stack = malloc(sizeof(Stack));
-	stack->dataLength = 50;
-	stack->offset = 30;
+void guardarCosasEnStack() {
 
 
-	char * A = "A";
-	printf( "Se creo 'A' en la posicion: %d \n",  apilarVariable( stack, A ) ) ;
-	printf( "Si pido la posicion de 'A' da: %d\n", obtenerOffsetVarible( stack, A ) );
-	modificarVariable( stack, obtenerOffsetVarible( stack, A ) , 5 );
-	printf( "Le guardo '5' en 'A' y cuando la lee me dice: %d \n", obtenerValor( stack, obtenerOffsetVarible( stack, A ) ) );
+	char A = 'A';
+	char J = 'J';
+	char P = 'P';
 
-	char * J = "J";
-	printf( "\nSe creo 'J' en la posicion: %d \n",  apilarVariable( stack, J ) ) ;
-	printf( "Si pido la posicion de 'j' da: %d\n", obtenerOffsetVarible( stack, J ) );
-	modificarVariable( stack, obtenerOffsetVarible( stack, J ) , 8 );
-	printf( "Le guardo '8' en 'J' y cuando la lee me dice: %d \n", obtenerValor( stack, obtenerOffsetVarible( stack, J ) ) );
+	printf( "Se creo 'A' en la posicion: %d \n",  apilarVariable( stackCache, A ) );
+	printf( "Se creo 'J' en la posicion: %d \n",  apilarVariable( stackCache, J ) );
+	apilarVariable( stackCache, 'Q' );
+	apilarVariable( stackCache, 'R' );
+	printf( "Se creo 'P' en la posicion: %d \n",  apilarVariable( stackCache, P ) ) ;
+
+	printf( "Guardo el valor 8 en 'A' \n");
+	modificarVariable( stackCache, obtenerOffsetVarible( stackCache, A ) , 8 );
+	printf( "Guardo el valor 7 en 'J' \n");
+	modificarVariable( stackCache, obtenerOffsetVarible( stackCache, J ) , 7 );
+	printf( "Guardo el valor 1 en 'P' \n");
+	modificarVariable( stackCache, obtenerOffsetVarible( stackCache, P ) , 1 );
+
+}
 
 
-	char * P = "P";
-	printf( "\nSe creo 'J' en la posicion: %d \n",  apilarVariable( stack, P ) ) ;
-	printf( "Si pido la posicion de 'P' da: %d\n", obtenerOffsetVarible( stack, P ) );
-	modificarVariable( stack, obtenerOffsetVarible( stack, P ) , 7 );
-	printf( "Le guardo '7' en 'P' y cuando la lee me dice: %d \n", obtenerValor( stack, obtenerOffsetVarible( stack, P ) ) );
+void leerVariablesDelStack()
+{
+
+	char A = 'A';
+	char J = 'J';
+	char P = 'P';
+
+	printf("\n\nAhora voy a leer 'A'\n");
+	printf( "Si pido la posicion de 'A' da: %d y su valor es: %d \n", obtenerOffsetVarible( stackCache, A ), obtenerValor( stackCache, obtenerOffsetVarible( stackCache, A ) ) );
+	printf( "Si pido la posicion de 'J' da: %d y su valor es: %d \n", obtenerOffsetVarible( stackCache, J ), obtenerValor( stackCache, obtenerOffsetVarible( stackCache, J ) ) );
+	printf( "Si pido la posicion de 'P' da: %d y su valor es: %d \n", obtenerOffsetVarible( stackCache, P ), obtenerValor( stackCache, obtenerOffsetVarible( stackCache, P ) ) );
 
 
 }
@@ -52,7 +63,6 @@ void testStack() {
 
 int ejecutarPrueba() {
 
-	printf("llegua hasta aca\n\n");
 	PCB_enEjecucion->codeSegment = 45;
 	PCB_enEjecucion->contextSize = 45;
 	PCB_enEjecucion->etiquetaIndex = 2;
@@ -61,10 +71,20 @@ int ejecutarPrueba() {
 	PCB_enEjecucion->prioridad = 2;
 	PCB_enEjecucion->programCounter = 432;
 	PCB_enEjecucion->programaSocket = 32423;
-	//PCB_enEjecucion->stackIndex = 234;
 
-	ejecutar();
-	//testStack();
+
+	printf("Ejecutando........\n\n");
+	printf("Guardando cosas cualquieras en el stack\n");
+	guardarCosasEnStack();
+	printf("Enviando el stack actual a la UMV...\n\n");
+	guardarStack();
+	printf("Limpiando el stack con un par de 0s\n\n");
+	memset( stackCache->data, 0, 100);
+	printf("Obteniendo el stack actual\n\n");
+	obtenerContextStack();
+	leerVariablesDelStack();
+
+
 	return 1;
 
 }
