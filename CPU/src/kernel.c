@@ -1,4 +1,5 @@
 #include <sys/socket.h>
+#include<string.h>
 
 #include "ejecucion.h"
 #include "kernel.h"
@@ -25,50 +26,71 @@ extern int retardo;
  */
 
 
-int orden_ejecucion() {
-
-
+int orden_ejecucion()
+{
 	return responder_orden_ejecucion( ejecutar () );
-
 }
 
 
 //recibe un pcb despues de ser ejecutado y se lo re envia al kernel
-int responder_orden_ejecucion() {
+int responder_orden_ejecucion()
+{
 	return 1;
 }
 
 
 
+/****************** SYSCALLS ************************/
 
-
-
-uint32_t solcitarVariableCompartidaAKernel() {
+uint32_t solcitarVariableCompartidaAKernel(t_nombre_compartida variable)
+{
+	socket_scObtenerValor mensaje;
+	enviarYRecibirPaquete( conexionKernel, &mensaje, sizeof( socket_scObtenerValor ) , 0, 'o', 'a', logger );
 	return 1;
 }
 
-
-int enviarAKernelNuevoValorVariableCompartida() {
+int enviarAKernelNuevoValorVariableCompartida(t_nombre_compartida variable, t_valor_variable valor)
+{
+	socket_scGrabarValor mensaje;
+	enviarYRecibirPaquete( conexionKernel, &mensaje, sizeof( socket_scGrabarValor ) , 0, 'g', 'a', logger );
 	return 1;
 }
 
-
-int enviarAKernelImprimir() {
-	return 1;
+int enviarAKernelImprimir( t_valor_variable valor )
+{
+	socket_imprimir mensaje;
+	mensaje.valor = valor;
+	return enviarPaquete( conexionKernel, &mensaje, sizeof( socket_imprimir ) , 'n', logger ) && enviarPCB();
 }
 
-int enviarAKernelImprimirTexto() {
-	return 1;
+int enviarAKernelImprimirTexto( char * texto )
+{
+	socket_imprimirTexto mensaje;
+	strcpy( (void * ) &mensaje.texto, texto );
+	return enviarPaquete( conexionKernel, &mensaje, sizeof( socket_imprimirTexto ) , 'k', logger ) && enviarPCB();
 }
 
-int enviarAKernelEntradaSalida() {
-	return 1;
+int enviarAKernelEntradaSalida(t_nombre_dispositivo dispositivo, int tiempo)
+{
+	socket_scIO mensaje;
+	mensaje.unidades = tiempo;
+	strcpy( (void *) &mensaje.identificador , dispositivo );
+	return enviarPaquete( conexionKernel, &mensaje, sizeof( socket_scIO ) , 'i', logger ) && enviarPCB();
 }
 
 
+/****************************************************/
 
 
-int enviarHandshake() {
+
+
+int enviarPCB()
+{
+	return enviarPaquete( conexionKernel, &PCB_enEjecucion, sizeof( socket_pcb ) , 'k', logger );
+}
+
+int enviarHandshake()
+{
 
 	socket_header cod;
 	cod.code = 'h';
@@ -94,7 +116,8 @@ int enviarHandshake() {
 
 
 //TODO definir codigos de operacion
-int procesarMensajesKernel( int socket, socket_header header ) {
+int procesarMensajesKernel( int socket, socket_header header )
+{
 
 
 
@@ -104,7 +127,8 @@ int procesarMensajesKernel( int socket, socket_header header ) {
 
 
 //TODO se podria reusar lo de la umv ??
-int recibirYProcesarMensajesKernel() {
+int recibirYProcesarMensajesKernel()
+{
 	return 1;
 }
 

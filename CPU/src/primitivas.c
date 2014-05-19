@@ -13,7 +13,8 @@ extern Stack * stackCache;
 
 
 //TODO crear ansisopKernel funciones
-AnSISOP_funciones * crearAnSISOP_funciones() {
+AnSISOP_funciones * crearAnSISOP_funciones()
+{
 
 	AnSISOP_funciones * funciones = malloc(sizeof(AnSISOP_funciones));
 
@@ -41,55 +42,48 @@ AnSISOP_funciones * crearAnSISOP_funciones() {
 /************************************************************************************/
 
 
-t_puntero definirVariable(t_nombre_variable identificador_variable) {
+t_puntero definirVariable(t_nombre_variable identificador_variable)
+{
 	log_debug( logger, "Llamada a definirVariable" );
 	return apilarVariable( stackCache, (char *) &identificador_variable );
 }
 
-
-t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable) {
+t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable)
+{
 	log_debug( logger, "Llamada a obtenerPosicionVariable" );
 	return (t_puntero) obtenerOffsetVarible( stackCache, (char *) &identificador_variable );
 }
 
-
-t_valor_variable dereferenciar(t_puntero direccion_variable) {
+t_valor_variable dereferenciar(t_puntero direccion_variable)
+{
 	log_debug( logger, "Llamada a dereferenciar" );
 	return obtenerValor( stackCache, (uint32_t) direccion_variable ) ;
 }
 
-void asignar(t_puntero direccion_variable, t_valor_variable valor) {
+void asignar(t_puntero direccion_variable, t_valor_variable valor)
+{
 	log_debug( logger, "Llamada a asignar" );
-	 modificarVariable( stackCache, (uint32_t) direccion_variable, (uint32_t) valor );
+	modificarVariable( stackCache, (uint32_t) direccion_variable, (uint32_t) valor );
 }
-
-
 
 
 /************************************************************************************/
 
-t_valor_variable obtenerValorCompartida(t_nombre_compartida variable) {
-	log_debug( logger, "Llamada a obtenerValorCompartida" );
-	return 32;
-}
 
-t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor) {
-	log_debug( logger, "Llamada a asignarValorCompartida" );
-	return 32;
-}
-
-/************************************************************************************/
-
-void irAlLabel(t_nombre_etiqueta t_nombre_etiqueta) {
+void irAlLabel(t_nombre_etiqueta t_nombre_etiqueta)
+{
 	log_debug( logger, "Llamada a irAlLabel" );
 
 }
 
+
 /************************************************************************************/
 
-void llamarSinRetorno(t_nombre_etiqueta etiqueta) {
-	log_debug( logger, "Llamada a llamarSinRetorno" );
 
+
+void llamarSinRetorno(t_nombre_etiqueta etiqueta)
+{
+	log_debug( logger, "Llamada a llamarSinRetorno" );
 }
 
 void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar) {
@@ -97,43 +91,72 @@ void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar) {
 
 }
 
-void finalizar(void) {
+void finalizar(void)
+{
 	log_debug( logger, "Llamada a finalizar" );
-
 }
 
-void retornar(t_valor_variable retorno) {
+void retornar(t_valor_variable retorno)
+{
 	log_debug( logger, "Llamada a retornar" );
-
 }
 
-/************************************************************************************/
 
-void imprimir(t_valor_variable valor_mostrar) {
+
+/****************************
+*	FUNCIONES DEL KERNEL
+****************************/
+
+
+t_valor_variable obtenerValorCompartida(t_nombre_compartida variable)
+{
+	log_debug( logger, "Llamada a obtenerValorCompartida" );
+	return solcitarVariableCompartidaAKernel(variable);
+}
+
+t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor)
+{
+	log_debug( logger, "Llamada a asignarValorCompartida" );
+	return  enviarAKernelNuevoValorVariableCompartida(variable, valor);
+}
+
+void imprimir(t_valor_variable valor_mostrar)
+{
 	log_debug( logger, "Llamada a imprimir" );
-	printf("\nANSISOP DICE: %d\n	\n", valor_mostrar);
+	enviarAKernelImprimir( valor_mostrar );
 }
 
-void imprimirTexto(char* texto) {
+void imprimirTexto(char* texto)
+{
 	log_debug( logger, "Llamada a imprimirTexto" );
-	printf("\nANSISOP DICE: %s\n\n", texto);
+	enviarAKernelImprimirTexto( texto );
 }
 
-void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo) {
+void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo)
+{
 	log_debug( logger, "Llamada a entradaSalida" );
 }
 
 
 
 
+/**************************************************************************************
+*
+*			SYS CALLS
+*
+****************************************************************************************/
 
 
 
+void AnSISOP_wait (t_nombre_semaforo identificador_semaforo)
+{
 
+}
 
+void AnSISOP_signal(t_nombre_semaforo identificador_semaforo)
+{
 
-
-
+}
 
 
 

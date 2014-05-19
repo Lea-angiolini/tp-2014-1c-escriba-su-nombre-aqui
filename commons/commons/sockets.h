@@ -96,6 +96,23 @@ typedef struct {
 	uint32_t unidades;
 }  __attribute__((packed)) socket_scIO;
 
+
+
+//CPU->KernelPCP
+typedef struct {
+	socket_header header; //header.code = 'n'
+	int valor;									//Es int ?? usamos para todo uint32_t, todas las variables son uint32_t porque aca es int ???
+}  __attribute__((packed)) socket_imprimir;
+
+
+//CPU->KernelPCP
+typedef struct {
+	socket_header header; //header.code = 'k'
+	char texto[1000];
+}  __attribute__((packed)) socket_imprimirTexto;
+
+
+
 /*******************************************************************/
 
 //CPU->UMV
