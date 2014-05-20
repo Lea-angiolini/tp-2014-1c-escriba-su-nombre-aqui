@@ -135,6 +135,7 @@ void imprimirTexto(char* texto)
 void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo)
 {
 	log_debug( logger, "Llamada a entradaSalida" );
+	enviarAKernelEntradaSalida(dispositivo, tiempo);
 }
 
 
@@ -150,12 +151,14 @@ void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo)
 
 void AnSISOP_wait (t_nombre_semaforo identificador_semaforo)
 {
-
+	log_debug( logger, "Llamada a Wait" );
+	enviarAKernelWait(identificador_semaforo);
 }
 
 void AnSISOP_signal(t_nombre_semaforo identificador_semaforo)
 {
-
+	log_debug( logger, "Llamada a Signal" );
+	enviarAKernelSignal(identificador_semaforo);
 }
 
 

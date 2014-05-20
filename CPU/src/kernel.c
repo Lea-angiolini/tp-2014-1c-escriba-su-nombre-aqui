@@ -45,6 +45,7 @@ int responder_orden_ejecucion()
 uint32_t solcitarVariableCompartidaAKernel(t_nombre_compartida variable)
 {
 	socket_scObtenerValor mensaje;
+	strcpy( (void * ) &mensaje.identificador, variable );
 	enviarYRecibirPaquete( conexionKernel, &mensaje, sizeof( socket_scObtenerValor ) , 0, 'o', 'a', logger );
 	return 1;
 }
@@ -52,6 +53,8 @@ uint32_t solcitarVariableCompartidaAKernel(t_nombre_compartida variable)
 int enviarAKernelNuevoValorVariableCompartida(t_nombre_compartida variable, t_valor_variable valor)
 {
 	socket_scGrabarValor mensaje;
+	mensaje.valor = valor;
+	strcpy( (void * ) &mensaje.identificador, variable );
 	enviarYRecibirPaquete( conexionKernel, &mensaje, sizeof( socket_scGrabarValor ) , 0, 'g', 'a', logger );
 	return 1;
 }
@@ -78,7 +81,21 @@ int enviarAKernelEntradaSalida(t_nombre_dispositivo dispositivo, int tiempo)
 	return enviarPaquete( conexionKernel, &mensaje, sizeof( socket_scIO ) , 'i', logger ) && enviarPCB();
 }
 
+int enviarAKernelSignal(t_nombre_semaforo identificador_semaforo)
+{
+	socket_scSignal mensaje;
+	strcpy( (void * ) &mensaje.identificador, identificador_semaforo );
+	enviarPaquete( conexionKernel, &mensaje, sizeof( socket_scSignal ), 's' , logger);
+	return 1;
+}
 
+int enviarAKernelWait(t_nombre_semaforo identificador_semaforo)
+{
+	socket_scWait mensaje;
+	strcpy( (void * ) &mensaje.identificador, identificador_semaforo );
+
+	return 1;
+}
 /****************************************************/
 
 
