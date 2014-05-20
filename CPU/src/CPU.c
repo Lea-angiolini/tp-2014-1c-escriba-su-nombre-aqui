@@ -1,12 +1,3 @@
-/*
- ============================================================================
- Name        : CPU.c
- Author      : 
- Version     :
- Copyright   : 
- Description : Hello World in C, Ansi-style
- ============================================================================
- */
 
 #include <string.h>
 #include <stdio.h>
@@ -31,9 +22,9 @@
 int conexionKernel;
 int conexionUMV;
 
-int quantumPorEjecucion;
-int retardo;
-int quantumRestante;
+uint32_t quantumPorEjecucion;
+uint32_t retardo;
+uint32_t quantumRestante;
 t_log * logger;
 
 AnSISOP_funciones * ansisop_funciones;

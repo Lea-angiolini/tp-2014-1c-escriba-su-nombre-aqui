@@ -14,8 +14,8 @@ extern int conexionKernel;
 extern t_log * logger;
 extern pcb_t * PCB_enEjecucion;
 
-extern int quantumPorEjecucion;
-extern int retardo;
+extern uint32_t quantumPorEjecucion;
+extern uint32_t retardo;
 
 
 
@@ -45,7 +45,7 @@ int responder_orden_ejecucion()
 uint32_t solcitarVariableCompartidaAKernel(t_nombre_compartida variable)
 {
 	socket_scObtenerValor mensaje;
-	strcpy( (void * ) &mensaje.identificador, variable );
+	strcpy( mensaje.identificador, variable );
 	enviarYRecibirPaquete( conexionKernel, &mensaje, sizeof( socket_scObtenerValor ) , 0, 'o', 'a', logger );
 	return 1;
 }
@@ -54,7 +54,7 @@ int enviarAKernelNuevoValorVariableCompartida(t_nombre_compartida variable, t_va
 {
 	socket_scGrabarValor mensaje;
 	mensaje.valor = valor;
-	strcpy( (void * ) &mensaje.identificador, variable );
+	strcpy( mensaje.identificador, variable );
 	enviarYRecibirPaquete( conexionKernel, &mensaje, sizeof( socket_scGrabarValor ) , 0, 'g', 'a', logger );
 	return 1;
 }
@@ -69,7 +69,7 @@ int enviarAKernelImprimir( t_valor_variable valor )
 int enviarAKernelImprimirTexto( char * texto )
 {
 	socket_imprimirTexto mensaje;
-	strcpy( (void * ) &mensaje.texto, texto );
+	strcpy( mensaje.texto, texto );
 	return enviarPaquete( conexionKernel, &mensaje, sizeof( socket_imprimirTexto ) , 'k', logger ) && enviarPCB();
 }
 
@@ -77,14 +77,14 @@ int enviarAKernelEntradaSalida(t_nombre_dispositivo dispositivo, int tiempo)
 {
 	socket_scIO mensaje;
 	mensaje.unidades = tiempo;
-	strcpy( (void *) &mensaje.identificador , dispositivo );
+	strcpy( mensaje.identificador , dispositivo );
 	return enviarPaquete( conexionKernel, &mensaje, sizeof( socket_scIO ) , 'i', logger ) && enviarPCB();
 }
 
 int enviarAKernelSignal(t_nombre_semaforo identificador_semaforo)
 {
 	socket_scSignal mensaje;
-	strcpy( (void * ) &mensaje.identificador, identificador_semaforo );
+	strcpy( mensaje.identificador, identificador_semaforo );
 	enviarPaquete( conexionKernel, &mensaje, sizeof( socket_scSignal ), 's' , logger);
 	return 1;
 }
@@ -92,7 +92,7 @@ int enviarAKernelSignal(t_nombre_semaforo identificador_semaforo)
 int enviarAKernelWait(t_nombre_semaforo identificador_semaforo)
 {
 	socket_scWait mensaje;
-	strcpy( (void * ) &mensaje.identificador, identificador_semaforo );
+	strcpy( mensaje.identificador, identificador_semaforo );
 
 	return 1;
 }

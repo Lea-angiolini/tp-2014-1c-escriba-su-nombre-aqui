@@ -342,9 +342,9 @@ bool syscallWait(int socket)
 		if( recv(socket, &spcb, sizeof(socket_pcb), MSG_WAITALL) != sizeof(socket_pcb) )
 		    return false;
 
-		uint32_t *id = malloc(sizeof(uint32_t));
-		*id = spcb.pcb.id;
-		queue_push(semaforo->cola, id);
+		uint32_t *pid = malloc(sizeof(uint32_t));
+		*pid = spcb.pcb.id;
+		queue_push(semaforo->cola, pid);
 
 		//Moviendo cpu de cpuExec a cpuReady
 
@@ -406,10 +406,10 @@ bool syscallSignal(int socket)
 	{
 		//Saco el pcb de la cola de bloqueados y lo pongo en la cola de ready
 
-		uint32_t *id = queue_pop(semaforo->cola);
+		uint32_t *pid = queue_pop(semaforo->cola);
 
 		bool matchearPCB(pcb_t *pcb){
-			return pcb->id == *id;
+			return pcb->id == *pid;
 		}
 
 		pthread_mutex_lock(&blockQueueMutex);
@@ -421,7 +421,9 @@ bool syscallSignal(int socket)
 		pthread_mutex_unlock(&readyQueueMutex);
 
 		sem_post(&dispatcherReady);
-		//  Liberar memoria de id??
+
+		free(pid);
+
 	}
 
 	return true;

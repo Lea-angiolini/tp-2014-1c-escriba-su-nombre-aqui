@@ -9,7 +9,7 @@
 extern AnSISOP_funciones * ansisop_funciones;
 extern t_log * logger;
 extern pcb_t * PCB_enEjecucion;
-extern int quantumRestante;
+extern uint32_t quantumRestante;
 
 //TODO no esta hecho todavia, es semi pseudocodigo
 pcb_t * ejecutar () {
