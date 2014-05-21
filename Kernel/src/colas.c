@@ -8,6 +8,7 @@ t_queue *newQueue, *readyQueue, *execQueue, *exitQueue, *blockQueue;
 pthread_mutex_t readyQueueMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t blockQueueMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t execQueueMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t exitQueueMutex = PTHREAD_MUTEX_INITIALIZER;
 
 t_queue *cpuReadyQueue, *cpuExecQueue;
 
@@ -45,3 +46,16 @@ pcb_t *list_remove_pcb_by_pid(t_list *self, uint32_t pid)
 	}
 	return list_remove_by_condition(self, matchearPCB);
 }
+
+cpu_info_t *list_remove_cpuInfo_by_socketCpu(t_list *self, int socket)
+{
+	bool matchearCPU(cpu_info_t *cpuInfo){
+		return cpuInfo->socketCPU == socket;
+	}
+	return list_remove_by_condition(self, matchearCPU);
+}
+
+
+
+
+

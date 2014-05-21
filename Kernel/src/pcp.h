@@ -14,7 +14,7 @@
 
 typedef struct {
 	int socketCPU;
-	int socketPrograma;
+	uint32_t pid;
 } cpu_info_t;
 
 void *IniciarPcp(void *arg);

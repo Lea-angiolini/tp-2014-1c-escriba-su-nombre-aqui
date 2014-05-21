@@ -23,16 +23,13 @@ void *hilo_io(void *ptr){
 		//aplico el retardo
 		usleep((orden_activa->tiempo) * (parametros->retardo) * 1000);
 
-		//funcion usada como condicion para buscar el pcb correspondiente en la blockQueue
-		bool matchearPCB (pcb_t *pcb){
-			return pcb->id == orden_activa->pid;
-		}
-	
 		//Saco el pcb de la cola de bloqueados y la pongo en la cola de ready
 		pthread_mutex_lock(&blockQueueMutex);
-		pthread_mutex_lock(&readyQueueMutex);
-		queue_push(readyQueue, list_remove_by_condition(blockQueue->elements, matchearPCB));
+		pcb_t *pcb = list_remove_pcb_by_pid(blockQueue->elements, orden_activa->pid);
 		pthread_mutex_unlock(&blockQueueMutex);
+
+		pthread_mutex_lock(&readyQueueMutex);
+		queue_push(readyQueue, pcb);
 		pthread_mutex_unlock(&readyQueueMutex);
 
 		free(orden_activa);
