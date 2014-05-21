@@ -37,3 +37,11 @@ void destruir_colas()
 	queue_destroy_and_destroy_elements(cpuReadyQueue, free);
 	queue_destroy_and_destroy_elements(cpuExecQueue, free);
 }
+
+pcb_t *list_remove_pcb_by_pid(t_list *self, uint32_t pid)
+{
+	bool matchearPCB(pcb_t *pcb) {
+		return pcb->id == pid;
+	}
+	return list_remove_by_condition(self, matchearPCB);
+}

@@ -24,4 +24,6 @@ extern pthread_mutex_t cpuExecQueueMutex;
 void crear_colas();
 void destruir_colas();
 
+pcb_t *list_remove_pcb_by_pid(t_list *self, uint32_t pid);
+
 #endif /* COLAS_H_ */
