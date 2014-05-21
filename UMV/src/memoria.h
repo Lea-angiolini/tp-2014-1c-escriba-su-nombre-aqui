@@ -22,6 +22,7 @@ void borrarSegmento( Segmento * segmentoABorrar );
 void moverSegmento(Segmento * segmento, uint32_t posicion) ;
 int tamanioSegmento(Segmento * segmento);
 
+
 void compactar();
 uint32_t memoriaOcupada();
 uint32_t memoriaLibre();

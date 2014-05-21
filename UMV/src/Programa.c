@@ -66,20 +66,16 @@ Programa * buscarPrograma( uint32_t pdi ) {
 	return NULL;
 }
 
-Segmento * buscarSegmentoEnPrograma( Programa * programa, uint32_t offset ) {
+Segmento * buscarSegmentoEnPrograma( Programa * programa, uint32_t base ) {
 
-	if( (offset >= programa->stack->inicioVirtual) && (offset <= programa->stack->finVirtual))
+	if( base == programa->stack->inicioVirtual)
 		return programa->stack;
+	if( base == programa->script->inicioVirtual)
+		return programa->script;
+	if( base == programa->etiquetas->inicioVirtual)
+		return programa->etiquetas;
+	if( base == programa->instrucciones->inicioVirtual)
+		return programa->instrucciones;
+	 return NULL;
 
-	if( (offset >= programa->script->inicioVirtual) && (offset <= programa->script->finVirtual))
-			return programa->script;
-
-	if( (offset >= programa->etiquetas->inicioVirtual) && (offset <= programa->etiquetas->finVirtual))
-			return programa->etiquetas;
-
-	if( (offset >= programa->instrucciones->inicioVirtual) && (offset <= programa->instrucciones->finVirtual))
-			return programa->instrucciones;
-	else{
-		return NULL;
-	}
 }

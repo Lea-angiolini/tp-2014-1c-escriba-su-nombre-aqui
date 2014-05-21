@@ -3,18 +3,21 @@
 #include <string.h>
 
 
+
 #include "Consola.h"
 #include "Segmento.h"
 
 #include "commons/log.h"
 #include "commons/string.h"
 #include "commons/collections/list.h"
+#include "memoria.h"
 
 
 char comandosBuffer[200];
 extern t_log * logger;
 extern t_list * tabla_segmentos;
-
+extern uint32_t retardoUMV;
+extern char * modoActualCreacionSegmentos;
 
 void * iniciarConsola( void * params ){
 
@@ -23,31 +26,80 @@ void * iniciarConsola( void * params ){
 
 	while( 1 ){
 
-		memset( &comandosBuffer, 0x0000, sizeof( comandosBuffer ) );
-		printf( ">>> " );
-		gets( &comandosBuffer );
-		if( parsearComando( &comandosBuffer ) == 0){
-			break;
-		}
+		char comando;
+		printf("¿Que operacion desea realizar?\n");
+		printf("Ingrese por teclado la letra de la operacion a realizar");
+		printf("a - Operaciones con segmentos\n");
+		printf("b - Modificar retardo ante una solicitud\n");
+		printf("c - Modificar algoritmo de modificacion de segmentos\n");
+		printf("d - Compactar tabla de segmentos\n");
+		printf("e - Generar dump\n");
+		printf("f - Finalizar consola\n");
 
-	}
+		comando = getchar();
+		switch( comando ){
+		case 'a': operacionesConSegmentos();
+				break;
+		case 'b': modificarRetardoUMV();
+				break;
+		case 'c': modificarAlgoCreacionSegmentos();
+				break;
+		case 'd': compactar();
+				break;
+		case 'e': generarDump();
+				break;
+		case 'f': break;
+
+		default : log_error( logger, "El comando ingresado no es valido" );
+					break;
+		}
+		if( comando == 'f')
+			break;
+
+		}
 
 	log_info( logger, "\n\nFinalizando la consola ..." );
 	return NULL;
 }
 
 
-int parsearComando( char * comando ) {
+void operacionesConSegmentos(){
 
-	if ( string_starts_with( comando, "holi" ) ){
-		printf("El comando es holi\n\n");
+}
+
+void modificarRetardoUMV(){
+	uint32_t retardo;
+
+	printf("Especifique el retardo que quiere modificar en milisegundos \n");
+	scanf("%d", &retardo);
+	retardoUMV = retardo;
+}
+
+void modificarAlgoCreacionSegmentos(){
+
+	char modo;
+
+	printf("Indique el modo con el que quiere crear segmentos\n");
+	printf("a - Worst-Fit \n b - First-Fit");
+	scanf("%c", &modo);
+
+	switch( modo ){
+	case 'a': if( string_starts_with( modoActualCreacionSegmentos, "WORSTFIT"))
+				break;
+			modoActualCreacionSegmentos = "WORSTFIT";
+				break;
+
+	case 'b': if( string_starts_with( modoActualCreacionSegmentos, "FIRSTFIT"))
+					break;
+			modoActualCreacionSegmentos = "FIRSTFIT";
+					break;
+	default: log_error( logger, "El comando ingresado para modificar el modo con el que quiere crear segmentos es invalido");
 	}
+}
 
-	if ( string_starts_with( comando, "salir" ) ){
-		return 0;
-	}
 
-	return 1;
+void generarDump(){
+
 }
 
 

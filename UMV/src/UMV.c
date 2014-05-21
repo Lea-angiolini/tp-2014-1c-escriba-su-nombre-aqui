@@ -48,6 +48,9 @@ pthread_t threadCpus;
  */
 void * memoria;
 uint32_t memoria_size;
+uint32_t retardoUMV;
+char * modoActualCreacionSegmentos;
+
 
 
 //TODO enviar codigo de error si no se puede bindear el socket
@@ -68,7 +71,7 @@ int leerConfiguraciones() {
 	umvConfig = config_create("config.cfg");
 	if (!config_has_property(umvConfig, "PUERTOCPU")
 			|| !config_has_property(umvConfig, "PUERTOKERNEL")
-			|| !config_has_property(umvConfig, "MEMORIA")) {
+			|| !config_has_property(umvConfig, "MEMORIA") || !config_has_property(umvConfig, "MODOCREACIONSEGMENTOS") || !config_has_property(umvConfig, "RETARDOUMV")) {
 		log_error(logger, "Archivo de configuracion invalido");
 		config_destroy(umvConfig);
 		free(memoria);
@@ -88,6 +91,8 @@ int setUp() {
 	tabla_segmentos		= list_create();
 
 	memoria_size = config_get_int_value(umvConfig, "MEMORIA");
+	retardoUMV = config_get_int_value(umvConfig, "RETARDOUMV");
+	modoActualCreacionSegmentos = config_get_string_value(umvConfig, "MODOCREACIONSEGMENTOS");
 
 	log_info( logger, "Reservando %d Bytes de memoria", memoria_size );
 	memoria = malloc( memoria_size );
