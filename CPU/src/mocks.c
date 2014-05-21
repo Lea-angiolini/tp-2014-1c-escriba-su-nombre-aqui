@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdio.h>
 
-extern pcb_t * PCB_enEjecucion;
+extern pcb_t PCB_enEjecucion;
 extern t_log * logger;
 extern Stack * stackCache;
 
@@ -61,16 +61,16 @@ void leerVariablesDelStack()
 }
 
 
-int ejecutarPrueba() {
+bool ejecutarPrueba() {
 
-	PCB_enEjecucion->codeSegment = 45;
-	PCB_enEjecucion->contextSize = 45;
-	PCB_enEjecucion->etiquetaIndex = 2;
-	PCB_enEjecucion->id = 4;
-	PCB_enEjecucion->lastErrorCode = 0;
-	PCB_enEjecucion->prioridad = 2;
-	PCB_enEjecucion->programCounter = 432;
-	PCB_enEjecucion->programaSocket = 32423;
+	PCB_enEjecucion.codeSegment = 45;
+	PCB_enEjecucion.contextSize = 45;
+	PCB_enEjecucion.etiquetaIndex = 2;
+	PCB_enEjecucion.id = 4;
+	PCB_enEjecucion.lastErrorCode = 0;
+	PCB_enEjecucion.prioridad = 2;
+	PCB_enEjecucion.programCounter = 432;
+	PCB_enEjecucion.programaSocket = 32423;
 
 
 	printf("Ejecutando........\n\n");
@@ -85,7 +85,7 @@ int ejecutarPrueba() {
 	leerVariablesDelStack();
 
 
-	return 1;
+	return true;
 
 }
 

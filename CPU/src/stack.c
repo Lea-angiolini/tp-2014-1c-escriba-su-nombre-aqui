@@ -3,12 +3,8 @@
 #include "commons/pcb.h"
 #include "commons/log.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 
-
-extern pcb_t * PCB_enEjecucion;
+extern pcb_t PCB_enEjecucion;
 extern t_log * logger;
 
 

@@ -1,8 +1,7 @@
-#include <stdint.h>
-
 #ifndef UMV_H_
 #define UMV_H_
 
+#include <stdint.h>
 
 char * solicitarLineaPrograma( uint32_t programCounter );
 

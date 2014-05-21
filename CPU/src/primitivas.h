@@ -1,7 +1,7 @@
-#include "commons/parser/parser.h"
-
 #ifndef PRIMITIVAS_H_
 #define PRIMITIVAS_H_
+
+#include "commons/parser/parser.h"
 
 AnSISOP_funciones * crearAnSISOP_funciones();
 
@@ -21,12 +21,5 @@ void imprimirTexto(char* texto);
 void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo);
 void AnSISOP_wait (t_nombre_semaforo identificador_semaforo);
 void AnSISOP_signal (t_nombre_semaforo identificador_semaforo);
-
-
-
-
-
-
-
 
 #endif /* PRIMITIVAS_H_ */

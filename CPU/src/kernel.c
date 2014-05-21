@@ -12,7 +12,7 @@
 
 extern int conexionKernel;
 extern t_log * logger;
-extern pcb_t * PCB_enEjecucion;
+extern pcb_t PCB_enEjecucion;
 
 extern uint32_t quantumPorEjecucion;
 extern uint32_t retardo;

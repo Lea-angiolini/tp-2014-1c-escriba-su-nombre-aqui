@@ -1,8 +1,9 @@
-
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/socket.h>
+
+#include <stdbool.h>
 
 #include "commons/sockets.h"
 #include "commons/log.h"
@@ -16,8 +17,8 @@
 #include "primitivas.h"
 #include "kernel.h"
 
-
-
+t_config * cpuConfig;
+t_log * logger;
 
 int conexionKernel;
 int conexionUMV;
@@ -25,42 +26,35 @@ int conexionUMV;
 uint32_t quantumPorEjecucion;
 uint32_t retardo;
 uint32_t quantumRestante;
-t_log * logger;
+
+pcb_t PCB_enEjecucion;
 
 AnSISOP_funciones * ansisop_funciones;
 
-pcb_t * PCB_enEjecucion;
-
-t_config * cpuConfig;
-
 Stack * stackCache;
 
-
-
-int leerConfig(){
-
-	log_debug( logger, "Leyendo archivo de configuracion" );
+bool leerConfig() {
 	cpuConfig = config_create("config.cfg");
 
-	if ( !config_has_property(cpuConfig, "IPKERNEL")
+	if (!config_has_property(cpuConfig, "IPKERNEL")
 			|| !config_has_property(cpuConfig, "PUERTOKERNEL")
 			|| !config_has_property(cpuConfig, "IPUMV")
-			|| !config_has_property(cpuConfig, "PUERTOUMV")) {
+			|| !config_has_property(cpuConfig, "PUERTOUMV"))
+	{
 
 		log_error(logger, "Archivo de configuracion no valido");
-		return -1;
+		return false;
 	}
-	log_debug( logger, "Se termino de leer el archivo de configuraciones" );
-	return 1;
+
+	return true;
 }
 
-
-
 int crearConexionKernel() {
-	log_info( logger, "Conectando al Kernel en: %s : %d", config_get_string_value(cpuConfig, "IPKERNEL") , config_get_int_value(cpuConfig, "PUERTOKERNEL"));
+	log_info(logger, "Conectando al Kernel en: %s : %d", config_get_string_value(cpuConfig, "IPKERNEL"), config_get_int_value(cpuConfig, "PUERTOKERNEL"));
 	conexionKernel = conectar(config_get_string_value(cpuConfig, "IPKERNEL"), config_get_int_value(cpuConfig, "PUERTOKERNEL"), logger);
+
 	if (conexionKernel < 0) {
-		log_error(logger, "No se pudo conectar al Kernel | CPU/src/CPU.c -> crearConexionKernel");
+		log_error(logger, "No se pudo conectar al Kernel");
 		return -1;
 	}
 
@@ -68,87 +62,47 @@ int crearConexionKernel() {
 
 }
 
-int crearConexionUMV() {
-	log_info( logger, "Conectando a la UMV en %s : %d", config_get_string_value(cpuConfig, "IPUMV") ,  config_get_int_value(cpuConfig, "PUERTOUMV") );
-	conexionUMV = conectar(config_get_string_value(cpuConfig, "IPUMV"), config_get_int_value(cpuConfig, "PUERTOUMV"), logger);
+bool crearConexionUMV() {
+	log_info(logger, "Conectando a la UMV en %s : %d", config_get_string_value(cpuConfig, "IPUMV"), config_get_int_value(cpuConfig, "PUERTOUMV"));
+	conexionUMV = conectar(config_get_string_value(cpuConfig, "IPUMV"),	config_get_int_value(cpuConfig, "PUERTOUMV"), logger);
 	if (conexionUMV < 0) {
 		close(conexionKernel);
 		log_error(logger, "No se pudo conectar al UMV");
-		return -1;
+		return false;
 	}
-	return 1;
+	return true;
 }
 
+bool crearConexiones() {
 
-int crearConexiones() {
-
-	if( crearConexionKernel() < 0 || crearConexionUMV() < 0 ){
-		return -1;
+	if (crearConexionKernel() < 0 || crearConexionUMV() < 0) {
+		return false;
 	}
-	return 1;
+	return true;
 }
 
-
-
-
-int main(void) {
-
-
-	logger				= log_create( "log.txt", "CPU", 1, LOG_LEVEL_TRACE );
-	log_info			( logger, "Iniciando CPU");
-	log_debug			( logger, "Setando primitivas");
-	ansisop_funciones	= crearAnSISOP_funciones();
-	PCB_enEjecucion		= malloc( sizeof( pcb_t ) );
-	stackCache			= new_Stack();
+int main(int argc, char *argv[]) {
+	logger = log_create("log.txt", "CPU", 1, LOG_LEVEL_TRACE);
+	log_info(logger, "Iniciando CPU");
+	log_debug(logger, "Setando primitivas");
+	ansisop_funciones = crearAnSISOP_funciones();
+	stackCache = new_Stack();
 
 	//if( leerConfig() < 0 || crearConexiones() < 0 || recibirYProcesarMensajesKernel() < 0 ) {
-	if( leerConfig() < 0 || crearConexiones() < 0 || ejecutarPrueba() < 0 ) {
-		log_error( logger, "Hubo un error en el programa, finalizando :( " );
-		return -1;
-	}else{
-		log_info( logger, "El programa finalizo con exito !" );
+	if (!leerConfig() || !crearConexiones() || !ejecutarPrueba()) {
+		log_error(logger, "Hubo un error en el proceso CPU, finalizando");
+		return EXIT_SUCCESS;
 	}
 
+	log_info(logger, "El programa finalizo con correctamente");
 
-	log_destroy( logger );
-	config_destroy( cpuConfig );
-	free( PCB_enEjecucion );
-	free( ansisop_funciones );
-	free( stackCache );
+	log_destroy(logger);
+	config_destroy(cpuConfig);
 
-	return 0;
+	free(ansisop_funciones);
+	free(stackCache);
+
+	return EXIT_SUCCESS;
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

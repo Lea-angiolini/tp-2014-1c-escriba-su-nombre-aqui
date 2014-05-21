@@ -1,8 +1,10 @@
-#include <stdint.h>
-
 #ifndef STACK_H_
 #define STACK_H_
 
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdint.h>
 
 /*
  * Esta estructura tiene una porcion del stack. Puede ser cualquier porcion.
