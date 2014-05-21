@@ -164,7 +164,7 @@ void desconexionCPU(int socket)
 		log_info(logpcp, "Moviendo PCB de la cola EXEC a EXIT");
 
 		pthread_mutex_lock(&execQueueMutex);
-		pcb_t *pcb = list_remove_pcb_by_pid(execQueue->elements, cpuInfo.pid);
+		pcb_t *pcb = list_remove_pcb_by_pid(execQueue->elements, cpuInfo->pid);
 		pthread_mutex_unlock(&execQueueMutex);
 
 		pthread_mutex_lock(&exitQueueMutex);

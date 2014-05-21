@@ -3,6 +3,7 @@
 
 #include <pthread.h>
 #include "commons/collections/queue.h"
+#include "pcp.h"
 
 extern t_queue *newQueue; //La usa el PLP
 extern t_queue *readyQueue; //La usa el PLP, PCP y el IO
@@ -13,6 +14,7 @@ extern t_queue *blockQueue; //Las usa el PCP y el IO
 extern pthread_mutex_t readyQueueMutex;
 extern pthread_mutex_t blockQueueMutex;
 extern pthread_mutex_t execQueueMutex;
+extern pthread_mutex_t exitQueueMutex;
 
 
 extern t_queue *cpuReadyQueue;
