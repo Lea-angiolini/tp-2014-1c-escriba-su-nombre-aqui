@@ -44,10 +44,9 @@ int responder_orden_ejecucion()
 
 uint32_t solcitarVariableCompartidaAKernel(t_nombre_compartida variable)
 {
-	if( enviarHeaderCodeaKernel('o') < 0 )
-		return false;
-
 	socket_scObtenerValor sObtenerValor;
+	sObtenerValor.header.code = 'o';
+	sObtenerValor.header.size = sizeof(socket_scObtenerValor);
 	strcpy( sObtenerValor.identificador, variable );
 
 	if( send(conexionKernel, &sObtenerValor, sizeof(socket_scObtenerValor), 0) < 0 )
@@ -61,10 +60,9 @@ uint32_t solcitarVariableCompartidaAKernel(t_nombre_compartida variable)
 
 bool enviarAKernelNuevoValorVariableCompartida(t_nombre_compartida variable, t_valor_variable valor)
 {
-	if( enviarHeaderCodeaKernel('g') < 0 )
-		return false;
-
 	socket_scGrabarValor sGrabarValor;
+	sGrabarValor.header.code = 'g';
+	sGrabarValor.header.size = sizeof(socket_scGrabarValor);
 	sGrabarValor.valor = valor;
 	strcpy( sGrabarValor.identificador, variable );
 
@@ -90,10 +88,9 @@ int enviarAKernelImprimirTexto( char * texto )
 
 bool enviarAKernelEntradaSalida(t_nombre_dispositivo dispositivo, int tiempo)
 {
-	if( enviarHeaderCodeaKernel('i') < 0 )
-		return false;
-
 	socket_scIO io;
+	io.header.code = 'i';
+	io.header.size = sizeof(socket_scIO);
 	io.unidades = tiempo;
 	strcpy(io.identificador, dispositivo);
 
@@ -104,15 +101,13 @@ bool enviarAKernelEntradaSalida(t_nombre_dispositivo dispositivo, int tiempo)
 		return false;
 
 	return true;
-	//return enviarPaquete( conexionKernel, &mensaje, sizeof( socket_scIO ) , 'i', logger ) && enviarPCB();
 }
 
 bool enviarAKernelSignal(t_nombre_semaforo identificador_semaforo)
 {
-	if( enviarHeaderCodeaKernel('s') < 0 )
-		return false;
-
 	socket_scSignal sSignal;
+	sSignal.header.code = 's';
+	sSignal.header.size = sizeof(socket_scSignal);
 	strcpy(sSignal.identificador, identificador_semaforo );
 
 	if( send(conexionKernel, &sSignal, sizeof(socket_scSignal), 0) < 0 )
@@ -123,10 +118,9 @@ bool enviarAKernelSignal(t_nombre_semaforo identificador_semaforo)
 
 bool enviarAKernelWait(t_nombre_semaforo identificador_semaforo)
 {
-	if( enviarHeaderCodeaKernel('w') < 0 )
-		return false;
-
 	socket_scWait sWait;
+	sWait.header.code = 'w';
+	sWait.header.size = sizeof(socket_scWait);
 	strcpy(sWait.identificador, identificador_semaforo );
 
 	if( send(conexionKernel, &sWait, sizeof(socket_scWait), 0) < 0 )
@@ -155,18 +149,10 @@ bool enviarAKernelWait(t_nombre_semaforo identificador_semaforo)
 /****************************************************/
 
 
-int enviarHeaderCodeaKernel(unsigned char code)
-{
-	socket_header header;
-	header.code = code;
-	header.size = sizeof(socket_header);
-
-	return send(conexionKernel, &header, sizeof(socket_header), 0);
-}
-
 int enviarPCB()
 {
 	socket_pcb spcb;
+	spcb.header.size = sizeof(socket_pcb);
 	spcb.pcb = PCB_enEjecucion;
 
 	return send(conexionKernel, &spcb, sizeof(socket_pcb), 0);
