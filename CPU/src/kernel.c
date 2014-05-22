@@ -81,21 +81,61 @@ int enviarAKernelEntradaSalida(t_nombre_dispositivo dispositivo, int tiempo)
 	return enviarPaquete( conexionKernel, &mensaje, sizeof( socket_scIO ) , 'i', logger ) && enviarPCB();
 }
 
-int enviarAKernelSignal(t_nombre_semaforo identificador_semaforo)
+bool enviarAKernelSignal(t_nombre_semaforo identificador_semaforo)
 {
-	socket_scSignal mensaje;
-	strcpy( mensaje.identificador, identificador_semaforo );
-	enviarPaquete( conexionKernel, &mensaje, sizeof( socket_scSignal ), 's' , logger);
-	return 1;
+	socket_header header;
+	header.code = 's';
+
+	if( send(conexionKernel, &header, sizeof(socket_header), 0) < 0 )
+		return false;
+
+	socket_scSignal sSignal;
+	strcpy( sSignal.identificador, identificador_semaforo );
+
+	if( send(conexionKernel, &header, sizeof(socket_header), 0) < 0 )
+		return false;
+
+	return true;
 }
 
-int enviarAKernelWait(t_nombre_semaforo identificador_semaforo)
+bool enviarAKernelWait(t_nombre_semaforo identificador_semaforo)
 {
-	socket_scWait mensaje;
-	strcpy( mensaje.identificador, identificador_semaforo );
+	socket_header header;
+	header.code = 'w';
 
-	return 1;
+	if( send(conexionKernel, &header, sizeof(socket_header), 0) < 0 )
+		return false;
+
+
+	socket_scWait sWait;
+	strcpy( sWait.identificador, identificador_semaforo );
+
+	if( send(conexionKernel, &sWait, sizeof(socket_scWait), 0) < 0 )
+		return false;
+
+	socket_respuesta res;
+
+	if( recv(socket, &res, sizeof(socket_respuesta), MSG_WAITALL) != sizeof(socket_respuesta) )
+			    return false;
+
+	if(!res.valor)
+	{
+		//Enviar pcb y detener ejecucion
+
+		socket_pcb spcb;
+		spcb.pcb = PCB_enEjecucion;
+
+		if( send(conexionKernel, &spcb, sizeof(socket_pcb), 0) < 0 )
+				return false;
+
+		//Detener ejecucion ???
+	}
+
+	return true;
 }
+
+
+
 /****************************************************/
 
 
@@ -103,7 +143,9 @@ int enviarAKernelWait(t_nombre_semaforo identificador_semaforo)
 
 int enviarPCB()
 {
-	return enviarPaquete( conexionKernel, &PCB_enEjecucion, sizeof( socket_pcb ) , 'k', logger );
+	socket_pcb spcb;
+	spcb.pcb = PCB_enEjecucion;
+	return enviarPaquete( conexionKernel, &spcb, sizeof( socket_pcb ) , 'k', logger );
 }
 
 int enviarHandshake()

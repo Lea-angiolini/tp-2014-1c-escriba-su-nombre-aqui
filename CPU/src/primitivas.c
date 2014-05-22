@@ -37,7 +37,15 @@ AnSISOP_funciones * crearAnSISOP_funciones()
 
 }
 
+AnSISOP_kernel *crearAnSISOP_kernel()
+{
+	AnSISOP_kernel *kernel = malloc(sizeof(AnSISOP_kernel));
 
+	kernel->AnSISOP_wait =   &scWait;
+	kernel->AnSISOP_signal = &scSignal;
+
+	return kernel;
+}
 
 /************************************************************************************/
 
@@ -149,13 +157,13 @@ void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo)
 
 
 
-void AnSISOP_wait (t_nombre_semaforo identificador_semaforo)
+void scWait(t_nombre_semaforo identificador_semaforo)
 {
 	log_debug( logger, "Llamada a Wait" );
 	enviarAKernelWait(identificador_semaforo);
 }
 
-void AnSISOP_signal(t_nombre_semaforo identificador_semaforo)
+void scSignal(t_nombre_semaforo identificador_semaforo)
 {
 	log_debug( logger, "Llamada a Signal" );
 	enviarAKernelSignal(identificador_semaforo);
