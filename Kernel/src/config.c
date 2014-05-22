@@ -73,7 +73,7 @@ void cargar_variablesCompartidas()
 
 	for(i = 0; variablesCompartidasArray[i] != NULL; i++)
 	{
-		uint32_t *valor = malloc(sizeof(uint32_t));
+		int32_t *valor = malloc(sizeof(int32_t));
 		*valor = 0;
 
 		dictionary_put(variablesCompartidas, variablesCompartidasArray[i], valor);

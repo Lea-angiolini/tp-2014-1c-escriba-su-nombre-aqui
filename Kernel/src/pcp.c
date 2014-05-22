@@ -174,6 +174,7 @@ void desconexionCPU(int socket)
 		log_info(logpcp, "Informandole a Programa que el script no pudo concluir su ejecucion");
 
 		socket_msg msg;
+		msg.header.size = sizeof(socket_msg);
 
 		strcpy(msg.msg, "El script no pudo concluir su ejecucion debido a la desconexion de un CPU");
 		send(pcb->programaSocket, &msg, sizeof(socket_msg), 0);
@@ -223,8 +224,8 @@ bool recibirYprocesarPedido(int socket)
 		return syscallSignal(socket);
 	case 'p': //Termino Quantum
 		return terminoQuantumCPU(socket);
-	case 'k': //SC Imprimir
-		return syscallImprimir(socket);
+	case 'k': //Imprimir Texto
+		return imprimirTexto(socket);
 	}
 	return true;
 }
@@ -286,10 +287,10 @@ bool syscallObtenerValor(int socket)
 	if( recv(socket, &sObtenerValor, sizeof(socket_scObtenerValor), MSG_WAITALL) != sizeof(socket_scObtenerValor) )
 		return false;
 
-	uint32_t *valor = dictionary_get(variablesCompartidas, sObtenerValor.identificador);
+	int32_t *valor = dictionary_get(variablesCompartidas, sObtenerValor.identificador);
 	sObtenerValor.valor = *valor;
 
-	if( send(socket, &sObtenerValor, sizeof(socket_scObtenerValor), 0) != sizeof(socket_scObtenerValor) )
+	if( send(socket, &sObtenerValor, sizeof(socket_scObtenerValor), 0) < 0 )
 		return false;
 
 	return true;
@@ -302,7 +303,7 @@ bool syscallGrabarValor(int socket)
 	if( recv(socket, &sGrabarValor, sizeof(socket_scGrabarValor), MSG_WAITALL) != sizeof(socket_scGrabarValor) )
 		return false;
 
-	uint32_t *valor = dictionary_get(variablesCompartidas, sGrabarValor.identificador);
+	int32_t *valor = dictionary_get(variablesCompartidas, sGrabarValor.identificador);
 	*valor = sGrabarValor.valor;
 
 	return true;
@@ -317,7 +318,9 @@ bool syscallWait(int socket)
 
 	semaforo_t *semaforo = dictionary_get(semaforos, sWait.identificador);
 	semaforo->valor -= 1;
+
 	socket_respuesta res;
+	res.header.size = sizeof(socket_respuesta);
 
 	if (semaforo->valor < 0)
 	{
@@ -441,7 +444,7 @@ bool terminoQuantumCPU(int socket)
 	return true;
 }
 
-bool syscallImprimir(int socket)
+bool imprimirTexto(int socket)
 {
 	socket_imprimirTexto texto;
 
@@ -449,11 +452,10 @@ bool syscallImprimir(int socket)
 			return false;
 
 	socket_msg msg;
+	msg.header.size = sizeof(socket_msg);
 
 	strcpy(msg.msg, texto.texto);
-
-	if( send(texto.programaSocket, &msg, sizeof(socket_msg), 0) < 0 )
-		return false;
+	send(texto.programaSocket, &msg, sizeof(socket_msg), 0);
 
 	return true;
 }

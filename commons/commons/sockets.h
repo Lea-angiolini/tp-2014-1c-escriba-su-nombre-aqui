@@ -67,14 +67,14 @@ typedef struct {
 typedef struct {
 	socket_header header; //header.code = 'o'
 	char identificador[100];
-	uint32_t valor; //Se llena solo para la respuesta
+	int32_t valor; //Se llena solo para la respuesta
 }  __attribute__((packed)) socket_scObtenerValor;
 
 //CPU->KernelPCP (necesita respuesta del kernel?)
 typedef struct {
 	socket_header header; //header.code = 'g'
 	char identificador[100];
-	uint32_t valor;
+	int32_t valor;
 }  __attribute__((packed)) socket_scGrabarValor;
 
 //CPU->KernelPCP
@@ -96,13 +96,6 @@ typedef struct {
 	uint32_t unidades;
 }  __attribute__((packed)) socket_scIO;
 
-
-
-//CPU->KernelPCP
-typedef struct {
-	socket_header header; //header.code = 'n'
-	int valor;									//Es int ?? usamos para todo uint32_t, todas las variables son uint32_t porque aca es int ???
-}  __attribute__((packed)) socket_imprimir;
 
 
 //CPU->KernelPCP
