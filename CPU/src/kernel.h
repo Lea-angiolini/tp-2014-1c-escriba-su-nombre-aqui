@@ -1,8 +1,12 @@
 #ifndef KERNEL_H_
 #define KERNEL_H_
 
+#include <sys/socket.h>
+
 #include "commons/sockets.h"
 
+bool crearConexionKernel();
+bool enviarHandshake();
 
 uint32_t	solcitarVariableCompartidaAKernel(t_nombre_compartida variable);
 bool		enviarAKernelNuevoValorVariableCompartida(t_nombre_compartida variable, t_valor_variable valor);
@@ -18,6 +22,11 @@ int procesarMenssajeKernel( int socket, socket_header header );
 int orden_ejecucion() ;
 
 int enviarPCB();
+
+void scWait(t_nombre_semaforo identificador_semaforo);
+void scSignal(t_nombre_semaforo identificador_semaforo);
+
+extern int socketKernel;
 
 #endif /* KERNEL_H_ */
 

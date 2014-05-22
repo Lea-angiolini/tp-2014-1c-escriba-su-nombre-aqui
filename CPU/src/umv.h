@@ -2,6 +2,9 @@
 #define UMV_H_
 
 #include <stdint.h>
+#include <stdbool.h>
+
+bool crearConexionUMV();
 
 char * solicitarLineaPrograma( uint32_t programCounter );
 
@@ -12,6 +15,8 @@ int enviarFinQuantum( uint32_t pid );
 
 int obtenerContextStack();
 int guardarStack();
+
+extern int socketUMV;
 
 #endif /* UMV_H_ */
 

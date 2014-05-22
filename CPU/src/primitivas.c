@@ -1,20 +1,19 @@
-#include "stack.h"
-#include "primitivas.h"
+#include "kernel.h"
+#include "config.h"
 
+#include "primitivas.h"
 
 #include "commons/log.h"
 #include "commons/parser/parser.h"
 
-#include <stdint.h>
-
 
 extern t_log * logger;
-extern Stack * stackCache;
 
 
 //TODO crear ansisopKernel funciones
 AnSISOP_funciones * crearAnSISOP_funciones()
 {
+	log_debug(logger, "Setando primitivas");
 
 	AnSISOP_funciones * funciones = malloc(sizeof(AnSISOP_funciones));
 

@@ -1,15 +1,24 @@
 #include "umv.h"
+#include "config.h"
 
 #include "commons/log.h"
 #include "commons/sockets.h"
 
-#include "stack.h"
-
-extern int conexionUMV;
+int socketUMV;
 extern t_log * logger;
 extern Stack * stackCache;
 
 
+bool crearConexionUMV() {
+	log_info(logger, "Conectando a la UMV en %s:%d", config_get_string_value(config, "IPUMV"), config_get_int_value(config, "PUERTOUMV"));
+	socketUMV = conectar(config_get_string_value(config, "IPUMV"),	config_get_int_value(config, "PUERTOUMV"), logger);
+
+	if (socketUMV < 0) {
+		log_error(logger, "No se pudo conectar al UMV");
+		return false;
+	}
+	return true;
+}
 
 
 /*
@@ -24,7 +33,7 @@ char * solicitarLineaPrograma( uint32_t programCounter ) {
 	paquete->numero_linea_Codigo = programCounter;
 
 	//socket_responderLineaCodigo * paqueteRespuesta = (socket_responderLineaCodigo*)
-	enviarYRecibirPaquete( conexionUMV, (void*) paquete, sizeof( socket_obtenerLineaCodigo ), sizeof( socket_responderLineaCodigo ) , 'a', 'd', logger  ) ;
+	enviarYRecibirPaquete( socketUMV, (void*) paquete, sizeof( socket_obtenerLineaCodigo ), sizeof( socket_responderLineaCodigo ) , 'a', 'd', logger  ) ;
 
 	free( paquete );
 	log_info( logger, "Se recibio una linea de programa");
@@ -99,7 +108,7 @@ int guardarStack()
 	paquete->length = 100;
 	memcpy( paquete->data, stackCache->data, 100 ) ;
 
-	socket_RespuestaGuardarEnMemoria * respuesta = (socket_RespuestaGuardarEnMemoria*) enviarYRecibirPaquete( conexionUMV, paquete, sizeof(socket_guardarEnMemoria) , 0, 'c', 'a', logger );
+	socket_RespuestaGuardarEnMemoria * respuesta = (socket_RespuestaGuardarEnMemoria*) enviarYRecibirPaquete( socketUMV, paquete, sizeof(socket_guardarEnMemoria) , 0, 'c', 'a', logger );
 	if( respuesta == NULL || respuesta->status ) {
 		return -1;
 	}else{
@@ -125,7 +134,7 @@ int obtenerContextStack()
 	paquete->pdi = 1;
 	paquete->length = 100;
 
-	socket_RespuestaLeerMemoria * respuesta = (socket_RespuestaLeerMemoria*) enviarYRecibirPaquete( conexionUMV, paquete, sizeof(socket_leerMemoria), 45, 'b', 'a', logger );
+	socket_RespuestaLeerMemoria * respuesta = (socket_RespuestaLeerMemoria*) enviarYRecibirPaquete( socketUMV, paquete, sizeof(socket_leerMemoria), 45, 'b', 'a', logger );
 	if( respuesta == NULL || respuesta->status == false ) {
 		log_error( logger, "Hubo un error al leer el stack" );
 		return -1;

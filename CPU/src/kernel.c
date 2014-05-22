@@ -1,23 +1,52 @@
-#include <sys/socket.h>
-#include<string.h>
+#include "kernel.h"
+#include "config.h"
 
 #include "ejecucion.h"
-#include "kernel.h"
 
 #include "commons/pcb.h"
-#include "commons/sockets.h"
 
-
-#define BUFF_SIZE 1024
-
-extern int conexionKernel;
+int socketKernel;
 extern t_log * logger;
 extern pcb_t PCB_enEjecucion;
 
 extern uint32_t quantumPorEjecucion;
 extern uint32_t retardo;
 
+bool crearConexionKernel() {
+	log_info(logger, "Conectando al Kernel en: %s:%d", config_get_string_value(config, "IPKERNEL"), config_get_int_value(config, "PUERTOKERNEL"));
+	socketKernel = conectar(config_get_string_value(config, "IPKERNEL"), config_get_int_value(config, "PUERTOKERNEL"), logger);
 
+	if (socketKernel < 0) {
+		log_error(logger, "No se pudo conectar al Kernel");
+		return false;
+	}
+
+	return enviarHandshake();
+}
+
+bool enviarHandshake()
+{
+
+	socket_header cod;
+	cod.code = 'h';
+	cod.size = sizeof( socket_header );
+
+	if ( send( socketKernel, &cod, cod.size, 0 ) < 0 ) {
+		return false;
+	}
+
+	socket_cpucfg * cpucfg = (socket_cpucfg *) recibirPaquete( socketKernel, 0, 'h', logger );
+	if( cpucfg == NULL ) {
+		log_error(logger, "No se pudo leer el la configuracion que envio el Kernel | CPU/src/CPU.c -> crearsocketKernel");
+		return false;
+	}
+
+	quantumPorEjecucion = cpucfg->quantum;
+	retardo = cpucfg->retardo;
+	log_info( logger, "El quantum que envio el kernel es: %d y el retardo: %d", quantumPorEjecucion, retardo );
+
+	return true;
+}
 
 /*
  *	Instrucciones que el CPU puede recibir del kernel
@@ -49,10 +78,10 @@ uint32_t solcitarVariableCompartidaAKernel(t_nombre_compartida variable)
 	sObtenerValor.header.size = sizeof(socket_scObtenerValor);
 	strcpy( sObtenerValor.identificador, variable );
 
-	if( send(conexionKernel, &sObtenerValor, sizeof(socket_scObtenerValor), 0) < 0 )
+	if( send(socketKernel, &sObtenerValor, sizeof(socket_scObtenerValor), 0) < 0 )
 		return false;
 
-	if( recv(conexionKernel, &sObtenerValor, sizeof(socket_scObtenerValor), MSG_WAITALL) != sizeof(socket_scObtenerValor) )
+	if( recv(socketKernel, &sObtenerValor, sizeof(socket_scObtenerValor), MSG_WAITALL) != sizeof(socket_scObtenerValor) )
 		return false;
 
 	return sObtenerValor.valor;
@@ -66,7 +95,7 @@ bool enviarAKernelNuevoValorVariableCompartida(t_nombre_compartida variable, t_v
 	sGrabarValor.valor = valor;
 	strcpy( sGrabarValor.identificador, variable );
 
-	if( send(conexionKernel, &sGrabarValor, sizeof(socket_scGrabarValor), 0) < 0 )
+	if( send(socketKernel, &sGrabarValor, sizeof(socket_scGrabarValor), 0) < 0 )
 		return false;
 
 	return true;
@@ -80,7 +109,7 @@ bool enviarAKernelImprimir( t_valor_variable valor )
 	mensaje.programaSocket = PCB_enEjecucion.programaSocket;
 	sprintf(mensaje.texto, "%d", valor);
 
-	if( send(conexionKernel, &mensaje, sizeof(socket_imprimirTexto), 0) < 0 )
+	if( send(socketKernel, &mensaje, sizeof(socket_imprimirTexto), 0) < 0 )
 		return false;
 
 	return true;
@@ -94,7 +123,7 @@ bool enviarAKernelImprimirTexto( char * texto )
 	mensaje.programaSocket = PCB_enEjecucion.programaSocket;
 	strcpy( mensaje.texto, texto );
 
-	if( send(conexionKernel, &mensaje, sizeof(socket_imprimirTexto), 0) < 0 )
+	if( send(socketKernel, &mensaje, sizeof(socket_imprimirTexto), 0) < 0 )
 			return false;
 
 	return true;
@@ -108,7 +137,7 @@ bool enviarAKernelEntradaSalida(t_nombre_dispositivo dispositivo, int tiempo)
 	io.unidades = tiempo;
 	strcpy(io.identificador, dispositivo);
 
-	if( send(conexionKernel, &io, sizeof(socket_scIO), 0) < 0 )
+	if( send(socketKernel, &io, sizeof(socket_scIO), 0) < 0 )
 		return false;
 
 	if( enviarPCB() < 0 )
@@ -124,7 +153,7 @@ bool enviarAKernelSignal(t_nombre_semaforo identificador_semaforo)
 	sSignal.header.size = sizeof(socket_scSignal);
 	strcpy(sSignal.identificador, identificador_semaforo );
 
-	if( send(conexionKernel, &sSignal, sizeof(socket_scSignal), 0) < 0 )
+	if( send(socketKernel, &sSignal, sizeof(socket_scSignal), 0) < 0 )
 		return false;
 
 	return true;
@@ -137,7 +166,7 @@ bool enviarAKernelWait(t_nombre_semaforo identificador_semaforo)
 	sWait.header.size = sizeof(socket_scWait);
 	strcpy(sWait.identificador, identificador_semaforo );
 
-	if( send(conexionKernel, &sWait, sizeof(socket_scWait), 0) < 0 )
+	if( send(socketKernel, &sWait, sizeof(socket_scWait), 0) < 0 )
 		return false;
 
 	socket_respuesta res;
@@ -169,32 +198,10 @@ int enviarPCB()
 	spcb.header.size = sizeof(socket_pcb);
 	spcb.pcb = PCB_enEjecucion;
 
-	return send(conexionKernel, &spcb, sizeof(socket_pcb), 0);
+	return send(socketKernel, &spcb, sizeof(socket_pcb), 0);
 }
 
-int enviarHandshake()
-{
 
-	socket_header cod;
-	cod.code = 'h';
-	cod.size = sizeof( socket_header );
-
-	if ( send( conexionKernel, &cod, cod.size, 0 ) < 0 ) {
-		return -1;
-	}
-
-	socket_cpucfg * cpucfg = (socket_cpucfg *) recibirPaquete( conexionKernel, 0, 'h', logger );
-	if( cpucfg == NULL ) {
-		log_error(logger, "No se pudo leer el la configuracion que envio el Kernel | CPU/src/CPU.c -> crearConexionKernel");
-		return -1;
-	}
-
-	quantumPorEjecucion = cpucfg->quantum;
-	retardo = cpucfg->retardo;
-	log_info( logger, "El quantum que envio el kernel es: %d y el retardo: %d", quantumPorEjecucion, retardo );
-
-	return 1;
-}
 
 
 
