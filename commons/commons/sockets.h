@@ -108,7 +108,8 @@ typedef struct {
 //CPU->KernelPCP
 typedef struct {
 	socket_header header; //header.code = 'k'
-	char texto[1000];
+	char texto[255];
+	int programaSocket;
 }  __attribute__((packed)) socket_imprimirTexto;
 
 

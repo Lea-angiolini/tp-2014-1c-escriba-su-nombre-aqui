@@ -223,6 +223,8 @@ bool recibirYprocesarPedido(int socket)
 		return syscallSignal(socket);
 	case 'p': //Termino Quantum
 		return terminoQuantumCPU(socket);
+	case 'k': //SC Imprimir
+		return syscallImprimir(socket);
 	}
 	return true;
 }
@@ -438,3 +440,21 @@ bool terminoQuantumCPU(int socket)
 
 	return true;
 }
+
+bool syscallImprimir(int socket)
+{
+	socket_imprimirTexto texto;
+
+	if( recv(socket, &texto, sizeof(socket_imprimirTexto), MSG_WAITALL) != sizeof(socket_imprimirTexto) )
+			return false;
+
+	socket_msg msg;
+
+	strcpy(msg.msg, texto.texto);
+
+	if( send(texto.programaSocket, &msg, sizeof(socket_msg), 0) < 0 )
+		return false;
+
+	return true;
+}
+

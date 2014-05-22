@@ -6,8 +6,8 @@
 
 uint32_t	solcitarVariableCompartidaAKernel(t_nombre_compartida variable);
 bool		enviarAKernelNuevoValorVariableCompartida(t_nombre_compartida variable, t_valor_variable valor);
-int			enviarAKernelImprimir		( t_valor_variable valor );
-int			enviarAKernelImprimirTexto	( char * texto );
+bool		enviarAKernelImprimir		( t_valor_variable valor );
+bool		enviarAKernelImprimirTexto	( char * texto );
 bool		enviarAKernelEntradaSalida	(t_nombre_dispositivo dispositivo, int tiempo);
 bool 		enviarAKernelSignal(t_nombre_semaforo identificador_semaforo);
 bool 		enviarAKernelWait(t_nombre_semaforo identificador_semaforo);

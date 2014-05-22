@@ -72,18 +72,32 @@ bool enviarAKernelNuevoValorVariableCompartida(t_nombre_compartida variable, t_v
 	return true;
 }
 
-int enviarAKernelImprimir( t_valor_variable valor )
-{
-	socket_imprimir mensaje;
-	mensaje.valor = valor;
-	return enviarPaquete( conexionKernel, &mensaje, sizeof( socket_imprimir ) , 'n', logger ) && enviarPCB();
-}
-
-int enviarAKernelImprimirTexto( char * texto )
+bool enviarAKernelImprimir( t_valor_variable valor )
 {
 	socket_imprimirTexto mensaje;
+	mensaje.header.code = 'k';
+	mensaje.header.size = sizeof( socket_imprimirTexto );
+	mensaje.programaSocket = PCB_enEjecucion.programaSocket;
+	sprintf(mensaje.texto, "%d", valor);
+
+	if( send(conexionKernel, &mensaje, sizeof(socket_imprimirTexto), 0) < 0 )
+		return false;
+
+	return true;
+}
+
+bool enviarAKernelImprimirTexto( char * texto )
+{
+	socket_imprimirTexto mensaje;
+	mensaje.header.code = 'k';
+	mensaje.header.size = sizeof( socket_imprimirTexto );
+	mensaje.programaSocket = PCB_enEjecucion.programaSocket;
 	strcpy( mensaje.texto, texto );
-	return enviarPaquete( conexionKernel, &mensaje, sizeof( socket_imprimirTexto ) , 'k', logger ) && enviarPCB();
+
+	if( send(conexionKernel, &mensaje, sizeof(socket_imprimirTexto), 0) < 0 )
+			return false;
+
+	return true;
 }
 
 bool enviarAKernelEntradaSalida(t_nombre_dispositivo dispositivo, int tiempo)

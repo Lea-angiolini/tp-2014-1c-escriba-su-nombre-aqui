@@ -34,5 +34,6 @@ bool syscallGrabarValor(int socket);
 bool syscallWait(int socket);
 bool syscallSignal(int socket);
 bool terminoQuantumCPU(int socket);
+bool syscallImprimir(int socket);
 
 #endif /* PCP_H_ */
