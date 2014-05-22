@@ -44,19 +44,34 @@ int responder_orden_ejecucion()
 
 uint32_t solcitarVariableCompartidaAKernel(t_nombre_compartida variable)
 {
-	socket_scObtenerValor mensaje;
-	strcpy( mensaje.identificador, variable );
-	enviarYRecibirPaquete( conexionKernel, &mensaje, sizeof( socket_scObtenerValor ) , 0, 'o', 'a', logger );
-	return 1;
+	if( enviarHeaderCodeaKernel('o') < 0 )
+		return false;
+
+	socket_scObtenerValor sObtenerValor;
+	strcpy( sObtenerValor.identificador, variable );
+
+	if( send(conexionKernel, &sObtenerValor, sizeof(socket_scObtenerValor), 0) < 0 )
+		return false;
+
+	if( recv(conexionKernel, &sObtenerValor, sizeof(socket_scObtenerValor), MSG_WAITALL) != sizeof(socket_scObtenerValor) )
+		return false;
+
+	return sObtenerValor.valor;
 }
 
-int enviarAKernelNuevoValorVariableCompartida(t_nombre_compartida variable, t_valor_variable valor)
+bool enviarAKernelNuevoValorVariableCompartida(t_nombre_compartida variable, t_valor_variable valor)
 {
-	socket_scGrabarValor mensaje;
-	mensaje.valor = valor;
-	strcpy( mensaje.identificador, variable );
-	enviarYRecibirPaquete( conexionKernel, &mensaje, sizeof( socket_scGrabarValor ) , 0, 'g', 'a', logger );
-	return 1;
+	if( enviarHeaderCodeaKernel('g') < 0 )
+		return false;
+
+	socket_scGrabarValor sGrabarValor;
+	sGrabarValor.valor = valor;
+	strcpy( sGrabarValor.identificador, variable );
+
+	if( send(conexionKernel, &sGrabarValor, sizeof(socket_scGrabarValor), 0) < 0 )
+		return false;
+
+	return true;
 }
 
 int enviarAKernelImprimir( t_valor_variable valor )
@@ -73,26 +88,34 @@ int enviarAKernelImprimirTexto( char * texto )
 	return enviarPaquete( conexionKernel, &mensaje, sizeof( socket_imprimirTexto ) , 'k', logger ) && enviarPCB();
 }
 
-int enviarAKernelEntradaSalida(t_nombre_dispositivo dispositivo, int tiempo)
+bool enviarAKernelEntradaSalida(t_nombre_dispositivo dispositivo, int tiempo)
 {
-	socket_scIO mensaje;
-	mensaje.unidades = tiempo;
-	strcpy( mensaje.identificador , dispositivo );
-	return enviarPaquete( conexionKernel, &mensaje, sizeof( socket_scIO ) , 'i', logger ) && enviarPCB();
+	if( enviarHeaderCodeaKernel('i') < 0 )
+		return false;
+
+	socket_scIO io;
+	io.unidades = tiempo;
+	strcpy(io.identificador, dispositivo);
+
+	if( send(conexionKernel, &io, sizeof(socket_scIO), 0) < 0 )
+		return false;
+
+	if( enviarPCB() < 0 )
+		return false;
+
+	return true;
+	//return enviarPaquete( conexionKernel, &mensaje, sizeof( socket_scIO ) , 'i', logger ) && enviarPCB();
 }
 
 bool enviarAKernelSignal(t_nombre_semaforo identificador_semaforo)
 {
-	socket_header header;
-	header.code = 's';
-
-	if( send(conexionKernel, &header, sizeof(socket_header), 0) < 0 )
+	if( enviarHeaderCodeaKernel('s') < 0 )
 		return false;
 
 	socket_scSignal sSignal;
-	strcpy( sSignal.identificador, identificador_semaforo );
+	strcpy(sSignal.identificador, identificador_semaforo );
 
-	if( send(conexionKernel, &header, sizeof(socket_header), 0) < 0 )
+	if( send(conexionKernel, &sSignal, sizeof(socket_scSignal), 0) < 0 )
 		return false;
 
 	return true;
@@ -100,15 +123,11 @@ bool enviarAKernelSignal(t_nombre_semaforo identificador_semaforo)
 
 bool enviarAKernelWait(t_nombre_semaforo identificador_semaforo)
 {
-	socket_header header;
-	header.code = 'w';
-
-	if( send(conexionKernel, &header, sizeof(socket_header), 0) < 0 )
+	if( enviarHeaderCodeaKernel('w') < 0 )
 		return false;
 
-
 	socket_scWait sWait;
-	strcpy( sWait.identificador, identificador_semaforo );
+	strcpy(sWait.identificador, identificador_semaforo );
 
 	if( send(conexionKernel, &sWait, sizeof(socket_scWait), 0) < 0 )
 		return false;
@@ -116,17 +135,14 @@ bool enviarAKernelWait(t_nombre_semaforo identificador_semaforo)
 	socket_respuesta res;
 
 	if( recv(socket, &res, sizeof(socket_respuesta), MSG_WAITALL) != sizeof(socket_respuesta) )
-			    return false;
+		return false;
 
 	if(!res.valor)
 	{
 		//Enviar pcb y detener ejecucion
 
-		socket_pcb spcb;
-		spcb.pcb = PCB_enEjecucion;
-
-		if( send(conexionKernel, &spcb, sizeof(socket_pcb), 0) < 0 )
-				return false;
+		if( enviarPCB() < 0 )
+			return false;
 
 		//Detener ejecucion ???
 	}
@@ -139,13 +155,21 @@ bool enviarAKernelWait(t_nombre_semaforo identificador_semaforo)
 /****************************************************/
 
 
+int enviarHeaderCodeaKernel(unsigned char code)
+{
+	socket_header header;
+	header.code = code;
+	header.size = sizeof(socket_header);
 
+	return send(conexionKernel, &header, sizeof(socket_header), 0);
+}
 
 int enviarPCB()
 {
 	socket_pcb spcb;
 	spcb.pcb = PCB_enEjecucion;
-	return enviarPaquete( conexionKernel, &spcb, sizeof( socket_pcb ) , 'k', logger );
+
+	return send(conexionKernel, &spcb, sizeof(socket_pcb), 0);
 }
 
 int enviarHandshake()
