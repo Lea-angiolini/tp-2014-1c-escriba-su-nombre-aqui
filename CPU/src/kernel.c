@@ -1,16 +1,17 @@
 #include "kernel.h"
+
 #include "config.h"
-
 #include "ejecucion.h"
-
 #include "commons/pcb.h"
 
-int socketKernel;
 extern t_log * logger;
+
 extern pcb_t PCB_enEjecucion;
 
 extern uint32_t quantumPorEjecucion;
 extern uint32_t retardo;
+
+int socketKernel;
 
 bool crearConexionKernel() {
 	log_info(logger, "Conectando al Kernel en: %s:%d", config_get_string_value(config, "IPKERNEL"), config_get_int_value(config, "PUERTOKERNEL"));
@@ -21,13 +22,13 @@ bool crearConexionKernel() {
 		return false;
 	}
 
-	return enviarHandshake();
+	return true;
 }
 
 bool enviarHandshake()
 {
-
 	socket_header cod;
+
 	cod.code = 'h';
 	cod.size = sizeof( socket_header );
 
@@ -35,48 +36,61 @@ bool enviarHandshake()
 		return false;
 	}
 
-	socket_cpucfg * cpucfg = (socket_cpucfg *) recibirPaquete( socketKernel, 0, 'h', logger );
-	if( cpucfg == NULL ) {
-		log_error(logger, "No se pudo leer el la configuracion que envio el Kernel | CPU/src/CPU.c -> crearsocketKernel");
-		return false;
-	}
+	socket_cpucfg cpucfg;
 
-	quantumPorEjecucion = cpucfg->quantum;
-	retardo = cpucfg->retardo;
-	log_info( logger, "El quantum que envio el kernel es: %d y el retardo: %d", quantumPorEjecucion, retardo );
+	if( recv(socketKernel, &cpucfg, sizeof(socket_cpucfg), MSG_WAITALL) != sizeof(socket_cpucfg) )
+		return false;
+
+	quantumPorEjecucion = cpucfg.quantum;
+	retardo = cpucfg.retardo;
+	log_info( logger, "El quantum que envio el kernel es: %d y el retardo: %d", quantumPorEjecucion, retardo);
 
 	return true;
 }
 
-/*
- *	Instrucciones que el CPU puede recibir del kernel
- *
- *
- */
-
-
-int orden_ejecucion()
+bool recibirYProcesarMensajesKernel()
 {
-	return responder_orden_ejecucion( ejecutar () );
+	if( !enviarHandshake() )
+		return false;
+
+	while(1)
+	{
+		log_info(logger, "Esperando nueva PCB del Kernel");
+		if( recv(socketKernel, &PCB_enEjecucion, sizeof(socket_pcb), MSG_WAITALL) != sizeof(socket_pcb) )
+			return false;
+
+		log_info(logger, "Se ha recibido una nueva PCB");
+
+		ejecutar();
+	}
+
+	return true;
 }
 
-
-//recibe un pcb despues de ser ejecutado y se lo re envia al kernel
-int responder_orden_ejecucion()
+bool enviarPCB()
 {
-	return 1;
-}
+	socket_pcb spcb;
 
+	spcb.header.size = sizeof(socket_pcb);
+	spcb.header.code = 'p';
+	spcb.pcb = PCB_enEjecucion;
+
+	if( send(socketKernel, &spcb, sizeof(socket_pcb), 0) < 0 )
+		return false;
+
+	return true;
+}
 
 
 /****************** SYSCALLS ************************/
 
-uint32_t solcitarVariableCompartidaAKernel(t_nombre_compartida variable)
+int32_t solcitarVariableCompartidaAKernel(t_nombre_compartida variable)
 {
 	socket_scObtenerValor sObtenerValor;
+
 	sObtenerValor.header.code = 'o';
 	sObtenerValor.header.size = sizeof(socket_scObtenerValor);
-	strcpy( sObtenerValor.identificador, variable );
+	strcpy(sObtenerValor.identificador, variable);
 
 	if( send(socketKernel, &sObtenerValor, sizeof(socket_scObtenerValor), 0) < 0 )
 		return false;
@@ -90,10 +104,11 @@ uint32_t solcitarVariableCompartidaAKernel(t_nombre_compartida variable)
 bool enviarAKernelNuevoValorVariableCompartida(t_nombre_compartida variable, t_valor_variable valor)
 {
 	socket_scGrabarValor sGrabarValor;
+
 	sGrabarValor.header.code = 'g';
 	sGrabarValor.header.size = sizeof(socket_scGrabarValor);
 	sGrabarValor.valor = valor;
-	strcpy( sGrabarValor.identificador, variable );
+	strcpy(sGrabarValor.identificador, variable);
 
 	if( send(socketKernel, &sGrabarValor, sizeof(socket_scGrabarValor), 0) < 0 )
 		return false;
@@ -140,7 +155,7 @@ bool enviarAKernelEntradaSalida(t_nombre_dispositivo dispositivo, int tiempo)
 	if( send(socketKernel, &io, sizeof(socket_scIO), 0) < 0 )
 		return false;
 
-	if( enviarPCB() < 0 )
+	if( !enviarPCB() )
 		return false;
 
 	return true;
@@ -178,47 +193,12 @@ bool enviarAKernelWait(t_nombre_semaforo identificador_semaforo)
 	{
 		//Enviar pcb y detener ejecucion
 
-		if( enviarPCB() < 0 )
+		if(!enviarPCB())
 			return false;
 
 		//Detener ejecucion ???
 	}
 
 	return true;
-}
-
-
-
-/****************************************************/
-
-
-int enviarPCB()
-{
-	socket_pcb spcb;
-	spcb.header.size = sizeof(socket_pcb);
-	spcb.pcb = PCB_enEjecucion;
-
-	return send(socketKernel, &spcb, sizeof(socket_pcb), 0);
-}
-
-
-
-
-
-//TODO definir codigos de operacion
-int procesarMensajesKernel( int socket, socket_header header )
-{
-
-
-
-	return 1;
-
-}
-
-
-//TODO se podria reusar lo de la umv ??
-int recibirYProcesarMensajesKernel()
-{
-	return 1;
 }
 

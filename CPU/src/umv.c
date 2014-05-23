@@ -4,9 +4,10 @@
 #include "commons/log.h"
 #include "commons/sockets.h"
 
-int socketUMV;
+
 extern t_log * logger;
-extern Stack * stackCache;
+
+int socketUMV;
 
 
 bool crearConexionUMV() {
@@ -29,13 +30,13 @@ bool crearConexionUMV() {
 char * solicitarLineaPrograma( uint32_t programCounter ) {
 
 	log_info( logger, "Solicitando linea de programa");
-	socket_obtenerLineaCodigo * paquete = malloc( sizeof ( socket_obtenerLineaCodigo ) ) ;
-	paquete->numero_linea_Codigo = programCounter;
+	socket_obtenerLineaCodigo sObtenerLineaCodigo;
+
+	sObtenerLineaCodigo.numero_linea_Codigo = programCounter;
 
 	//socket_responderLineaCodigo * paqueteRespuesta = (socket_responderLineaCodigo*)
-	enviarYRecibirPaquete( socketUMV, (void*) paquete, sizeof( socket_obtenerLineaCodigo ), sizeof( socket_responderLineaCodigo ) , 'a', 'd', logger  ) ;
+	enviarYRecibirPaquete( socketUMV, &sObtenerLineaCodigo, sizeof( socket_obtenerLineaCodigo ), sizeof( socket_responderLineaCodigo ) , 'a', 'd', logger  ) ;
 
-	free( paquete );
 	log_info( logger, "Se recibio una linea de programa");
 
 	/*if ( paqueteRespuesta == NULL || paqueteRespuesta->numero_linea_Codigo != programCounter ){
@@ -101,14 +102,14 @@ int enviarFinQuantum( uint32_t pid ){
 int guardarStack()
 {
 
-	socket_guardarEnMemoria * paquete = malloc( sizeof( socket_guardarEnMemoria ) );
+	socket_guardarEnMemoria sGuardarEnMemoria;
 
-	paquete->offset = 0;
-	paquete->pdi = 1;
-	paquete->length = 100;
-	memcpy( paquete->data, stackCache->data, 100 ) ;
+	sGuardarEnMemoria.offset = 0;
+	sGuardarEnMemoria.pdi = 1;
+	sGuardarEnMemoria.length = 100;
+	memcpy( sGuardarEnMemoria.data, stackCache->data, 100 ) ;
 
-	socket_RespuestaGuardarEnMemoria * respuesta = (socket_RespuestaGuardarEnMemoria*) enviarYRecibirPaquete( socketUMV, paquete, sizeof(socket_guardarEnMemoria) , 0, 'c', 'a', logger );
+	socket_RespuestaGuardarEnMemoria * respuesta = (socket_RespuestaGuardarEnMemoria*) enviarYRecibirPaquete( socketUMV, &sGuardarEnMemoria, sizeof(socket_guardarEnMemoria) , 0, 'c', 'a', logger );
 	if( respuesta == NULL || respuesta->status ) {
 		return -1;
 	}else{
@@ -128,13 +129,13 @@ int guardarStack()
 int obtenerContextStack()
 {
 
-	socket_leerMemoria * paquete = malloc( sizeof( socket_leerMemoria ) );
+	socket_leerMemoria sLeerMemoria;
 
-	paquete->offset = 0;
-	paquete->pdi = 1;
-	paquete->length = 100;
+	sLeerMemoria.offset = 0;
+	sLeerMemoria.pdi = 1;
+	sLeerMemoria.length = 100;
 
-	socket_RespuestaLeerMemoria * respuesta = (socket_RespuestaLeerMemoria*) enviarYRecibirPaquete( socketUMV, paquete, sizeof(socket_leerMemoria), 45, 'b', 'a', logger );
+	socket_RespuestaLeerMemoria * respuesta = (socket_RespuestaLeerMemoria*) enviarYRecibirPaquete( socketUMV, &sLeerMemoria, sizeof(socket_leerMemoria), 45, 'b', 'a', logger );
 	if( respuesta == NULL || respuesta->status == false ) {
 		log_error( logger, "Hubo un error al leer el stack" );
 		return -1;
@@ -158,55 +159,4 @@ int obtenerContextStackAnterior(){
 	//Tiene que hacer 2 llamadas a la umv
 	return 1;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

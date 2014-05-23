@@ -8,7 +8,7 @@
 bool crearConexionKernel();
 bool enviarHandshake();
 
-uint32_t	solcitarVariableCompartidaAKernel(t_nombre_compartida variable);
+int32_t	solcitarVariableCompartidaAKernel(t_nombre_compartida variable);
 bool		enviarAKernelNuevoValorVariableCompartida(t_nombre_compartida variable, t_valor_variable valor);
 bool		enviarAKernelImprimir		( t_valor_variable valor );
 bool		enviarAKernelImprimirTexto	( char * texto );
@@ -16,12 +16,10 @@ bool		enviarAKernelEntradaSalida	(t_nombre_dispositivo dispositivo, int tiempo);
 bool 		enviarAKernelSignal(t_nombre_semaforo identificador_semaforo);
 bool 		enviarAKernelWait(t_nombre_semaforo identificador_semaforo);
 
+bool recibirYProcesarMensajesKernel();
 int escucharYEjecutarInstruccionesKernel();
-int responder_orden_ejecucion( );
-int procesarMenssajeKernel( int socket, socket_header header );
-int orden_ejecucion() ;
 
-int enviarPCB();
+bool enviarPCB();
 
 void scWait(t_nombre_semaforo identificador_semaforo);
 void scSignal(t_nombre_semaforo identificador_semaforo);
