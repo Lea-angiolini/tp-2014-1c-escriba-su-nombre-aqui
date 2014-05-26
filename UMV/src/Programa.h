@@ -7,6 +7,9 @@
 #include "commons/collections/list.h"
 #include "Segmento.h"
 
+#ifndef PROGRAMA_H_
+#define PROGRAMA_H_
+
 typedef struct {
 	uint32_t pid;
 	Segmento * stack;
@@ -27,3 +30,5 @@ socket_umvpcb crearEstructuraParaPCB( Programa * programa);
 Programa * buscarPrograma( uint32_t pdi);
 
 Segmento * buscarSegmentoEnPrograma( Programa * programa, uint32_t offset);
+
+#endif /*PROGRAMA_H_*/
