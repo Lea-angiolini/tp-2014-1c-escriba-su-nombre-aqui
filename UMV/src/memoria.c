@@ -227,7 +227,7 @@ void compactar(){
 			moverSegmento(segmentoAmover, segmentoMovido->finReal + 1 );
 		}
 		log_info(logger, "Se ha compactado correctamente");
-		printTodosSegmentos();
+		printSegmentos(tabla_segmentos);
 		return ;
 }
 

@@ -20,6 +20,7 @@ extern t_list * tabla_segmentos;
 extern uint32_t retardoUMV;
 extern char * modoActualCreacionSegmentos;
 extern t_list *programas;
+extern uint32_t memoria_size;
 
 
 void * iniciarConsola( void * params ){
@@ -116,7 +117,8 @@ void generarDump(){
 				break;
 	case 'b': 	buscarProgramaEImprimirSegmentos();
 				break;
-	case 'c':	printSegmentos(tabla_segmentos);
+	case 'c':	ordenarTablaSegmentos();
+				printSegmentos(tabla_segmentos);
 				break;
 	case 'd':
 	default:log_error( logger, "El comando ingresado es invalido");
@@ -126,7 +128,7 @@ void generarDump(){
 
 
 void printSegmentosHeaders(){
-	printf("\n\n");
+	printf("\n");
 	printf("\t\tInicio Real\tFin Real\tTamaño\n\n");
 }
 
@@ -162,33 +164,31 @@ void buscarProgramaEImprimirSegmentos(){
 
 }
 
-void printTodosSegmentos(){
-	printSegmentos( tabla_segmentos );
-	//No lo puedo borrar porque se usa en memoria.c pero aca no se usa
-
-}
-
-
-
 void printSegmentos( t_list * segmentos ) {
-	//Falta hacer esta funcion de acuerdo a lo que se pide
-	printSegmentosHeaders();
 	int i = 0;
+	uint32_t cont = 0;
 	for( i = 0; i < list_size( segmentos ) ; i++ ){
 		Segmento * segmento = (Segmento *) list_get( segmentos, i );
+		if(segmento->inicioReal > cont){
+			printEspacioLibre(cont,segmento->inicioReal);
+			cont = segmento->finReal;
+		}
+		printSegmentosHeaders();
 		printSegmento( segmento );
 	}
+	if (cont < (memoria_size-1))
+		printEspacioLibre(cont,(memoria_size-1));
 }
-
-
 
 void printSegmento( Segmento * segmento ) {
 	printf(">>>\t\t%d\t\t%d\t\t%d\n", segmento->inicioReal, segmento->finReal, segmento->finReal - segmento->inicioReal + 1 );
 }
 
-
-
-
+void printEspacioLibre(uint32_t inicioEspacio, uint32_t finEspacio){
+	printf("\nEspacio Libre");
+	printSegmentosHeaders();
+	printf(">>>\t\t%d\t\t%d\t\t%d\n", inicioEspacio, finEspacio, finEspacio - inicioEspacio + 1 );
+}
 
 
 

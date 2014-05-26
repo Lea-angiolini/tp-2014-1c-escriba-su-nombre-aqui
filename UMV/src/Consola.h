@@ -20,5 +20,6 @@ void printSegmentosPorPrograma();
 void printTodosSegmentos();
 void printSegmento( Segmento * segmento );
 void buscarProgramaEImprimirSegmentos();
+void printEspacioLibre(uint32_t inicioEspacio, uint32_t finEspacio);
 
 void imprimirSegmentosDe(Programa * programaAImprimir);
