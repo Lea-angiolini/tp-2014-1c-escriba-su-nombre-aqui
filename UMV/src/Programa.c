@@ -53,17 +53,24 @@ Segmento * crearDireccionesVirtuales(Segmento * segmento, uint32_t tamanioSegmen
 	return segmento;
 }
 
-Programa * buscarPrograma( uint32_t pdi ) {
+Programa * buscarPrograma( uint32_t pid ) {
+		bool matchearPrograma(Programa *nodoPrograma){
+			return nodoPrograma->pid == pid;
+		}
 
-	uint32_t tamanioProgramas;
-	tamanioProgramas = list_size( programas);
-	int i = 0;
-	for(i = 0; i <= tamanioProgramas; i++){
-		Programa * programa = list_get(programas, i);
-		if(programa->pid == pdi)
-			return programa;
-	}
-	return NULL;
+		return list_find(programas, matchearPrograma);
+
+	//Seria mas facil asi, que ya se cuenta con una funcion copada en la commons
+
+	//uint32_t tamanioProgramas;
+	//tamanioProgramas = list_size( programas);
+	//int i = 0;
+	//for(i = 0; i <= tamanioProgramas; i++){
+	//	Programa * programa = list_get(programas, i);
+	//	if(programa->pid == pdi)
+	//		return programa;
+	//}
+	//return NULL;
 }
 
 Segmento * buscarSegmentoEnPrograma( Programa * programa, uint32_t base ) {

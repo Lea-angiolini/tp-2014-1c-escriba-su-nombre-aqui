@@ -6,6 +6,7 @@
 
 #include "Consola.h"
 #include "Segmento.h"
+//#include "Programa.h"
 
 #include "commons/log.h"
 #include "commons/string.h"
@@ -18,6 +19,8 @@ extern t_log * logger;
 extern t_list * tabla_segmentos;
 extern uint32_t retardoUMV;
 extern char * modoActualCreacionSegmentos;
+extern t_list *programas;
+
 
 void * iniciarConsola( void * params ){
 
@@ -81,7 +84,7 @@ void modificarAlgoCreacionSegmentos(){
 
 	printf("Indique el modo con el que quiere crear segmentos\n");
 	printf("a - Worst-Fit \n b - First-Fit");
-	scanf("%c", &modo);
+	modo = getchar();
 
 	switch( modo ){
 	case 'a': if( string_starts_with( modoActualCreacionSegmentos, "WORSTFIT"))
@@ -99,39 +102,89 @@ void modificarAlgoCreacionSegmentos(){
 
 
 void generarDump(){
+	char reporte;
 
+	printf("Indique que reporte quiere\n");
+	printf("a-Tabla de segmentos de todos los procesos\n");
+	printf("b-Tabla de segmento de un proceso en particular\n");
+	printf("c-Detalle de la memoria principal\n");
+	printf("d-Contenido de la memoria principal\n");
+	reporte = getchar();
+
+	switch(reporte){
+	case 'a': 	printSegmentosPorPrograma();
+				break;
+	case 'b': 	buscarProgramaEImprimirSegmentos();
+				break;
+	case 'c':	printSegmentos(tabla_segmentos);
+				break;
+	case 'd':
+	default:log_error( logger, "El comando ingresado es invalido");
+
+	}
 }
 
-
-
-
-
-
-void printTodosSegmentos() {
-	printSegmentos( tabla_segmentos );
-}
-
-void printSegmentos( t_list * segmentos ) {
-	printSegmentosHeaders();
-		int i = 0;
-		for( i = 0; i < list_size( segmentos ) ; i++ ){
-			Segmento * segmento = (Segmento *) list_get( segmentos, i );
-			printSegmento( segmento );
-		}
-}
 
 void printSegmentosHeaders(){
 	printf("\n\n");
 	printf("\t\tInicio Real\tFin Real\tTamaño\n\n");
 }
 
-void printSegmento( Segmento * segmento ) {
-	printf(">>>\t\t%d\t\t%d\t\t%d\n", segmento->inicioReal, segmento->finReal, segmento->finReal - segmento->inicioReal + 1 );
+void imprimirSegmentosDe(Programa *programa){
+	printf("Programa: %d \n",programa->pid);
+	printSegmentosHeaders();
+	printSegmento(programa->stack);
+	printSegmento(programa->script);
+	printSegmento(programa->etiquetas);
+	printSegmento(programa->instrucciones);
+}
+
+void printSegmentosPorPrograma() {
+	uint32_t tamanioProgramas;
+	tamanioProgramas = list_size(programas);
+	int i = 0;
+	for(i = 0; i <= tamanioProgramas; i++){
+		Programa * programa = list_get(programas, i);
+		imprimirSegmentosDe(programa);
+	}
+
+}
+
+void buscarProgramaEImprimirSegmentos(){
+	uint32_t pid;
+	Programa *programaAImprimir;
+
+	printf("Ingrese el id del programa para imprimir sus segmentos\n");
+	scanf("%d\n\n", &pid);
+
+	programaAImprimir = buscarPrograma(pid);
+	imprimirSegmentosDe(programaAImprimir);
+
+}
+
+void printTodosSegmentos(){
+	printSegmentos( tabla_segmentos );
+	//No lo puedo borrar porque se usa en memoria.c pero aca no se usa
+
 }
 
 
 
+void printSegmentos( t_list * segmentos ) {
+	//Falta hacer esta funcion de acuerdo a lo que se pide
+	printSegmentosHeaders();
+	int i = 0;
+	for( i = 0; i < list_size( segmentos ) ; i++ ){
+		Segmento * segmento = (Segmento *) list_get( segmentos, i );
+		printSegmento( segmento );
+	}
+}
 
+
+
+void printSegmento( Segmento * segmento ) {
+	printf(">>>\t\t%d\t\t%d\t\t%d\n", segmento->inicioReal, segmento->finReal, segmento->finReal - segmento->inicioReal + 1 );
+}
 
 
 
