@@ -4,6 +4,7 @@
 #include "commons/log.h"
 #include "commons/sockets.h"
 
+#include <unistd.h>
 
 extern t_log * logger;
 
@@ -16,6 +17,7 @@ bool crearConexionUMV() {
 
 	if (socketUMV < 0) {
 		log_error(logger, "No se pudo conectar al UMV");
+		close( socketUMV );
 		return false;
 	}
 	return true;
@@ -27,30 +29,66 @@ bool crearConexionUMV() {
  *
  *
  */
+
 char * solicitarLineaPrograma( uint32_t programCounter ) {
 
-	log_info( logger, "Solicitando linea de programa");
-	socket_obtenerLineaCodigo sObtenerLineaCodigo;
 
+	switch (programCounter){
+	case 0:
+		return "variables a";
+		break;
+	case 1:
+		return "a=1";
+		break;
+	case 2:
+		return "print a";
+		break;
+	case 3:
+		return "variables b";
+		break;
+	case 4:
+		return "a=2";
+		break;
+	case 5:
+		return "a=8";
+		break;
+	case 6:
+		return "a=90";
+		break;
+	case 7:
+		return "b=2";
+		break;
+	case 8:
+		return "print b";
+		break;
+	default:
+		return "end";
+	}
+
+	/*log_info( logger, "Solicitando linea de programa a la UMV");
+	socket_obtenerLineaCodigo sObtenerLineaCodigo;
 	sObtenerLineaCodigo.numero_linea_Codigo = programCounter;
 
-	//socket_responderLineaCodigo * paqueteRespuesta = (socket_responderLineaCodigo*)
-	enviarYRecibirPaquete( socketUMV, &sObtenerLineaCodigo, sizeof( socket_obtenerLineaCodigo ), sizeof( socket_responderLineaCodigo ) , 'a', 'd', logger  ) ;
+	socket_responderLineaCodigo * respuesta = (socket_responderLineaCodigo *) enviarYRecibirPaquete( socketUMV, &sObtenerLineaCodigo, sizeof( socket_obtenerLineaCodigo ), sizeof( socket_responderLineaCodigo ) , 'a', 'd', logger  ) ;
 
-	log_info( logger, "Se recibio una linea de programa");
+	log_info( logger, "Se recibio una linea de programa %s", respuesta->lineaCodigo );*/
 
-	/*if ( paqueteRespuesta == NULL || paqueteRespuesta->numero_linea_Codigo != programCounter ){
+	/*if ( paqueteRespuesta == NULL || paqueteRespuesta->numero_linea_Codigo != programCounter ) {
 		return -1;
 	}*/
 
 	//char respuesta[] = paqueteRespuesta->lineaCodigo ;
 	//free(paqueteRespuesta);
 	//return respuesta;
-	static char array[] = "my string";
-    return array;
+	/*static char array[] = "my string";
+    return array;*/
 
 }
 
+
+uint32_t obtenerLineaDeLabel( t_nombre_etiqueta t_nombre_etiqueta ) {
+	return 1;
+}
 
 
 /*
@@ -64,7 +102,6 @@ int enviarCambioContexto( uint32_t pid ) {
 	log_debug( logger, "Enviando a umv cambio de contexto" );
 	return 1;
 }
-
 
 /*
  * Envia que el programa finalizo para que destruya el segmento de memoria correspondiente
@@ -94,69 +131,4 @@ int enviarFinQuantum( uint32_t pid ){
 
 
 
-
-/*
- * Guarda en la umv el stack con el que estabamos trabajando
- */
-//TODO
-int guardarStack()
-{
-
-	socket_guardarEnMemoria sGuardarEnMemoria;
-
-	sGuardarEnMemoria.offset = 0;
-	sGuardarEnMemoria.pdi = 1;
-	sGuardarEnMemoria.length = 100;
-	memcpy( sGuardarEnMemoria.data, stackCache->data, 100 ) ;
-
-	socket_RespuestaGuardarEnMemoria * respuesta = (socket_RespuestaGuardarEnMemoria*) enviarYRecibirPaquete( socketUMV, &sGuardarEnMemoria, sizeof(socket_guardarEnMemoria) , 0, 'c', 'a', logger );
-	if( respuesta == NULL || respuesta->status ) {
-		return -1;
-	}else{
-		return 1;
-	}
-
-
-}
-
-
-
-/*
- * Le solicita a la UMV los datos del stack desde el contexto actual
- * y los almacena en la "cache" del cpu.
- */
-//TODO leer parcialmente y manejar error
-int obtenerContextStack()
-{
-
-	socket_leerMemoria sLeerMemoria;
-
-	sLeerMemoria.offset = 0;
-	sLeerMemoria.pdi = 1;
-	sLeerMemoria.length = 100;
-
-	socket_RespuestaLeerMemoria * respuesta = (socket_RespuestaLeerMemoria*) enviarYRecibirPaquete( socketUMV, &sLeerMemoria, sizeof(socket_leerMemoria), 45, 'b', 'a', logger );
-	if( respuesta == NULL || respuesta->status == false ) {
-		log_error( logger, "Hubo un error al leer el stack" );
-		return -1;
-	}else{
-		memcpy( stackCache->data, respuesta->data, respuesta->header.size );
-		log_debug( logger, "Se leyo correctamente el stack desde la UMV" );
-		return 1;
-	}
-
-}
-
-
-
-/*
- * Esto es para el caso que se llame al retorno de una funcion
- * Necesito conseguir todos los datos del contexto anterior, entonces
- * lo pido con esta funcion
- *
- */
-int obtenerContextStackAnterior(){
-	//Tiene que hacer 2 llamadas a la umv
-	return 1;
-}
 

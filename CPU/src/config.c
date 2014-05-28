@@ -1,9 +1,12 @@
 #include "config.h"
+#include "primitivas.h"
 
 t_config *config;
 
 AnSISOP_funciones * ansisop_funciones;
-Stack * stackCache;
+AnSISOP_kernel * ansisop_Kernelfunciones;
+extern Stack stackCache;
+
 
 bool cargar_config(char *configFile)
 {
@@ -13,6 +16,7 @@ bool cargar_config(char *configFile)
 		return false;
 	}
 
+	ansisop_Kernelfunciones = crearAnSISOP_kernel();
 	ansisop_funciones = crearAnSISOP_funciones();
 	stackCache = new_Stack();
 
@@ -33,8 +37,8 @@ bool validar_configuracion() {
 }
 
 void destruir_config() {
-	free(ansisop_funciones);
-	free(stackCache);
 
+	free(ansisop_funciones);
 	config_destroy(config);
+
 }

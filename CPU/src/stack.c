@@ -2,17 +2,21 @@
 
 #include "commons/pcb.h"
 #include "commons/log.h"
+#include "commons/sockets.h"
 
+#include <stdbool.h>
 
 extern pcb_t PCB_enEjecucion;
 extern t_log * logger;
+extern int socketUMV;
+Stack stackCache;
 
 
-Stack * new_Stack()
+Stack new_Stack()
 {
-	Stack * stack = (Stack *) malloc( sizeof( Stack ) );
-	stack->dataLength = 0;
-	stack->offset = 0;
+	Stack stack;
+	stack.dataLength = 0;
+	stack.offset = 0;
 	return stack;
 }
 
@@ -21,26 +25,23 @@ Stack * new_Stack()
  *	Apila una variable en el stack dado, y devuelve un "puntero" a esa variable
  */
 //TODO, verificar si la variable no existe
-uint32_t apilarVariable( Stack * stack, char identificador )
+uint32_t apilarVariable( char identificador )
 {
-	stack->data[stack->dataLength] = identificador;
-	stack->dataLength += 5;
-	return stack->dataLength - 4;
+	stackCache.data[stackCache.dataLength] = identificador;
+	stackCache.dataLength += 5;
+	return stackCache.dataLength - 4;
 }
 
 
 /*
  * Obtiene la posicion de memoria de una variable
  */
-//TODO determinar que hacer si la variable no esta definida
-uint32_t obtenerOffsetVarible( Stack * stack, char variable )
+
+uint32_t obtenerOffsetVarible( char variable )
 {
 	int i = 0;
-	//printf("El dataLength = %d, i = %d \n" , stack->dataLength, i );
-	for( i = 0; i < stack->dataLength ; i +=1 ) {
-		//printf( "Evaluando variable %c comprado con: %c, son iguales ? %d \n", stack->data[i], variable, stack->data[i] == variable );
-		//printf("El dataLength = %d, i = %d \n" , stack->dataLength, i );
-		if( stack->data[i] == variable ) {
+	for( i = 0; i < stackCache.dataLength ; i +=5 ) {
+		if( stackCache.data[i] == variable ) {
 			return i+1;
 		}
 	}
@@ -50,33 +51,117 @@ uint32_t obtenerOffsetVarible( Stack * stack, char variable )
 
 
 //TODO ver segmentation fault
-uint32_t obtenerValor( Stack * stack, uint32_t pos )
+uint32_t obtenerValor( uint32_t pos )
 {
-	uint32_t valor;
-	memcpy( &valor , stack->data + pos , 4 );
-	return valor;
+	return (uint32_t)stackCache.data[pos];
 }
 
 
 //TODO verificar segmentation fault
-void modificarVariable( Stack * stack, uint32_t pos, uint32_t valor )
+void modificarVariable( uint32_t pos, uint32_t valor )
 {
-	memcpy( stack->data + pos , &valor, 4 );
+	stackCache.data[pos] = valor;
 }
 
 
 
-void apilarFuncionConRetorno( Stack * stack, uint32_t context_init, uint32_t programCounter, uint32_t variableRetorno )
+
+/*
+ * Se apila
+ * direccion base del contecto
+ * programCounter
+ * posicion de la variable de retorno
+ */
+bool apilarFuncionConRetorno( uint32_t variableRetorno )
 {
+	apilarFuncionSinRetorno();
+	stackCache.data[stackCache.dataLength] = variableRetorno;
+	stackCache.dataLength += sizeof( uint32_t );
+	return true;
+}
+
+
+bool apilarFuncionSinRetorno()
+{
+	stackCache.data[stackCache.dataLength] = PCB_enEjecucion.stackCursor - PCB_enEjecucion.contextSize;
+	stackCache.data[stackCache.dataLength +  sizeof( uint32_t ) ] = PCB_enEjecucion.programCounter;
+	stackCache.dataLength += 2*sizeof( uint32_t );
+	return true;
+}
+
+
+
+/*
+ * Guarda en la umv el stack con el que estabamos trabajando
+ */
+//TODO manejar tamaño
+bool guardarStack()
+{
+
+	socket_guardarEnMemoria sGuardarEnMemoria;
+
+	sGuardarEnMemoria.offset = 0;
+	sGuardarEnMemoria.pdi = 1;
+	sGuardarEnMemoria.length = 100;
+	sGuardarEnMemoria.base = 0;
+	memcpy( sGuardarEnMemoria.data, &stackCache.data, 100 ) ;
+
+	/*printf("\n\n\n");
+	int i = 0;
+	for( i = 0; i < 24; i+=5){
+		printf("%c = %d\n", sGuardarEnMemoria.data[ i ], sGuardarEnMemoria.data[ i+1 ] );
+	}
+	printf("\n\n\n");*/
+
+	socket_RespuestaGuardarEnMemoria * respuesta = (socket_RespuestaGuardarEnMemoria*) enviarYRecibirPaquete( socketUMV, &sGuardarEnMemoria, sizeof(socket_guardarEnMemoria) , 0, 'c', 'a', logger );
+	if( respuesta == NULL || respuesta->status ) {
+		return false;
+	}else{
+		return true;
+	}
+}
+
+
+
+/*
+ * Le solicita a la UMV los datos del stack desde el contexto actual
+ * y los almacena en la "cache" del cpu.
+ */
+//TODO leer parcialmente y manejar error
+bool obtenerContextStack()
+{
+
+	socket_leerMemoria sLeerMemoria;
+
+	sLeerMemoria.offset = 0;
+	sLeerMemoria.pdi = 1;
+	sLeerMemoria.base = 0;
+	sLeerMemoria.length = 100;
+
+	socket_RespuestaLeerMemoria * respuesta = (socket_RespuestaLeerMemoria*) enviarYRecibirPaquete( socketUMV, &sLeerMemoria, sizeof(socket_leerMemoria), 45, 'b', 'a', logger );
+	if( respuesta == NULL || respuesta->status == false ) {
+		log_error( logger, "Hubo un error al leer el stack" );
+		return false;
+	}else{
+		memcpy( &stackCache.data, respuesta->data, respuesta->header.size );
+		log_debug( logger, "Se leyo correctamente el stack desde la UMV" );
+		return true;
+	}
 
 }
 
 
-void apilarFuncionSinRetorno( Stack * stack, uint32_t context_init, uint32_t programCounter )
-{
 
+/*
+ * Esto es para el caso que se llame al retorno de una funcion
+ * Necesito conseguir todos los datos del contexto anterior, entonces
+ * lo pido con esta funcion
+ *
+ */
+bool obtenerContextStackAnterior(){
+	//Tiene que hacer 2 llamadas a la umv
+	return 1;
 }
-
 
 
 

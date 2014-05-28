@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 /*
  * Esta estructura tiene una porcion del stack. Puede ser cualquier porcion.
@@ -29,13 +30,20 @@ typedef struct {
 
 } __attribute__((packed)) Stack;
 
-Stack * new_Stack();
 
-uint32_t apilarVariable( Stack * stack, char identificador );
-uint32_t obtenerOffsetVarible( Stack * stack, char variable );
-uint32_t obtenerValor( Stack * stack, uint32_t pos );
-void modificarVariable( Stack * stack, uint32_t pos, uint32_t valor );
+Stack new_Stack();
 
+uint32_t apilarVariable( char identificador );
+uint32_t obtenerOffsetVarible( char variable );
+uint32_t obtenerValor( uint32_t pos );
+void modificarVariable( uint32_t pos, uint32_t valor );
+
+bool apilarFuncionConRetorno( uint32_t variableRetorno );
+bool apilarFuncionSinRetorno( );
+
+bool obtenerContextStack();
+bool guardarStack();
+bool obtenerContextStackAnterior();
 
 #endif /* STACK_H_ */
 

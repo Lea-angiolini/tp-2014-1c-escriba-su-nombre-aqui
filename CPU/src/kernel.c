@@ -3,26 +3,31 @@
 #include "config.h"
 #include "ejecucion.h"
 #include "commons/pcb.h"
+#include "commons/sockets.h"
+
+#include <unistd.h>
 
 extern t_log * logger;
-
 extern pcb_t PCB_enEjecucion;
-
 extern uint32_t quantumPorEjecucion;
-extern uint32_t retardo;
-
+extern uint32_t retardoQuantum;
+extern uint32_t quantumRestante;
 int socketKernel;
 
+
 bool crearConexionKernel() {
+
 	log_info(logger, "Conectando al Kernel en: %s:%d", config_get_string_value(config, "IPKERNEL"), config_get_int_value(config, "PUERTOKERNEL"));
 	socketKernel = conectar(config_get_string_value(config, "IPKERNEL"), config_get_int_value(config, "PUERTOKERNEL"), logger);
 
 	if (socketKernel < 0) {
-		log_error(logger, "No se pudo conectar al Kernel");
+		log_error( logger, "No se pudo conectar al Kernel" );
+		close( socketKernel );
 		return false;
 	}
 
-	return true;
+	return enviarHandshake();
+
 }
 
 bool enviarHandshake()
@@ -42,26 +47,42 @@ bool enviarHandshake()
 		return false;
 
 	quantumPorEjecucion = cpucfg.quantum;
-	retardo = cpucfg.retardo;
-	log_info( logger, "El quantum que envio el kernel es: %d y el retardo: %d", quantumPorEjecucion, retardo);
+	retardoQuantum = cpucfg.retardo;
+	log_info( logger, "El quantum que envio el kernel es: %d y el retardo: %d", quantumPorEjecucion, retardoQuantum);
 
 	return true;
 }
 
 bool recibirYProcesarMensajesKernel()
 {
-	if( !enviarHandshake() )
-		return false;
 
+	socket_pcb pcbNuevo;
 	while(1)
 	{
+
 		log_info(logger, "Esperando nueva PCB del Kernel");
-		if( recv(socketKernel, &PCB_enEjecucion, sizeof(socket_pcb), MSG_WAITALL) != sizeof(socket_pcb) )
+
+		if( recv(socketKernel, &pcbNuevo, sizeof(socket_pcb), MSG_WAITALL) != sizeof(socket_pcb) )
 			return false;
 
 		log_info(logger, "Se ha recibido una nueva PCB");
 
-		ejecutar();
+		PCB_enEjecucion = pcbNuevo.pcb;
+		quantumRestante = 3;
+
+		if( ! ejecutar() ) {
+			//TODO maneja error de ejecucion
+			log_error( logger, "Finalizando la ejecucion por un error." );
+			return false;
+		}
+
+		if( !enviarPCB() ) {
+			log_error(logger, "No se puedo devolver el PCB al Kernel");
+			return false;
+		}else{
+			log_info( logger, "Se le devolvio el PCB al Kernel" );
+		}
+
 	}
 
 	return true;

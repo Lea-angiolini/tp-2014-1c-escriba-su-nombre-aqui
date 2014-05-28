@@ -6,9 +6,8 @@
 #include "commons/log.h"
 #include "commons/parser/parser.h"
 
-
+extern pcb_t PCB_enEjecucion;
 extern t_log * logger;
-
 
 //TODO crear ansisopKernel funciones
 AnSISOP_funciones * crearAnSISOP_funciones()
@@ -36,7 +35,7 @@ AnSISOP_funciones * crearAnSISOP_funciones()
 
 }
 
-AnSISOP_kernel *crearAnSISOP_kernel()
+AnSISOP_kernel * crearAnSISOP_kernel()
 {
 	AnSISOP_kernel *kernel = malloc(sizeof(AnSISOP_kernel));
 
@@ -51,26 +50,26 @@ AnSISOP_kernel *crearAnSISOP_kernel()
 
 t_puntero definirVariable(t_nombre_variable identificador_variable)
 {
-	log_debug( logger, "Llamada a definirVariable" );
-	return apilarVariable( stackCache, (char *) &identificador_variable );
+	log_trace( logger, "Llamada a definirVariable, el identificador es: %c", identificador_variable );
+	return apilarVariable( identificador_variable );
 }
 
 t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable)
 {
-	log_debug( logger, "Llamada a obtenerPosicionVariable" );
-	return (t_puntero) obtenerOffsetVarible( stackCache, (char *) &identificador_variable );
+	log_trace( logger, "Llamada a obtenerPosicionVariable, el identificador es: %c", identificador_variable );
+	return (t_puntero) obtenerOffsetVarible( identificador_variable );
 }
 
 t_valor_variable dereferenciar(t_puntero direccion_variable)
 {
-	log_debug( logger, "Llamada a dereferenciar" );
-	return obtenerValor( stackCache, (uint32_t) direccion_variable ) ;
+	log_trace( logger, "Llamada a dereferenciar, direccion: %d", direccion_variable );
+	return obtenerValor( (uint32_t) direccion_variable ) ;
 }
 
 void asignar(t_puntero direccion_variable, t_valor_variable valor)
 {
-	log_debug( logger, "Llamada a asignar" );
-	modificarVariable( stackCache, (uint32_t) direccion_variable, (uint32_t) valor );
+	log_trace( logger, "Llamada a asignar [ %d ] = %d ", direccion_variable, valor );
+	modificarVariable( (uint32_t) direccion_variable, (uint32_t) valor );
 }
 
 
@@ -79,23 +78,23 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor)
 
 void irAlLabel(t_nombre_etiqueta t_nombre_etiqueta)
 {
-	log_debug( logger, "Llamada a irAlLabel" );
-
+	log_trace( logger, "Llamada a irAlLabel" );
+	PCB_enEjecucion.programCounter = obtenerLineaDeLabel( t_nombre_etiqueta );
 }
-
-
-/************************************************************************************/
-
 
 
 void llamarSinRetorno(t_nombre_etiqueta etiqueta)
 {
-	log_debug( logger, "Llamada a llamarSinRetorno" );
+	log_trace( logger, "Llamada a llamarSinRetorno" );
+	apilarFuncionSinRetorno();
+	irALabel( etiqueta );
 }
 
-void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar) {
-	log_debug( logger, "Llamada a llamarConRetorno" );
-
+void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar)
+{
+	log_trace( logger, "Llamada a llamarConRetorno" );
+	apilarFuncionConRetorno( donde_retornar );
+	irALabel( etiqueta );
 }
 
 void finalizar(void)
@@ -105,7 +104,7 @@ void finalizar(void)
 
 void retornar(t_valor_variable retorno)
 {
-	log_debug( logger, "Llamada a retornar" );
+	log_trace( logger, "Llamada a retornar" );
 }
 
 
@@ -117,19 +116,19 @@ void retornar(t_valor_variable retorno)
 
 t_valor_variable obtenerValorCompartida(t_nombre_compartida variable)
 {
-	log_debug( logger, "Llamada a obtenerValorCompartida" );
+	log_trace( logger, "Llamada a obtenerValorCompartida" );
 	return solcitarVariableCompartidaAKernel(variable);
 }
 
 t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor)
 {
-	log_debug( logger, "Llamada a asignarValorCompartida" );
+	log_trace( logger, "Llamada a asignarValorCompartida" );
 	return  enviarAKernelNuevoValorVariableCompartida(variable, valor);
 }
 
 void imprimir(t_valor_variable valor_mostrar)
 {
-	log_debug( logger, "Llamada a imprimir" );
+	log_trace( logger, "Llamada a imprimir variable: %c", valor_mostrar );
 	enviarAKernelImprimir( valor_mostrar );
 }
 
@@ -141,7 +140,7 @@ void imprimirTexto(char* texto)
 
 void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo)
 {
-	log_debug( logger, "Llamada a entradaSalida" );
+	log_trace( logger, "Llamada a entradaSalida" );
 	enviarAKernelEntradaSalida(dispositivo, tiempo);
 }
 
@@ -158,13 +157,13 @@ void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo)
 
 void scWait(t_nombre_semaforo identificador_semaforo)
 {
-	log_debug( logger, "Llamada a Wait" );
+	log_trace( logger, "Llamada a Wait" );
 	enviarAKernelWait(identificador_semaforo);
 }
 
 void scSignal(t_nombre_semaforo identificador_semaforo)
 {
-	log_debug( logger, "Llamada a Signal" );
+	log_trace( logger, "Llamada a Signal" );
 	enviarAKernelSignal(identificador_semaforo);
 }
 

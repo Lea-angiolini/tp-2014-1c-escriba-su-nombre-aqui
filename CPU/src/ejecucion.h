@@ -4,7 +4,7 @@
 #include "commons/pcb.h"
 
 
-pcb_t ejecutar( );
+bool ejecutar( );
 
 
 #endif /* EJECUCION_H_ */

@@ -7,14 +7,14 @@
 bool crearConexionUMV();
 
 char * solicitarLineaPrograma( uint32_t programCounter );
+uint32_t obtenerLineaDeLabel( t_nombre_etiqueta t_nombre_etiqueta );
 
 int enviarCambioContexto( uint32_t pid );
 int enviarFinPrograma( uint32_t pid );
 int enviarFinQuantum( uint32_t pid );
 
 
-int obtenerContextStack();
-int guardarStack();
+
 
 extern int socketUMV;
 

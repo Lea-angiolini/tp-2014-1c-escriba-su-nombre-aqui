@@ -7,40 +7,25 @@
 #include <string.h>
 #include <stdio.h>
 
-extern pcb_t PCB_enEjecucion;
-extern t_log * logger;
-extern Stack * stackCache;
 
-
-const char lineasCodigo[][25] = {
-	"variables a,b",
-	"a = 2",
-	"b = 4",
-	"c = a * b",
-	"imprimir c"
-};
-
+extern Stack stackCache;
 
 
 void guardarCosasEnStack() {
 
+	printf( "Se creo 'A' en la posicion: %d \n",  apilarVariable( 'A' ) );
+	printf( "Se creo 'J' en la posicion: %d \n",  apilarVariable( 'J' ) );
+	apilarVariable( 'Q' );
+	apilarVariable( 'R' );
+	printf( "Se creo 'P' en la posicion: %d \n",  apilarVariable( 'P' ) ) ;
 
-	char A = 'A';
-	char J = 'J';
-	char P = 'P';
+	printf( "El offset de A es: %d\n", obtenerOffsetVarible( 'A' ) );
+	printf( "El offset de J es: %d\n", obtenerOffsetVarible( 'J' ) );
+	printf( "El offset de Q es: %d\n", obtenerOffsetVarible( 'Q' ) );
 
-	printf( "Se creo 'A' en la posicion: %d \n",  apilarVariable( stackCache, A ) );
-	printf( "Se creo 'J' en la posicion: %d \n",  apilarVariable( stackCache, J ) );
-	apilarVariable( stackCache, 'Q' );
-	apilarVariable( stackCache, 'R' );
-	printf( "Se creo 'P' en la posicion: %d \n",  apilarVariable( stackCache, P ) ) ;
-
-	printf( "Guardo el valor 8 en 'A' \n");
-	modificarVariable( stackCache, obtenerOffsetVarible( stackCache, A ) , 8 );
-	printf( "Guardo el valor 7 en 'J' \n");
-	modificarVariable( stackCache, obtenerOffsetVarible( stackCache, J ) , 7 );
-	printf( "Guardo el valor 1 en 'P' \n");
-	modificarVariable( stackCache, obtenerOffsetVarible( stackCache, P ) , 1 );
+	printf( "Guardo el valor 84 en 'A' \n"); modificarVariable( obtenerOffsetVarible( 'A' ), 84 );
+	printf( "Guardo el valor  7 en 'J' \n"); modificarVariable( obtenerOffsetVarible( 'J' ), 7 );
+	printf( "Guardo el valor 19 en 'P' \n"); modificarVariable( obtenerOffsetVarible( 'P' ), 19 );
 
 }
 
@@ -48,43 +33,31 @@ void guardarCosasEnStack() {
 void leerVariablesDelStack()
 {
 
-	char A = 'A';
-	char J = 'J';
-	char P = 'P';
-
-	printf("\n\nAhora voy a leer 'A'\n");
-	printf( "Si pido la posicion de 'A' da: %d y su valor es: %d \n", obtenerOffsetVarible( stackCache, A ), obtenerValor( stackCache, obtenerOffsetVarible( stackCache, A ) ) );
-	printf( "Si pido la posicion de 'J' da: %d y su valor es: %d \n", obtenerOffsetVarible( stackCache, J ), obtenerValor( stackCache, obtenerOffsetVarible( stackCache, J ) ) );
-	printf( "Si pido la posicion de 'P' da: %d y su valor es: %d \n", obtenerOffsetVarible( stackCache, P ), obtenerValor( stackCache, obtenerOffsetVarible( stackCache, P ) ) );
-
+	printf( "Si pido la posicion de 'A' da: %d y su valor es: %d \n", obtenerOffsetVarible( 'A' ), obtenerValor( obtenerOffsetVarible( 'A' ) ) );
+	printf( "Si pido la posicion de 'J' da: %d y su valor es: %d \n", obtenerOffsetVarible( 'J' ), obtenerValor( obtenerOffsetVarible( 'J' ) ) );
+	printf( "Si pido la posicion de 'P' da: %d y su valor es: %d \n", obtenerOffsetVarible( 'P' ), obtenerValor( obtenerOffsetVarible( 'P' ) ) );
 
 }
 
 
 bool ejecutarPrueba() {
 
-	PCB_enEjecucion.codeSegment = 45;
-	PCB_enEjecucion.contextSize = 45;
-	PCB_enEjecucion.etiquetaIndex = 2;
-	PCB_enEjecucion.id = 4;
-	PCB_enEjecucion.lastErrorCode = 0;
-	PCB_enEjecucion.prioridad = 2;
-	PCB_enEjecucion.programCounter = 432;
-	PCB_enEjecucion.programaSocket = 32423;
 
-
-	printf("Ejecutando........\n\n");
 	printf("Guardando cosas cualquieras en el stack\n");
 	guardarCosasEnStack();
 	printf("Enviando el stack actual a la UMV...\n\n");
 	guardarStack();
 	printf("Limpiando el stack con un par de 0s\n\n");
-	memset( stackCache->data, 0, 100);
+
+	int i = 0;
+	for( i = 0; i < 100; i++){
+		stackCache.data[ i ] = '0';
+	}
+
 	printf("Obteniendo el stack actual\n\n");
 	obtenerContextStack();
 	leerVariablesDelStack();
-
-
+	printf("Finalizo sin segmentation fault");
 	return true;
 
 }
