@@ -2,6 +2,7 @@
 #include "config.h"
 
 #include "primitivas.h"
+#include "umv.h"
 
 #include "commons/log.h"
 #include "commons/parser/parser.h"
@@ -87,14 +88,14 @@ void llamarSinRetorno(t_nombre_etiqueta etiqueta)
 {
 	log_trace( logger, "Llamada a llamarSinRetorno" );
 	apilarFuncionSinRetorno();
-	irALabel( etiqueta );
+	irAlLabel( etiqueta );
 }
 
 void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar)
 {
 	log_trace( logger, "Llamada a llamarConRetorno" );
 	apilarFuncionConRetorno( donde_retornar );
-	irALabel( etiqueta );
+	irAlLabel( etiqueta );
 }
 
 void finalizar(void)

@@ -3,11 +3,12 @@
 
 #include "commons/log.h"
 #include "commons/sockets.h"
+#include "commons/parser/parser.h"
 
 #include <unistd.h>
 
 extern t_log * logger;
-
+extern pcb_t PCB_enEjecucion;
 int socketUMV;
 
 
@@ -30,10 +31,10 @@ bool crearConexionUMV() {
  *
  */
 
-char * solicitarLineaPrograma( uint32_t programCounter ) {
+char * solicitarLineaPrograma() {
 
 
-	switch (programCounter){
+	/*switch (programCounter){
 	case 0:
 		return "variables a";
 		break;
@@ -63,25 +64,24 @@ char * solicitarLineaPrograma( uint32_t programCounter ) {
 		break;
 	default:
 		return "end";
-	}
-
-	/*log_info( logger, "Solicitando linea de programa a la UMV");
-	socket_obtenerLineaCodigo sObtenerLineaCodigo;
-	sObtenerLineaCodigo.numero_linea_Codigo = programCounter;
-
-	socket_responderLineaCodigo * respuesta = (socket_responderLineaCodigo *) enviarYRecibirPaquete( socketUMV, &sObtenerLineaCodigo, sizeof( socket_obtenerLineaCodigo ), sizeof( socket_responderLineaCodigo ) , 'a', 'd', logger  ) ;
-
-	log_info( logger, "Se recibio una linea de programa %s", respuesta->lineaCodigo );*/
-
-	/*if ( paqueteRespuesta == NULL || paqueteRespuesta->numero_linea_Codigo != programCounter ) {
-		return -1;
 	}*/
 
-	//char respuesta[] = paqueteRespuesta->lineaCodigo ;
-	//free(paqueteRespuesta);
-	//return respuesta;
-	/*static char array[] = "my string";
-    return array;*/
+	log_info( logger, "Solicitando linea de programa a la UMV");
+	socket_leerMemoria sLeerMemoria;
+	log_debug( logger, "Solicitando segmento con base %d", PCB_enEjecucion.codeSegment);
+	sLeerMemoria.base = PCB_enEjecucion.codeSegment;
+	sLeerMemoria.offset = PCB_enEjecucion.programCounter;
+
+	socket_RespuestaLeerMemoria * paqueteRespuesta = (socket_RespuestaLeerMemoria *) enviarYRecibirPaquete( socketUMV, (void*)&sLeerMemoria, sizeof( socket_leerMemoria ), sizeof( socket_RespuestaLeerMemoria ) , 'b', 'a', logger  ) ;
+
+	if ( paqueteRespuesta == NULL ) {
+		return -1;
+	}
+
+	char * respuesta = paqueteRespuesta->data;
+	printf("Se obtuvo la linea %s\n", respuesta );
+	free(paqueteRespuesta);
+	return respuesta;
 
 }
 

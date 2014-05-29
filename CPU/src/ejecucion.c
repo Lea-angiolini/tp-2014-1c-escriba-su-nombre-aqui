@@ -30,11 +30,18 @@ bool ejecutar () {
 	while( quantumRestante > 0 ) //Agregar condicion para salida por excepcion o llamada bloqueante
 	{
 
-		char * instruccion = solicitarLineaPrograma( PCB_enEjecucion.programCounter );
+		char * instruccion = solicitarLineaPrograma();
+
+		if( instruccion == -1 ){
+			log_error( logger, "No se pudo obtener la linea" );
+			return false;
+		}
+
 		log_trace( logger, "Incrementando el program counter" );
 		PCB_enEjecucion.programCounter++;
 		log_info( logger, "Ejecutando la linea obtenida: %s", instruccion );
 		analizadorLinea( instruccion, ansisop_funciones, ansisop_Kernelfunciones );
+		free( instruccion );
 		log_debug( logger, "Finalizo la linea" );
 		quantumRestante--;
 		usleep(retardoQuantum*1000);
