@@ -8,6 +8,7 @@
 #include "config.h"
 #include "commons/pcb.h"
 
+extern t_log *logpcp;
 
 void *hilo_io(void *ptr){
 	io_t *parametros = (io_t *) ptr;
@@ -20,8 +21,12 @@ void *hilo_io(void *ptr){
 		data_cola_t *orden_activa = queue_pop(parametros->cola);
 		pthread_mutex_unlock(&parametros->mutex);
 
+		log_trace(logpcp, "Procesando trabajo de IO, esperando %d ms",(orden_activa->tiempo) * (parametros->retardo));
+
 		//aplico el retardo
 		usleep((orden_activa->tiempo) * (parametros->retardo) * 1000);
+
+		log_trace(logpcp, "Concluyo trabajo de IO");
 
 		//Saco el pcb de la cola de bloqueados y la pongo en la cola de ready
 		pthread_mutex_lock(&blockQueueMutex);

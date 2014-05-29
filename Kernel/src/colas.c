@@ -56,6 +56,11 @@ cpu_info_t *list_remove_cpuInfo_by_socketCpu(t_list *self, int socket)
 }
 
 
-
+void MoverAExit(pcb_t *pcb)
+{
+	pthread_mutex_lock(&exitQueueMutex);
+	queue_push(exitQueue, pcb);
+	pthread_mutex_unlock(&exitQueueMutex);
+}
 
 

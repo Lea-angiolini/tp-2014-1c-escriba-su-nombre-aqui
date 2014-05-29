@@ -28,5 +28,6 @@ void destruir_colas();
 
 pcb_t *list_remove_pcb_by_pid(t_list *self, uint32_t pid);
 cpu_info_t *list_remove_cpuInfo_by_socketCpu(t_list *self, int socket);
+void MoverAExit(pcb_t *pcb);
 
 #endif /* COLAS_H_ */

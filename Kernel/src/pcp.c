@@ -224,8 +224,8 @@ bool recibirYprocesarPedido(int socket)
 		return syscallSignal(socket);
 	case 'p': //Termino Quantum
 		return terminoQuantumCPU(socket);
-	case 'k': //Imprimir Texto
-		return imprimirTexto(socket);
+	case 'k': //SC: Imprimir Texto
+		return syscallImprimirTexto(socket);
 	}
 	return true;
 }
@@ -271,6 +271,9 @@ bool syscallIO(int socket)
 	queue_push(blockQueue, pcb);
 	pthread_mutex_unlock(&blockQueueMutex);
 
+	log_trace(logpcp, "Cargando nuevo trabajo en el dispositivo %s",io.identificador);
+
+	//Cargando nuevo trabajo a la cola
 	pthread_mutex_lock(&disp->mutex);
 	queue_push(disp->cola, pedido);
 	pthread_mutex_unlock(&disp->mutex);
@@ -435,16 +438,40 @@ bool terminoQuantumCPU(int socket)
 
 	*pcb = spcb.pcb;
 
-	pthread_mutex_lock(&readyQueueMutex);
-	queue_push(readyQueue, pcb);
-	pthread_mutex_unlock(&readyQueueMutex);
+	switch(pcb->lastErrorCode)
+	{
+		case 0 : //Termino bien el quantum
+				pthread_mutex_lock(&readyQueueMutex);
+				queue_push(readyQueue, pcb);
+				pthread_mutex_unlock(&readyQueueMutex);
 
-	sem_post(&dispatcherReady);
+				sem_post(&dispatcherReady);
+				break;
+
+		case 1: //El programa finalizo correctamente
+				MoverAExit(pcb);
+				break;
+
+		case 2: //Segmentation fault
+				MoverAExit(pcb);
+				mensajeAPrograma(pcb->programaSocket,"Segmentation fault");
+				break;
+
+		case 3: //Se solicito la posicion de memoria inexistente
+				MoverAExit(pcb);
+				mensajeAPrograma(pcb->programaSocket,"Se solicito la posicion de memoria inexistente");
+				break;
+
+		case 4: //UMV error
+				MoverAExit(pcb);
+				mensajeAPrograma(pcb->programaSocket,"UMV error");
+				break;
+	}
 
 	return true;
 }
 
-bool imprimirTexto(int socket)
+bool syscallImprimirTexto(int socket)
 {
 	socket_imprimirTexto texto;
 
@@ -460,3 +487,12 @@ bool imprimirTexto(int socket)
 	return true;
 }
 
+void mensajeAPrograma(int programaSocket, char *mensaje)
+{
+	socket_msg msg;
+	msg.header.size = sizeof(socket_msg);
+
+	strcpy(msg.msg, mensaje);
+	send(programaSocket, &msg, sizeof(socket_msg), 0);
+	shutdown(programaSocket, SHUT_RDWR);
+}
