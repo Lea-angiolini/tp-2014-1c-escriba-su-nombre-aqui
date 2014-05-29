@@ -35,3 +35,8 @@ Kernel/Debug/src/commons/*
 Programa/Debug/src/commons/*
 UMV/Debug/src/commons/*
 CPU/Debug/src/commons/*
+
+Kernel/src/commons/*
+Programa/src/commons/*
+UMV/src/commons/*
+CPU/src/commons/*
