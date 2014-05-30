@@ -1,16 +1,14 @@
 #include "Programa.h"
 #include "memoria.h"
 
-
 extern t_list * programas;
 
+Programa * crearPrograma(uint32_t pid, void * script, void * etiquetas,
+		void * instrucciones_serializado, uint32_t tamanioScript,
+		uint32_t tamanioEtiquetas, uint32_t tamanioInstrucciones,
+		uint32_t tamanioStack) {
 
-
-
-Programa *  crearPrograma(uint32_t pid, void * script, void * etiquetas, void * instrucciones_serializado, uint32_t tamanioScript, uint32_t tamanioEtiquetas, uint32_t tamanioInstrucciones, uint32_t tamanioStack ) {
-
-
-	Programa * programa = malloc( sizeof( Programa));
+	Programa * programa = malloc(sizeof(Programa));
 
 	programa->pid = pid;
 
@@ -18,14 +16,18 @@ Programa *  crearPrograma(uint32_t pid, void * script, void * etiquetas, void * 
 	programa->stack->inicioVirtual = 0;
 	programa->stack->finVirtual = tamanioStack - 1;
 
-	programa->script	= crearYllenarSegmento(tamanioScript, script);
-	crearDireccionesVirtuales(programa->script, tamanioScript, programa->stack->finVirtual);
+	programa->script = crearYllenarSegmento(tamanioScript, script);
+	crearDireccionesVirtuales(programa->script, tamanioScript,
+			programa->stack->finVirtual);
 
 	programa->etiquetas = crearYllenarSegmento(tamanioEtiquetas, etiquetas);
-	crearDireccionesVirtuales(programa->etiquetas, tamanioEtiquetas, programa->script->finVirtual);
+	crearDireccionesVirtuales(programa->etiquetas, tamanioEtiquetas,
+			programa->script->finVirtual);
 
-	programa->instrucciones = crearYllenarSegmento(tamanioInstrucciones, instrucciones_serializado);
-	crearDireccionesVirtuales(programa->instrucciones, tamanioInstrucciones, programa->etiquetas->finVirtual);
+	programa->instrucciones = crearYllenarSegmento(tamanioInstrucciones,
+			instrucciones_serializado);
+	crearDireccionesVirtuales(programa->instrucciones, tamanioInstrucciones,
+			programa->etiquetas->finVirtual);
 
 	list_add(programas, programa);
 
@@ -33,19 +35,20 @@ Programa *  crearPrograma(uint32_t pid, void * script, void * etiquetas, void * 
 
 }
 
-socket_umvpcb crearEstructuraParaPCB( Programa * programa){
+socket_umvpcb crearEstructuraParaPCB(Programa * programa) {
 
-	    socket_umvpcb datosSegmentos;
+	socket_umvpcb datosSegmentos;
 
-		datosSegmentos.stackSegment		= programa->stack->inicioVirtual;
-		datosSegmentos.codeSegment		= programa->script->inicioVirtual;
-		datosSegmentos.etiquetaIndex	= programa->etiquetas->inicioVirtual;
-		datosSegmentos.codeIndex		= programa->instrucciones->inicioVirtual;
+	datosSegmentos.stackSegment = programa->stack->inicioVirtual;
+	datosSegmentos.codeSegment = programa->script->inicioVirtual;
+	datosSegmentos.etiquetaIndex = programa->etiquetas->inicioVirtual;
+	datosSegmentos.codeIndex = programa->instrucciones->inicioVirtual;
 
-		return datosSegmentos;
+	return datosSegmentos;
 }
 
-Segmento * crearDireccionesVirtuales(Segmento * segmento, uint32_t tamanioSegmento, uint32_t finVirtualDelAnterior) {
+Segmento * crearDireccionesVirtuales(Segmento * segmento,
+		uint32_t tamanioSegmento, uint32_t finVirtualDelAnterior) {
 
 	segmento->inicioVirtual = finVirtualDelAnterior + 1;
 	segmento->finVirtual = segmento->inicioVirtual + (tamanioSegmento - 1);
@@ -53,12 +56,12 @@ Segmento * crearDireccionesVirtuales(Segmento * segmento, uint32_t tamanioSegmen
 	return segmento;
 }
 
-Programa * buscarPrograma( uint32_t pid ) {
-		bool matchearPrograma(Programa *nodoPrograma){
-			return nodoPrograma->pid == pid;
-		}
+Programa * buscarPrograma(uint32_t pid) {
+	bool matchearPrograma(Programa *nodoPrograma) {
+		return nodoPrograma->pid == pid;
+	}
 
-		return list_find(programas, matchearPrograma);
+	return list_find(programas, matchearPrograma);
 
 	//Seria mas facil asi, que ya se cuenta con una funcion copada en la commons
 
@@ -73,16 +76,17 @@ Programa * buscarPrograma( uint32_t pid ) {
 	//return NULL;
 }
 
-Segmento * buscarSegmentoEnPrograma( Programa * programa, uint32_t base ) {
+Segmento * buscarSegmentoEnPrograma(Programa * programa, uint32_t base) {
 
-	if( base == programa->stack->inicioVirtual)
+	if (base == programa->stack->inicioVirtual)
 		return programa->stack;
-	if( base == programa->script->inicioVirtual)
+	if (base == programa->script->inicioVirtual)
 		return programa->script;
-	if( base == programa->etiquetas->inicioVirtual)
+	if (base == programa->etiquetas->inicioVirtual)
 		return programa->etiquetas;
-	if( base == programa->instrucciones->inicioVirtual)
+	if (base == programa->instrucciones->inicioVirtual)
 		return programa->instrucciones;
-	 return NULL;
+	return NULL ;
 
 }
+

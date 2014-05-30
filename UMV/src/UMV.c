@@ -125,7 +125,7 @@ int main(void) {
 	log_info(logger, "Iniciando UMV...");
 
 	setUp();
-	ejecutar();
+	//ejecutar();
 	startThreads();
 
 

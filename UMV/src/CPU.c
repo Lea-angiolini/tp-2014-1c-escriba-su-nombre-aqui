@@ -20,7 +20,7 @@ int contadorCpuId;
 
 
 
-int procesarSolicitudDeLinea( CPU * cpu, socket_obtenerLineaCodigo * solicitud ) {
+ int procesarSolicitudDeLinea( CPU * cpu, socket_obtenerLineaCodigo * solicitud ) {
 	//log_info( logger, "La CPU ID: %d solicito la linea de programa: %d del pid XXX", cpu->cpuId, solicitud->numero_linea_Codigo );
 	log_info( logger, "Alguna cpu solicito una linea de codigo" );
 
@@ -44,10 +44,10 @@ int procesarSolicitudDeLinea( CPU * cpu, socket_obtenerLineaCodigo * solicitud )
 
 int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud ) {
 
-	/*if( cpu->pidProcesando != solicitud->pdi) {
+	if( cpu->pidProcesando != solicitud->pdi) {
 		log_error(logger, "La cpu solicito un pedido de memoria de un pid que no esta procesando UMV/src/CPU.c -> procesarSolicitudLecturaMemoria ");
 		return -1;
-	}*/
+	}
 
 	Programa * programa;
 	programa = buscarPrograma( solicitud->pdi );
@@ -94,10 +94,10 @@ int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud )
 int procesarSolicitudEscrituraMemoria( CPU * cpu, socket_guardarEnMemoria * solicitud ) {
 
 
-	/*if( cpu->pidProcesando != solicitud->pdi){
+	if( cpu->pidProcesando != solicitud->pdi){
 		log_error(logger, "La cpu solicito un pedido de memoria de un pid que no esta procesando  UMV/src/CPU.c -> procesarSolicitudEscrituraMemoria ");
 		return -1;
-	}*/
+	}
 
 	Programa * programa;
 	programa = buscarPrograma( solicitud->pdi);
@@ -161,10 +161,11 @@ int recibirYProcesarMensajesCpu( CPU * cpu ) {
 				break;
 			case 'b':
 				todoSaleBien = procesarSolicitudLecturaMemoria( cpu, (socket_leerMemoria *) paquete );
-				break;
+								break;
+
 			case 'c':
 				todoSaleBien = procesarSolicitudEscrituraMemoria( cpu, (socket_guardarEnMemoria *) paquete );
-				break;
+								break;
 			default:
 				//TODO decidir que hacer aca
 				log_error( logger, "La CPU ID: %d envio un mensaje que no se entiende... ???", cpu->cpuId );
