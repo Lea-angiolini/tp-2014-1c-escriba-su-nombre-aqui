@@ -11,7 +11,7 @@
 extern t_log * logger;
 extern pcb_t PCB_enEjecucion;
 int socketUMV;
-
+char * etiquetasCache;
 
 bool crearConexionUMV() {
 
@@ -35,20 +35,6 @@ bool crearConexionUMV() {
 
 char * solicitarLineaPrograma() {
 
-
-	/*switch (programCounter){
-	case 0: return "variables a"; break;
-	case 1: return "a=1"; break;
-	case 2: return "print a"; break;
-	case 3:	return "variables b"; break;
-	case 4:	return "a=2"; break;
-	case 5:	return "a=8"; break;
-	case 6:	return "a=90"; break;
-	case 7:	return "b=2"; break;
-	case 8:	return "print b"; break;
-	default: return "end";
-	}*/
-
 	log_trace( logger, "Solicitando linea de programa a la UMV para el programCounter: %d", PCB_enEjecucion.programCounter );
 
 	socket_leerMemoria sLeerCodeIndex;
@@ -57,12 +43,20 @@ char * solicitarLineaPrograma() {
 	sLeerCodeIndex.offset = sizeof(t_intructions) * PCB_enEjecucion.programCounter;
 	sLeerCodeIndex.length = sizeof(t_intructions);
 	socket_RespuestaLeerMemoria * respuestaCodeIndex = (socket_RespuestaLeerMemoria *) enviarYRecibirPaquete( socketUMV, (void*)&sLeerCodeIndex, sizeof( socket_leerMemoria ), sizeof( socket_RespuestaLeerMemoria ) , 'b', 'a', logger  ) ;
-	if ( respuestaCodeIndex == NULL ) {
+	if ( respuestaCodeIndex == NULL || respuestaCodeIndex->status == false ) {
+		log_error( logger, "La UMV respondio con un error o Segmentation fault" );
 		return (char *)-1;
 	}
 
 	t_intructions * instruct = (t_intructions *) respuestaCodeIndex->data ;
-	log_info( logger, "Se leyo el code index, la proxima instruccion esta en %d - %d", instruct->offset, instruct->start );
+	log_info( logger, "Se leyo el codeIndex, la proxima instruccion esta en %d - %d", instruct->offset, instruct->start );
+
+	if( instruct->offset == 0){
+		log_error( logger, "Llego un code index con length 0 | ( %s ) %s - %s",  __func__, __FILE__, __LINE__  );
+		return (char *) -1;
+	}else if( instruct->offset <= 3 ){
+		log_warning( logger, "Llego un code index con length de 3 o menos" );
+	}
 
 	socket_leerMemoria sLeerLineaCodigo;
 	sLeerLineaCodigo.pdi = PCB_enEjecucion.id;
@@ -72,20 +66,48 @@ char * solicitarLineaPrograma() {
 
 	socket_RespuestaLeerMemoria * paqueteRespuesta = (socket_RespuestaLeerMemoria *) enviarYRecibirPaquete( socketUMV, (void*)&sLeerLineaCodigo, sizeof( socket_leerMemoria ), sizeof( socket_RespuestaLeerMemoria ) , 'b', 'a', logger  ) ;
 
-	if ( paqueteRespuesta == NULL ) {
+	if ( paqueteRespuesta == NULL || paqueteRespuesta->data == NULL || paqueteRespuesta->status == false ) {
 		return (char *)-1;
 	}
 
 	char * respuesta = paqueteRespuesta->data;
-	printf("Se obtuvo la linea %s\n", respuesta );
-	//free(paqueteRespuesta);
+	free(paqueteRespuesta);
 	return respuesta;
 
 }
 
 
+bool obtenerEtiquetas(){
+
+	if( PCB_enEjecucion.etiquetasSize == 0 ){
+		etiquetasCache = realloc( etiquetasCache, 1 );
+		log_warning( logger, "No leyeron etiquetas, el programa tiene?" );
+		return true;
+	}
+
+	socket_leerMemoria sLeerCodeIndex;
+	sLeerCodeIndex.pdi = PCB_enEjecucion.id;
+	sLeerCodeIndex.base = PCB_enEjecucion.etiquetaIndex;
+	sLeerCodeIndex.offset = 0;
+	sLeerCodeIndex.length = PCB_enEjecucion.etiquetasSize;
+	socket_RespuestaLeerMemoria * respuesta = (socket_RespuestaLeerMemoria *) enviarYRecibirPaquete( socketUMV, (void*)&sLeerCodeIndex, sizeof( socket_leerMemoria ), sizeof( socket_RespuestaLeerMemoria ) , 'b', 'a', logger  ) ;
+
+	if( respuesta == NULL || respuesta->status == false ) {
+		log_error( logger, "Llego un code index con length 0 | ( %s ) %s - %s  ",  __func__, __FILE__, __LINE__ );
+		return false;
+	}
+
+	printf("Recibido %s\n", respuesta->data );
+	etiquetasCache = realloc( etiquetasCache, PCB_enEjecucion.etiquetasSize );
+	memcpy( etiquetasCache, respuesta->data, PCB_enEjecucion.etiquetasSize );
+	free( respuesta );
+	return true;
+
+}
+
+
 uint32_t obtenerLineaDeLabel( t_nombre_etiqueta t_nombre_etiqueta ) {
-	return 1;
+	return metadata_buscar_etiqueta(t_nombre_etiqueta, etiquetasCache, PCB_enEjecucion.etiquetasSize);
 }
 
 

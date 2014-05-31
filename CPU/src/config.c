@@ -6,7 +6,7 @@ t_config *config;
 AnSISOP_funciones * ansisop_funciones;
 AnSISOP_kernel * ansisop_Kernelfunciones;
 extern Stack stackCache;
-
+extern char * etiquetasCache;
 
 bool cargar_config(char *configFile)
 {
@@ -19,7 +19,7 @@ bool cargar_config(char *configFile)
 	ansisop_Kernelfunciones = crearAnSISOP_kernel();
 	ansisop_funciones = crearAnSISOP_funciones();
 	stackCache = new_Stack();
-
+	etiquetasCache = malloc(1);
 	return true;
 }
 

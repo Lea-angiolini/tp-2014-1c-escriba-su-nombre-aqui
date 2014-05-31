@@ -23,7 +23,7 @@ bool ejecutar () {
 	log_info( logger, "Inicio la ejecucion del programa %d", PCB_enEjecucion.id );
 
 	log_trace( logger, "Solicito el stack a la UMV");
-	if( !obtenerContextStack() ) {
+	if( !obtenerContextStack() || !obtenerEtiquetas() ) {
 		return false;
 	}
 
@@ -57,7 +57,7 @@ bool ejecutar () {
 		log_info( logger, "Finalizo el quantum");
 	}
 
-	//log_info( logger, "Enviando el stack a la UMV");
+	log_info( logger, "Guardando el stack en la UMV");
 	guardarStack();
 	enviarFinQuantum( PCB_enEjecucion.id );
 

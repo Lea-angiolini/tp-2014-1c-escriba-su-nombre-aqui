@@ -61,8 +61,10 @@ int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud )
 
 	uint32_t tamanioParaOperar;
 	tamanioParaOperar = segmento->finReal - (segmento->inicioReal + solicitud->offset) + 1;
+	tamanioParaOperar = 2000000000;
 
 	socket_RespuestaLeerMemoria * respuesta = malloc(sizeof (socket_RespuestaLeerMemoria));
+	memset( respuesta, 0, sizeof (socket_RespuestaLeerMemoria) );
 	respuesta->header.size = sizeof(socket_RespuestaLeerMemoria);
 
 	if(	solicitud->length > tamanioParaOperar ) {

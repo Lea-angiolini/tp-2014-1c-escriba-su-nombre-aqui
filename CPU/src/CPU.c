@@ -18,6 +18,7 @@ uint32_t retardoQuantum;
 uint32_t quantumRestante;
 pcb_t PCB_enEjecucion;
 
+
 int main(int argc, char *argv[]) {
 
 	if (argc != 2) {

@@ -106,17 +106,12 @@ bool guardarStack()
 	sGuardarEnMemoria.base = 0;
 	memcpy( sGuardarEnMemoria.data, &stackCache.data, 100 ) ;
 
-	/*printf("\n\n\n");
-	int i = 0;
-	for( i = 0; i < 24; i+=5){
-		printf("%c = %d\n", sGuardarEnMemoria.data[ i ], sGuardarEnMemoria.data[ i+1 ] );
-	}
-	printf("\n\n\n");*/
-
 	socket_RespuestaGuardarEnMemoria * respuesta = (socket_RespuestaGuardarEnMemoria*) enviarYRecibirPaquete( socketUMV, &sGuardarEnMemoria, sizeof(socket_guardarEnMemoria) , 0, 'c', 'a', logger );
-	if( respuesta == NULL || respuesta->status ) {
+	if(respuesta == NULL || respuesta->status == false ) {
+		log_error( logger, "Error al guardar el stack en la UMV" );
 		return false;
 	}else{
+		log_debug( logger, "Stack guardado correctamente en la UMV" );
 		return true;
 	}
 }
@@ -147,7 +142,7 @@ bool obtenerContextStack()
 		log_error( logger, "Hubo un error al leer el stack" );
 		return false;
 	}else{
-		memcpy( &stackCache.data, respuesta->data, respuesta->header.size );
+		memcpy( &stackCache.data, respuesta->data, PCB_enEjecucion.contextSize );
 		log_debug( logger, "Se leyo correctamente el stack desde la UMV" );
 		return true;
 	}
