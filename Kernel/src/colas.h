@@ -29,5 +29,14 @@ void destruir_colas();
 pcb_t *list_remove_pcb_by_pid(t_list *self, uint32_t pid);
 cpu_info_t *list_remove_cpuInfo_by_socketCpu(t_list *self, int socket);
 void MoverAExit(pcb_t *pcb);
+void moverABlock(pcb_t *pcb);
+void moverAExec(pcb_t *pcb);
+void moverAReady(pcb_t *pcb);
+void moverCpuAReady(cpu_info_t *cpuInfo);
+void moverCpuAExec(cpu_info_t *cpuInfo);
+pcb_t *sacarDeExec(uint32_t pid);
+pcb_t *sacarDeBlock(uint32_t pid);
+cpu_info_t *sacarCpuDeExec(int socketCPU);
+cpu_info_t *sacarCpuDeReady(int socketCPU);
 
 #endif /* COLAS_H_ */
