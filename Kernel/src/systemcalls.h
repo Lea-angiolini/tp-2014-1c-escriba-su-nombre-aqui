@@ -1,12 +1,14 @@
-/*
- * systemcalls.h
- *
- *  Created on: 31/05/2014
- *      Author: utnso
- */
 
 #ifndef SYSTEMCALLS_H_
 #define SYSTEMCALLS_H_
+
+bool syscallIO(int socket);
+bool syscallObtenerValor(int socket);
+bool syscallGrabarValor(int socket);
+bool syscallWait(int socket);
+bool syscallSignal(int socket);
+bool syscallImprimirTexto(int socket);
+
 
 
 
