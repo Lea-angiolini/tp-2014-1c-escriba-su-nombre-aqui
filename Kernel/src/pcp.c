@@ -85,13 +85,10 @@ void MoverReadyAExec()
 		sem_wait(&dispatcherReady);
 
 		pthread_mutex_lock(&readyQueueMutex);
-		if( queue_is_empty(readyQueue) ) {
+		if( queue_is_empty(readyQueue) )
 			log_error(logpcp, "Se llamo al dispatcher sin tener procesos en READY");
-			pthread_mutex_unlock(&readyQueueMutex);
-			continue;
-		}
-
-		pcb = queue_pop(readyQueue);
+		else
+			pcb = queue_pop(readyQueue);
 		pthread_mutex_unlock(&readyQueueMutex);
 	} while(pcb == NULL);
 
@@ -100,13 +97,9 @@ void MoverReadyAExec()
 		sem_wait(&dispatcherCpu);
 		pthread_mutex_lock(&cpuReadyQueueMutex);
 		if( queue_is_empty(cpuReadyQueue) )
-		{
 			log_error(logpcp, "Se llamo al dispatcher sin tener una CPU disponible");
-			pthread_mutex_unlock(&cpuReadyQueueMutex);
-			continue;
-		}
-
-		cpuInfo = queue_pop(cpuReadyQueue);
+		else
+			cpuInfo = queue_pop(cpuReadyQueue);
 		pthread_mutex_unlock(&cpuReadyQueueMutex);
 	} while(cpuInfo == NULL);
 
