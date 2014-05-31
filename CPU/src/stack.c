@@ -101,8 +101,8 @@ bool guardarStack()
 	socket_guardarEnMemoria sGuardarEnMemoria;
 
 	sGuardarEnMemoria.offset = 0;
-	sGuardarEnMemoria.pdi = 1;
-	sGuardarEnMemoria.length = 100;
+	sGuardarEnMemoria.pdi = PCB_enEjecucion.id;
+	sGuardarEnMemoria.length = PCB_enEjecucion.contextSize;
 	sGuardarEnMemoria.base = 0;
 	memcpy( sGuardarEnMemoria.data, &stackCache.data, 100 ) ;
 
@@ -131,12 +131,16 @@ bool guardarStack()
 bool obtenerContextStack()
 {
 
+	if( PCB_enEjecucion.contextSize == 0 ){
+		return true;
+	}
+
 	socket_leerMemoria sLeerMemoria;
 
-	sLeerMemoria.offset = 0;
-	sLeerMemoria.pdi = 1;
+	sLeerMemoria.offset = PCB_enEjecucion.stackCursor - PCB_enEjecucion.contextSize;
+	sLeerMemoria.pdi = PCB_enEjecucion.id;
 	sLeerMemoria.base = 0;
-	sLeerMemoria.length = 100;
+	sLeerMemoria.length = PCB_enEjecucion.contextSize;
 
 	socket_RespuestaLeerMemoria * respuesta = (socket_RespuestaLeerMemoria*) enviarYRecibirPaquete( socketUMV, &sLeerMemoria, sizeof(socket_leerMemoria), 45, 'b', 'a', logger );
 	if( respuesta == NULL || respuesta->status == false ) {

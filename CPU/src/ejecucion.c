@@ -27,7 +27,7 @@ bool ejecutar () {
 		return false;
 	}
 
-	while( quantumRestante > 0 ) //Agregar condicion para salida por excepcion o llamada bloqueante
+	while( quantumRestante > 0 && PCB_enEjecucion.lastErrorCode == 0 ) //Agregar condicion para salida por excepcion o llamada bloqueante
 	{
 
 		char * instruccion = solicitarLineaPrograma();
@@ -41,12 +41,17 @@ bool ejecutar () {
 		PCB_enEjecucion.programCounter++;
 		log_info( logger, "Ejecutando la linea obtenida: %s", instruccion );
 		analizadorLinea( instruccion, ansisop_funciones, ansisop_Kernelfunciones );
-		free( instruccion );
-		log_debug( logger, "Finalizo la linea" );
+		//free( instruccion );
+		log_trace( logger, "Finalizo la linea" );
 		quantumRestante--;
 		usleep(retardoQuantum*1000);
 
 	}
+
+	if( PCB_enEjecucion.lastErrorCode > 0 ) {
+		//TODO informar a la UMV
+	}
+
 
 	if( quantumRestante == 0 ) {
 		log_info( logger, "Finalizo el quantum");

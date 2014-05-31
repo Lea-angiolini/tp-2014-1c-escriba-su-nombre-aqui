@@ -44,10 +44,10 @@ int contadorCpuId;
 
 int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud ) {
 
-	if( cpu->pidProcesando != solicitud->pdi) {
+	/*if( cpu->pidProcesando != solicitud->pdi) {
 		log_error(logger, "La cpu solicito un pedido de memoria de un pid que no esta procesando UMV/src/CPU.c -> procesarSolicitudLecturaMemoria ");
 		return -1;
-	}
+	}*/
 
 	Programa * programa;
 	programa = buscarPrograma( solicitud->pdi );
@@ -60,13 +60,13 @@ int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud )
 	}
 
 	uint32_t tamanioParaOperar;
-	tamanioParaOperar = segmento->finReal - (segmento->inicioReal + solicitud->offset);
+	tamanioParaOperar = segmento->finReal - (segmento->inicioReal + solicitud->offset) + 1;
 
 	socket_RespuestaLeerMemoria * respuesta = malloc(sizeof (socket_RespuestaLeerMemoria));
 	respuesta->header.size = sizeof(socket_RespuestaLeerMemoria);
 
 	if(	solicitud->length > tamanioParaOperar ) {
-		log_error(logger, "Violación de Segmento debido al tamaño con el que se quiere operar | UMV/src/cpu.c -> procesarSolicitudLecturaMemoria");
+		log_error(logger, "Segmentation fault, length: %d, tamanioParaOperar: %d, base: %d, offset: %d | UMV/src/cpu.c -> procesarSolicitudLecturaMemoria", solicitud->length, tamanioParaOperar, solicitud->base, solicitud->offset );
 		respuesta->status = false;
 	}else{
 		respuesta->status = true;
@@ -94,10 +94,10 @@ int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud )
 int procesarSolicitudEscrituraMemoria( CPU * cpu, socket_guardarEnMemoria * solicitud ) {
 
 
-	if( cpu->pidProcesando != solicitud->pdi){
+	/*if( cpu->pidProcesando != solicitud->pdi){
 		log_error(logger, "La cpu solicito un pedido de memoria de un pid que no esta procesando  UMV/src/CPU.c -> procesarSolicitudEscrituraMemoria ");
 		return -1;
-	}
+	}*/
 
 	Programa * programa;
 	programa = buscarPrograma( solicitud->pdi);
@@ -110,13 +110,13 @@ int procesarSolicitudEscrituraMemoria( CPU * cpu, socket_guardarEnMemoria * soli
 	}
 
 	uint32_t tamanioParaOperar;
-	tamanioParaOperar = segmento->finReal - (segmento->inicioReal + solicitud->offset);
+	tamanioParaOperar = segmento->finReal - (segmento->inicioReal + solicitud->offset) + 1;
 
 	socket_RespuestaGuardarEnMemoria * respuesta = malloc(sizeof (socket_RespuestaGuardarEnMemoria));
 	respuesta->header.size = sizeof(socket_RespuestaGuardarEnMemoria);
 
 	if(	solicitud->length > tamanioParaOperar ) {
-		log_error(logger, "Violación de Segmento debido al tamaño con el que se quiere operar | UMV/src/cpu.c -> procesarSolicitudEscrituraMemoria");
+		log_error(logger, "Segmentation fault, length: %d, tamanioParaOperar: %d, base: %d, offset: %d | UMV/src/cpu.c -> procesarSolicitudEscrituraMemoria", solicitud->length, tamanioParaOperar, solicitud->base, solicitud->offset );
 		respuesta->status = false;
 	}else{
 		respuesta->status = true;

@@ -9,6 +9,7 @@
 
 extern pcb_t PCB_enEjecucion;
 extern t_log * logger;
+extern uint32_t finalizado;
 
 //TODO crear ansisopKernel funciones
 AnSISOP_funciones * crearAnSISOP_funciones()
@@ -100,7 +101,9 @@ void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar)
 
 void finalizar(void)
 {
-	log_debug( logger, "Llamada a finalizar" );
+	log_trace( logger, "Llamada a finalizar" );
+	PCB_enEjecucion.lastErrorCode = 1;
+	enviarPCB();
 }
 
 void retornar(t_valor_variable retorno)

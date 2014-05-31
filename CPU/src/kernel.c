@@ -17,7 +17,7 @@ int socketKernel;
 
 bool crearConexionKernel() {
 
-	log_info(logger, "Conectando al Kernel en: %s:%d", config_get_string_value(config, "IPKERNEL"), config_get_int_value(config, "PUERTOKERNEL"));
+	log_debug(logger, "Conectando al Kernel en: %s:%d", config_get_string_value(config, "IPKERNEL"), config_get_int_value(config, "PUERTOKERNEL"));
 	socketKernel = conectar(config_get_string_value(config, "IPKERNEL"), config_get_int_value(config, "PUERTOKERNEL"), logger);
 
 	if (socketKernel < 0) {
@@ -48,7 +48,7 @@ bool enviarHandshake()
 
 	quantumPorEjecucion = cpucfg.quantum;
 	retardoQuantum = cpucfg.retardo;
-	log_info( logger, "El quantum que envio el kernel es: %d y el retardo: %d", quantumPorEjecucion, retardoQuantum);
+	log_debug( logger, "El quantum que envio el kernel es: %d y el retardo: %d", quantumPorEjecucion, retardoQuantum);
 
 	return true;
 }
@@ -80,7 +80,7 @@ bool recibirYProcesarMensajesKernel()
 			log_error(logger, "No se puedo devolver el PCB al Kernel");
 			return false;
 		}else{
-			log_info( logger, "Se le devolvio el PCB al Kernel" );
+			log_trace( logger, "Se le devolvio el PCB al Kernel" );
 		}
 
 	}

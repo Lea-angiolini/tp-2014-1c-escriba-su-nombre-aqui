@@ -4,6 +4,7 @@
 #include "commons/log.h"
 #include "commons/sockets.h"
 #include "commons/parser/parser.h"
+#include "commons/parser/metadata_program.h"
 
 #include <unistd.h>
 
@@ -13,7 +14,8 @@ int socketUMV;
 
 
 bool crearConexionUMV() {
-	log_info(logger, "Conectando a la UMV en %s:%d", config_get_string_value(config, "IPUMV"), config_get_int_value(config, "PUERTOUMV"));
+
+	log_debug(logger, "Conectando a la UMV en %s:%d", config_get_string_value(config, "IPUMV"), config_get_int_value(config, "PUERTOUMV"));
 	socketUMV = conectar(config_get_string_value(config, "IPUMV"),	config_get_int_value(config, "PUERTOUMV"), logger);
 
 	if (socketUMV < 0) {
@@ -35,52 +37,48 @@ char * solicitarLineaPrograma() {
 
 
 	/*switch (programCounter){
-	case 0:
-		return "variables a";
-		break;
-	case 1:
-		return "a=1";
-		break;
-	case 2:
-		return "print a";
-		break;
-	case 3:
-		return "variables b";
-		break;
-	case 4:
-		return "a=2";
-		break;
-	case 5:
-		return "a=8";
-		break;
-	case 6:
-		return "a=90";
-		break;
-	case 7:
-		return "b=2";
-		break;
-	case 8:
-		return "print b";
-		break;
-	default:
-		return "end";
+	case 0: return "variables a"; break;
+	case 1: return "a=1"; break;
+	case 2: return "print a"; break;
+	case 3:	return "variables b"; break;
+	case 4:	return "a=2"; break;
+	case 5:	return "a=8"; break;
+	case 6:	return "a=90"; break;
+	case 7:	return "b=2"; break;
+	case 8:	return "print b"; break;
+	default: return "end";
 	}*/
 
-	log_info( logger, "Solicitando linea de programa a la UMV");
-	socket_leerMemoria sLeerMemoria;
-	log_debug( logger, "Solicitando segmento con base %d", PCB_enEjecucion.codeSegment);
-	sLeerMemoria.base = PCB_enEjecucion.codeSegment;
-	sLeerMemoria.offset = PCB_enEjecucion.programCounter;
+	log_trace( logger, "Solicitando linea de programa a la UMV para el programCounter: %d", PCB_enEjecucion.programCounter );
 
-	socket_RespuestaLeerMemoria * paqueteRespuesta = (socket_RespuestaLeerMemoria *) enviarYRecibirPaquete( socketUMV, (void*)&sLeerMemoria, sizeof( socket_leerMemoria ), sizeof( socket_RespuestaLeerMemoria ) , 'b', 'a', logger  ) ;
+	socket_leerMemoria sLeerCodeIndex;
+	sLeerCodeIndex.pdi = PCB_enEjecucion.id;
+	sLeerCodeIndex.base = PCB_enEjecucion.codeIndex;
+	sLeerCodeIndex.offset = sizeof(t_intructions) * PCB_enEjecucion.programCounter;
+	sLeerCodeIndex.length = sizeof(t_intructions);
+	socket_RespuestaLeerMemoria * respuestaCodeIndex = (socket_RespuestaLeerMemoria *) enviarYRecibirPaquete( socketUMV, (void*)&sLeerCodeIndex, sizeof( socket_leerMemoria ), sizeof( socket_RespuestaLeerMemoria ) , 'b', 'a', logger  ) ;
+	if ( respuestaCodeIndex == NULL ) {
+		return (char *)-1;
+	}
+
+	t_intructions * instruct = (t_intructions *) respuestaCodeIndex->data ;
+	log_info( logger, "Se leyo el code index, la proxima instruccion esta en %d - %d", instruct->offset, instruct->start );
+
+	socket_leerMemoria sLeerLineaCodigo;
+	sLeerLineaCodigo.pdi = PCB_enEjecucion.id;
+	sLeerLineaCodigo.base = PCB_enEjecucion.codeSegment;
+	sLeerLineaCodigo.offset = instruct->start;
+	sLeerLineaCodigo.length = instruct->offset;
+
+	socket_RespuestaLeerMemoria * paqueteRespuesta = (socket_RespuestaLeerMemoria *) enviarYRecibirPaquete( socketUMV, (void*)&sLeerLineaCodigo, sizeof( socket_leerMemoria ), sizeof( socket_RespuestaLeerMemoria ) , 'b', 'a', logger  ) ;
 
 	if ( paqueteRespuesta == NULL ) {
-		return -1;
+		return (char *)-1;
 	}
 
 	char * respuesta = paqueteRespuesta->data;
 	printf("Se obtuvo la linea %s\n", respuesta );
-	free(paqueteRespuesta);
+	//free(paqueteRespuesta);
 	return respuesta;
 
 }
