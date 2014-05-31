@@ -1,4 +1,11 @@
+#include "systemcalls.h"
+#include "io.h"
+#include "colas.h"
+#include "config.h"
 
+extern t_log *logpcp;
+
+extern sem_t dispatcherReady, dispatcherCpu;
 
 bool syscallIO(int socket)
 {

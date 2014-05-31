@@ -4,6 +4,8 @@
 #include <pthread.h>
 #include "commons/collections/queue.h"
 
+extern t_log *logpcp;
+
 t_queue *newQueue, *readyQueue, *execQueue, *exitQueue, *blockQueue;
 pthread_mutex_t readyQueueMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t blockQueueMutex = PTHREAD_MUTEX_INITIALIZER;
