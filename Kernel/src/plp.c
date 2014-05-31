@@ -128,29 +128,20 @@ bool recibirYprocesarScript(int socket) {
 
 	socket_respuesta respuesta;
 
-#ifdef UMV_ENABLE
 	recv(socketUMV, &respuesta, sizeof(socket_respuesta), MSG_WAITALL);
-#endif
 
-#ifndef UMV_ENABLE
-	respuesta.valor = true;
-#endif
 	if(respuesta.valor == true)
 	{
 		log_info(logplp, "La UMV informo que pudo alojar la memoria necesaria para el script ansisop");
 		log_info(logplp, "Enviando a la UMV los datos a guardar en los segmentos");
 
-#ifdef UMV_ENABLE
 		send(socketUMV, &nextProcessId, sizeof(nextProcessId), 0);
 		send(socketUMV, script, pedirMemoria.codeSegmentSize, 0);
 		send(socketUMV, scriptMetadata->etiquetas, pedirMemoria.etiquetasSegmentSize, 0);
 		send(socketUMV, scriptMetadata->instrucciones_serializado, pedirMemoria.instruccionesSegmentSize, 0);
-#endif
 
 		socket_umvpcb umvpcb;
-#ifdef UMV_ENABLE
 		recv(socketUMV, &umvpcb, sizeof(socket_umvpcb), MSG_WAITALL);
-#endif
 
 		pcb_t *pcb = malloc(sizeof(pcb_t));
 
@@ -161,7 +152,7 @@ bool recibirYprocesarScript(int socket) {
 		pcb->stackCursor = umvpcb.stackSegment;
 		pcb->codeIndex = umvpcb.codeIndex;
 		pcb->etiquetaIndex = umvpcb.etiquetaIndex;
-
+		pcb->etiquetasSize = scriptMetadata->etiquetas_size;
 		pcb->programCounter = scriptMetadata->instruccion_inicio;
 		pcb->contextSize = 0;
 
