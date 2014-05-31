@@ -14,11 +14,12 @@
 #include "commons/parser/metadata_program.h"
 
 void *IniciarPlp(void *arg);
+bool iniciarServidorProgramas();
+bool conectarUMV();
 
 void MoverNewAReady();
 void puedoMoverNewAReady();
 
-bool nuevoMensaje(int socket);
 void desconexionCliente();
 bool recibirYprocesarScript(int socket);
 

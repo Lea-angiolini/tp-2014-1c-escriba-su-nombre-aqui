@@ -20,21 +20,24 @@ typedef struct {
 void *IniciarPcp(void *arg);
 void *Dispatcher(void *arg);
 
+bool iniciarServidorCpu();
+
 void MoverReadyAExec();
 
 void bajarNivelMultiprogramacion();
 
 bool conexionCPU(int socket);
 void desconexionCPU(int socket);
-bool nuevoMensajeCPU(int socket);
 bool recibirYprocesarPedido(int socket);
+
 bool syscallIO(int socket);
 bool syscallObtenerValor(int socket);
 bool syscallGrabarValor(int socket);
 bool syscallWait(int socket);
 bool syscallSignal(int socket);
-bool terminoQuantumCPU(int socket);
 bool syscallImprimirTexto(int socket);
+
+bool terminoQuantumCPU(int socket);
 void mensajeAPrograma(int programaSocket, char *mensaje);
 
 #endif /* PCP_H_ */

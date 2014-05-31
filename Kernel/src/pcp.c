@@ -13,20 +13,39 @@ sem_t dispatcherReady, dispatcherCpu;
 void *IniciarPcp(void *arg)
 {
 	logpcp = log_create("log_pcp.txt", "KernelPCP", 1, LOG_LEVEL_TRACE);
-	log_info(logpcp, "Thread iniciado");
+	log_debug(logpcp, "Thread iniciado");
 
 	pthread_t dispatcherThread;
 	pthread_create(&dispatcherThread, NULL, &Dispatcher, NULL);
 
-	if(crearServidorNoBloqueante(config_get_int_value(config, "PUERTO_CPU"), nuevoMensajeCPU, logpcp) == -1) {
-		log_error(logpcp, "No se pudo crear el servidor receptor de CPUs");
-	}
+	iniciarServidorCpu();
 
 	pthread_join(&dispatcherThread, NULL);
 
-	log_info(logpcp, "Thread concluido");
+	log_debug(logpcp, "Thread concluido");
 	log_destroy(logpcp);
+
 	return NULL;
+}
+
+bool iniciarServidorCpu()
+{
+	bool nuevoMensaje(int socket) {
+		if ( recibirYprocesarPedido(socket) == false ) {
+			desconexionCPU(socket);
+			return false;
+		}
+
+		return true;
+	}
+
+	log_debug(logpcp, "Iniciando servidor de CPUs");
+
+	if(crearServidorNoBloqueante(config_get_int_value(config, "PUERTO_CPU"), nuevoMensaje, logpcp) == -1) {
+		log_error(logpcp, "Hubo un problema en el servidor receptor de CPUs");
+	}
+
+	return true;
 }
 
 /*
@@ -36,59 +55,65 @@ void *IniciarPcp(void *arg)
  */
 void *Dispatcher(void *arg)
 {
-	log_info(logpcp, "Dispatcher Thread iniciado");
+	log_debug(logpcp, "Dispatcher Thread iniciado");
 
 	sem_init(&dispatcherReady, 0, 0);
 	sem_init(&dispatcherCpu, 0, 0);
 
 	while(1)
 	{
-		sem_wait(&dispatcherReady);
-		sem_wait(&dispatcherCpu);
-
-		log_info(logpcp, "Dispatcher invocado");
-
-		if( queue_is_empty(readyQueue) )
-		{
-			log_error(logpcp, "Se llamo al dispatcher sin tener procesos en READY");
-			sem_post(&dispatcherCpu);
-			continue;
-		}
-
-		if( queue_is_empty(cpuReadyQueue) )
-		{
-			log_error(logpcp, "Se llamo al dispatcher sin tener una CPU disponible");
-			sem_post(&dispatcherReady);
-			continue;
-		}
-
+		log_debug(logpcp, "Dispatcher esperando");
 		MoverReadyAExec();
+		log_debug(logpcp, "Dispatcher completo operacion");
 	}
 
 	sem_destroy(&dispatcherReady);
 	sem_destroy(&dispatcherCpu);
 
-	log_info(logpcp, "Dispatcher Thread concluido");
+	log_debug(logpcp, "Dispatcher Thread concluido");
 
 	return NULL;
 }
 
 void MoverReadyAExec()
 {
+	pcb_t *pcb = NULL;
+	cpu_info_t *cpuInfo = NULL;
+
+	do
+	{
+		sem_wait(&dispatcherReady);
+
+		pthread_mutex_lock(&readyQueueMutex);
+		if( queue_is_empty(readyQueue) ) {
+			log_error(logpcp, "Se llamo al dispatcher sin tener procesos en READY");
+			pthread_mutex_unlock(&readyQueueMutex);
+			continue;
+		}
+
+		pcb = queue_pop(readyQueue);
+		pthread_mutex_unlock(&readyQueueMutex);
+	} while(pcb == NULL);
+
+	do
+	{
+		sem_wait(&dispatcherCpu);
+		pthread_mutex_lock(&cpuReadyQueueMutex);
+		if( queue_is_empty(cpuReadyQueue) )
+		{
+			log_error(logpcp, "Se llamo al dispatcher sin tener una CPU disponible");
+			pthread_mutex_unlock(&cpuReadyQueueMutex);
+			continue;
+		}
+
+		cpuInfo = queue_pop(cpuReadyQueue);
+		pthread_mutex_unlock(&cpuReadyQueueMutex);
+	} while(cpuInfo == NULL);
+
 	log_info(logpcp, "Moviendo PCB de la cola READY a EXEC");
-
-	//Iniciando proceso de ejecucion
-	pthread_mutex_lock(&readyQueueMutex);
-	pcb_t *pcb = queue_pop(readyQueue);
-	pthread_mutex_unlock(&readyQueueMutex);
-
 	pthread_mutex_lock(&execQueueMutex);
 	queue_push(execQueue, pcb);
 	pthread_mutex_unlock(&execQueueMutex);
-
-	pthread_mutex_lock(&cpuReadyQueueMutex);
-	cpu_info_t *cpuInfo = queue_pop(cpuReadyQueue);
-	pthread_mutex_unlock(&cpuReadyQueueMutex);
 
 	cpuInfo->pid = pcb->id;
 
@@ -189,17 +214,6 @@ void desconexionCPU(int socket)
 		free(list_remove_cpuInfo_by_socketCpu(cpuReadyQueue->elements, socket));
 		pthread_mutex_unlock(&cpuReadyQueueMutex);
 	}
-}
-
-
-bool nuevoMensajeCPU(int socket) {
-
-	if ( recibirYprocesarPedido(socket) == false ) {
-		desconexionCPU(socket);
-		return false;
-	}
-
-	return true;
 }
 
 bool recibirYprocesarPedido(int socket)

@@ -4,8 +4,6 @@
 
 #define CALCULAR_PRIORIDAD(e,f,t) (5 * e + 3 * f + t)
 
-#define UMV_ENABLE
-
 t_log *logplp;
 
 uint32_t nextProcessId = 1;
@@ -19,28 +17,49 @@ int socketUMV;
 
 void *IniciarPlp(void *arg) {
 	logplp = log_create("log_plp.txt", "KernelPLP", 1, LOG_LEVEL_TRACE);
-	log_info(logplp, "Thread iniciado");
+	log_debug(logplp, "Thread iniciado");
 
-#ifdef UMV_ENABLE
+	if( conectarUMV() )
+		iniciarServidorProgramas();
+
+	log_debug(logplp, "Thread concluido");
+	log_destroy(logplp);
+
+	return NULL;
+}
+
+bool iniciarServidorProgramas()
+{
+	bool nuevoMensaje(int socket) {
+		if (recibirYprocesarScript(socket) == false) {
+			desconexionCliente();
+			return false;
+		}
+
+		return true;
+	}
+
+	log_debug(logplp, "Iniciando servidor de Programas");
+
+	if (crearServidorNoBloqueante(config_get_int_value(config, "PUERTO_PROG"), nuevoMensaje, logplp) == -1) {
+		log_error(logplp, "Hubo un problema en el servidor receptor de Programas");
+		return false;
+	}
+
+	return true;
+}
+
+bool conectarUMV()
+{
 	socketUMV = conectar(config_get_string_value(config, "IP_UMV"), config_get_int_value(config, "PUERTO_UMV"), logplp);
 
 	if (socketUMV == -1) {
 		log_error(logplp, "No se pudo establecer la conexion con la UMV");
-		log_info(logplp, "Thread concluido");
-		log_destroy(logplp);
-		return NULL ;
+		return false;
 	}
 
 	log_info(logplp, "Conectado con la UMV");
-#endif
-
-	if (crearServidorNoBloqueante(config_get_int_value(config, "PUERTO_PROG"), nuevoMensaje, logplp) == -1) {
-		log_error(logplp, "No se pudo crear el servidor receptor de Programas");
-	}
-
-	log_info(logplp, "Thread concluido");
-	log_destroy(logplp);
-	return NULL ;
+	return true;
 }
 
 void MoverNewAReady()
@@ -54,12 +73,14 @@ void MoverNewAReady()
 	list_sort(newQueue->elements, sjnAlgorithm);
 
 	log_info(logplp, "Moviendo PCB de la cola NEW a READY");
+
 	pthread_mutex_lock(&readyQueueMutex);
-	pthread_mutex_lock(&multiprogramacionMutex);
 	queue_push(readyQueue, queue_pop(newQueue));
+	pthread_mutex_unlock(&readyQueueMutex);
+
+	pthread_mutex_lock(&multiprogramacionMutex);
 	multiprogramacion++;
 	pthread_mutex_unlock(&multiprogramacionMutex);
-	pthread_mutex_unlock(&readyQueueMutex);
 
 	//Llamada a dispatcher del PCP para avisar que hay un nuevo trabajo pendiente
 	sem_post(&dispatcherReady);
@@ -78,16 +99,6 @@ void desconexionCliente()
 {
 	log_info(logplp, "Se ha desconectado un Programa");
 	puedoMoverNewAReady();
-}
-
-
-bool nuevoMensaje(int socket) {
-	if (recibirYprocesarScript(socket) == false) {
-		desconexionCliente();
-		return false;
-	}
-
-	return true;
 }
 
 bool recibirYprocesarScript(int socket) {
@@ -122,9 +133,7 @@ bool recibirYprocesarScript(int socket) {
 	pedirMemoria.etiquetasSegmentSize = scriptMetadata->etiquetas_size;
 	pedirMemoria.instruccionesSegmentSize = scriptMetadata->instrucciones_size * sizeof(t_intructions);
 
-#ifdef UMV_ENABLE
 	send(socketUMV, &pedirMemoria, sizeof(socket_pedirMemoria), 0);
-#endif
 
 	socket_respuesta respuesta;
 
