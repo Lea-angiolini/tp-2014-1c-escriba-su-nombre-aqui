@@ -39,11 +39,11 @@ bool ejecutar () {
 
 		log_trace( logger, "Incrementando el program counter" );
 		PCB_enEjecucion.programCounter++;
+		quantumRestante--;
 		log_info( logger, "Ejecutando la linea obtenida: %s", instruccion );
 		analizadorLinea( instruccion, ansisop_funciones, ansisop_Kernelfunciones );
 		//free( instruccion );
 		log_trace( logger, "Finalizo la linea" );
-		quantumRestante--;
 		usleep(retardoQuantum*1000);
 
 	}

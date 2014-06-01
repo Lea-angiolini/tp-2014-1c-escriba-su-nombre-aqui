@@ -95,7 +95,7 @@ bool enviarPCB()
 	spcb.header.size = sizeof(socket_pcb);
 	spcb.header.code = 'p';
 	spcb.pcb = PCB_enEjecucion;
-
+	log_debug( logger, "Enviando PCB id: %d", PCB_enEjecucion.id );
 	if( send(socketKernel, &spcb, sizeof(socket_pcb), 0) < 0 )
 		return false;
 
@@ -173,12 +173,12 @@ bool enviarAKernelEntradaSalida(t_nombre_dispositivo dispositivo, int tiempo)
 	io.unidades = tiempo;
 	strcpy(io.identificador, dispositivo);
 
-	if( send(socketKernel, &io, sizeof(socket_scIO), 0) < 0 )
+	if( send(socketKernel, &io, sizeof(socket_scIO), 0) < 0 ){
+		log_error( logger, "No se pudo enviar la Syscall de entrada/salida al kernel" );
 		return false;
+	}
 
-	if( !enviarPCB() )
-		return false;
-
+	quantumRestante = 0;
 	return true;
 }
 
@@ -207,7 +207,7 @@ bool enviarAKernelWait(t_nombre_semaforo identificador_semaforo)
 
 	socket_respuesta res;
 
-	if( recv(socket, &res, sizeof(socket_respuesta), MSG_WAITALL) != sizeof(socket_respuesta) )
+	if( recv(socketKernel, &res, sizeof(socket_respuesta), MSG_WAITALL) != sizeof(socket_respuesta) )
 		return false;
 
 	if(!res.valor)
