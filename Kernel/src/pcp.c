@@ -2,6 +2,7 @@
 #include "colas.h"
 #include "config.h"
 #include "io.h"
+#include "systemcalls.h"
 
 t_log *logpcp;
 
@@ -104,9 +105,7 @@ void MoverReadyAExec()
 	} while(cpuInfo == NULL);
 
 	log_info(logpcp, "Moviendo PCB de la cola READY a EXEC");
-	pthread_mutex_lock(&execQueueMutex);
-	queue_push(execQueue, pcb);
-	pthread_mutex_unlock(&execQueueMutex);
+	moverAExec(pcb);
 
 	cpuInfo->pid = pcb->id;
 
@@ -117,9 +116,7 @@ void MoverReadyAExec()
 	spcb.header.size = sizeof(socket_pcb);
 	spcb.pcb = *pcb;
 
-	pthread_mutex_lock(&cpuExecQueueMutex);
-	queue_push(cpuExecQueue, cpuInfo);
-	pthread_mutex_unlock(&cpuExecQueueMutex);
+	moverCpuAExec(cpuInfo);
 
 	if( send(cpuInfo->socketCPU, &spcb, sizeof(socket_pcb), 0) <= 0 )
 		desconexionCPU(cpuInfo->socketCPU);
@@ -138,9 +135,7 @@ bool conexionCPU(int socket)
 	cpu_info_t *cpuInfo = malloc(sizeof(cpu_info_t));
 	cpuInfo->socketCPU = socket;
 
-	pthread_mutex_lock(&cpuReadyQueueMutex);
-	queue_push(cpuReadyQueue, cpuInfo);
-	pthread_mutex_unlock(&cpuReadyQueueMutex);
+	moverCpuAReady(cpuInfo);
 
 	//Hay que mandar QUANTUM y RETARDO al CPU
 	socket_cpucfg cpucfg;
@@ -172,22 +167,15 @@ void desconexionCPU(int socket)
 	log_info(logpcp, "Se ha desconectado un CPU");
 	log_info(logpcp, "Verificando si el CPU desconectado estaba corriendo algun programa");
 
-	pthread_mutex_lock(&cpuExecQueueMutex);
-	cpu_info_t *cpuInfo = list_remove_cpuInfo_by_socketCpu(cpuExecQueue->elements, socket);
-	pthread_mutex_unlock(&cpuExecQueueMutex);
+	cpu_info_t *cpuInfo = sacarCpuDeExec(socket);
 
 	if( cpuInfo != NULL )
 	{
 		log_error(logpcp, "La CPU desconectada estaba en ejecucion, abortando ejecucion de programa");
 		log_info(logpcp, "Moviendo PCB de la cola EXEC a EXIT");
 
-		pthread_mutex_lock(&execQueueMutex);
-		pcb_t *pcb = list_remove_pcb_by_pid(execQueue->elements, cpuInfo->pid);
-		pthread_mutex_unlock(&execQueueMutex);
-
-		pthread_mutex_lock(&exitQueueMutex);
-		queue_push(exitQueue, pcb);
-		pthread_mutex_unlock(&exitQueueMutex);
+		pcb_t *pcb = sacarDeExec(cpuInfo->pid);
+		moverAExit(pcb);
 
 		log_info(logpcp, "Informandole a Programa que el script no pudo concluir su ejecucion");
 
@@ -203,9 +191,7 @@ void desconexionCPU(int socket)
 	else
 	{
 		log_info(logpcp, "La CPU desconectada no se encontraba en ejecucion");
-		pthread_mutex_lock(&cpuReadyQueueMutex);
-		free(list_remove_cpuInfo_by_socketCpu(cpuReadyQueue->elements, socket));
-		pthread_mutex_unlock(&cpuReadyQueueMutex);
+		free(sacarCpuDeReady(socket));
 	}
 }
 
@@ -244,49 +230,42 @@ bool terminoQuantumCPU(int socket)
 	if( recv(socket, &spcb, sizeof(socket_pcb), MSG_WAITALL) != sizeof(socket_pcb) )
 		return false;
 
-	//Sacar cpu de la cpuExecQueue y pasarla a cpuReadyQueue
+	log_debug(logpcp, "CPU: %d, termino quantum", socket);
 
-	pthread_mutex_lock(&cpuExecQueueMutex);
-	cpu_info_t *cpuInfo = list_remove_cpuInfo_by_socketCpu(cpuExecQueue->elements, socket);
-	pthread_mutex_unlock(&cpuExecQueueMutex);
-
-	pthread_mutex_lock(&cpuReadyQueueMutex);
-	queue_push(cpuReadyQueue, cpuInfo);
-	pthread_mutex_unlock(&cpuReadyQueueMutex);
+	moverCpuAReady(sacarCpuDeExec(socket));
 
 	sem_post(&dispatcherCpu);
 
-	pthread_mutex_lock(&execQueueMutex);
-	pcb_t *pcb = list_remove_pcb_by_pid(execQueue->elements, spcb.pcb.id);
-	pthread_mutex_unlock(&execQueueMutex);
-
+	pcb_t *pcb = sacarDeExec(spcb.pcb.id);
 	*pcb = spcb.pcb;
 
 	switch(pcb->lastErrorCode)
 	{
 		case 0 : //Termino bien el quantum
-				pthread_mutex_lock(&readyQueueMutex);
-				queue_push(readyQueue, pcb);
-				pthread_mutex_unlock(&readyQueueMutex);
-
+				log_trace(logpcp, "Termino bien el quantum");
+				moverAReady(pcb);
 				sem_post(&dispatcherReady);
 				break;
 
 		case 1: //El programa finalizo correctamente
+				log_trace(logpcp, "El programa finalizo correctamente");
 				moverAExit(pcb);
 				break;
 
 		case 2: //Segmentation fault
+				log_trace(logpcp, "Segmentation fault");
 				moverAExit(pcb);
 				mensajeYDesconexionPrograma(pcb->programaSocket,"Segmentation fault");
 				break;
 
 		case 3: //Se solicito la posicion de memoria inexistente
+				log_trace(logpcp, "Se solicito la posicion de memoria inexistente");
 				moverAExit(pcb);
 				mensajeYDesconexionPrograma(pcb->programaSocket,"Se solicito la posicion de memoria inexistente");
 				break;
 
 		case 4: //UMV error
+				log_trace(logpcp, "UMV error");
 				moverAExit(pcb);
 				mensajeYDesconexionPrograma(pcb->programaSocket,"UMV error");
 				break;
@@ -302,5 +281,8 @@ void mensajeYDesconexionPrograma(int programaSocket, char *mensaje)
 
 	strcpy(msg.msg, mensaje);
 	send(programaSocket, &msg, sizeof(socket_msg), 0);
+
+	log_trace(logpcp, "Mensaje de error enviado al programa. Apagando socket: %d",programaSocket);
+
 	shutdown(programaSocket, SHUT_RDWR);
 }
