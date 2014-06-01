@@ -232,11 +232,28 @@ bool terminoQuantumCPU(int socket)
 
 	log_debug(logpcp, "CPU: %d, termino quantum", socket);
 
-	moverCpuAReady(sacarCpuDeExec(socket));
+	cpu_info_t *cpuInfo = sacarCpuDeExec(socket);
+
+	//CHECK
+	if(cpuInfo == NULL)
+	{
+		log_error(logpcp, "La CPU que quiere devolver una PCB no se encontraba en ejecucion");
+		return false;
+	}
+
+	moverCpuAReady(cpuInfo);
 
 	sem_post(&dispatcherCpu);
 
 	pcb_t *pcb = sacarDeExec(spcb.pcb.id);
+
+	//CHECK
+	if(pcb == NULL)
+	{
+		log_error(logpcp, "La CPU devuelve una PCB de un proceso que no se encontraba en ejecucion");
+		return false;
+	}
+
 	*pcb = spcb.pcb;
 
 	switch(pcb->lastErrorCode)
