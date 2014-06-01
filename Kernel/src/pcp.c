@@ -267,6 +267,7 @@ bool terminoQuantumCPU(int socket)
 		case 1: //El programa finalizo correctamente
 				log_trace(logpcp, "El programa finalizo correctamente");
 				moverAExit(pcb);
+				shutdown(pcb->programaSocket, SHUT_RDWR);
 				break;
 
 		case 2: //Segmentation fault

@@ -10,6 +10,8 @@
 
 extern t_log *logpcp;
 
+extern sem_t dispatcherReady, dispatcherCpu;
+
 void *hilo_io(void *ptr){
 	io_t *parametros = (io_t *) ptr;
 
@@ -28,14 +30,9 @@ void *hilo_io(void *ptr){
 
 		log_trace(logpcp, "Concluyo trabajo de IO");
 
-		//Saco el pcb de la cola de bloqueados y la pongo en la cola de ready
-		pthread_mutex_lock(&blockQueueMutex);
-		pcb_t *pcb = list_remove_pcb_by_pid(blockQueue->elements, orden_activa->pid);
-		pthread_mutex_unlock(&blockQueueMutex);
 
-		pthread_mutex_lock(&readyQueueMutex);
-		queue_push(readyQueue, pcb);
-		pthread_mutex_unlock(&readyQueueMutex);
+		moverAReady(sacarDeBlock(orden_activa->pid));
+		sem_post(&dispatcherReady);
 
 		free(orden_activa);
 	}
