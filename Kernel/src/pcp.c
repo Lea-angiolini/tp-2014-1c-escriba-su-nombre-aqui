@@ -256,37 +256,43 @@ bool terminoQuantumCPU(int socket)
 
 	*pcb = spcb.pcb;
 
+	log_debug(logpcp, "Codigo de error %d", pcb->lastErrorCode);
 	switch(pcb->lastErrorCode)
 	{
 		case 0 : //Termino bien el quantum
-				log_trace(logpcp, "Termino bien el quantum");
-				moverAReady(pcb);
-				sem_post(&dispatcherReady);
-				break;
+			log_trace(logpcp, "Termino bien el quantum");
+			moverAReady(pcb);
+			sem_post(&dispatcherReady);
+			break;
 
 		case 1: //El programa finalizo correctamente
-				log_trace(logpcp, "El programa finalizo correctamente");
-				moverAExit(pcb);
-				shutdown(pcb->programaSocket, SHUT_RDWR);
-				break;
+			log_trace(logpcp, "El programa finalizo correctamente");
+			moverAExit(pcb);
+			shutdown(pcb->programaSocket, SHUT_RDWR);
+			break;
 
 		case 2: //Segmentation fault
-				log_trace(logpcp, "Segmentation fault");
-				moverAExit(pcb);
-				mensajeYDesconexionPrograma(pcb->programaSocket,"Segmentation fault");
-				break;
+			log_trace(logpcp, "Segmentation fault");
+			moverAExit(pcb);
+			mensajeYDesconexionPrograma(pcb->programaSocket,"Segmentation fault");
+			break;
 
 		case 3: //Se solicito la posicion de memoria inexistente
-				log_trace(logpcp, "Se solicito la posicion de memoria inexistente");
-				moverAExit(pcb);
-				mensajeYDesconexionPrograma(pcb->programaSocket,"Se solicito la posicion de memoria inexistente");
-				break;
+			log_trace(logpcp, "Se solicito la posicion de memoria inexistente");
+			moverAExit(pcb);
+			mensajeYDesconexionPrograma(pcb->programaSocket,"Se solicito la posicion de memoria inexistente");
+			break;
 
 		case 4: //UMV error
-				log_trace(logpcp, "UMV error");
-				moverAExit(pcb);
-				mensajeYDesconexionPrograma(pcb->programaSocket,"UMV error");
-				break;
+			log_trace(logpcp, "UMV error");
+			moverAExit(pcb);
+			mensajeYDesconexionPrograma(pcb->programaSocket,"UMV error");
+			break;
+
+		case 5: //Label error
+			log_trace(logpcp, "Label error");
+			moverAExit(pcb);
+			mensajeYDesconexionPrograma(pcb->programaSocket,"Label error");
 	}
 
 	return true;
