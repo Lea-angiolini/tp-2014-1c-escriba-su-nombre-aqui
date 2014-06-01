@@ -9,7 +9,7 @@
 
 extern pcb_t PCB_enEjecucion;
 extern t_log * logger;
-extern uint32_t finalizado;
+extern uint32_t quantumRestante;
 
 //TODO crear ansisopKernel funciones
 AnSISOP_funciones * crearAnSISOP_funciones()
@@ -85,7 +85,7 @@ void irAlLabel(t_nombre_etiqueta t_nombre_etiqueta)
 	if( obtenerLineaDeLabel( t_nombre_etiqueta ) == -1 ){
 		PCB_enEjecucion.lastErrorCode = 5;
 		log_error( logger, "Se quiso saltar a un label inexistente: %s", t_nombre_etiqueta);
-		enviarPCB();
+		quantumRestante = 0;
 		return;
 	}
 	log_debug( logger, "Se seteo el programCounter = %d", PCB_enEjecucion.programCounter );
@@ -110,7 +110,7 @@ void finalizar(void)
 {
 	log_trace( logger, "Llamada a finalizar" );
 	PCB_enEjecucion.lastErrorCode = 1;
-	enviarPCB();
+	quantumRestante = 0;
 }
 
 void retornar(t_valor_variable retorno)

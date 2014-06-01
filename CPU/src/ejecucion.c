@@ -58,8 +58,12 @@ bool ejecutar () {
 	}
 
 	log_info( logger, "Guardando el stack en la UMV");
-	guardarStack();
-	enviarFinQuantum( PCB_enEjecucion.id );
+
+	if( ! guardarStack() || ! enviarFinQuantum( PCB_enEjecucion.id ) ){
+		log_error( logger, "Hubo un problema al sincronizar los datos con la UMV" );
+		PCB_enEjecucion.lastErrorCode = 4;
+		//No hago un return false porque la cpu respondio bien, pero se debe informar al kernel, si hiciera return false ni llegaria al Kernel
+	}
 
 	return true;
 
