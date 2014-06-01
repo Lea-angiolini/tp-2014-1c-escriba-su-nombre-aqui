@@ -24,7 +24,9 @@ bool ejecutar () {
 
 	log_trace( logger, "Solicito el stack a la UMV");
 	if( !obtenerContextStack() || !obtenerEtiquetas() ) {
-		return false;
+		PCB_enEjecucion.lastErrorCode = 4;
+		//No hago un return false porque la cpu respondio bien, pero se debe informar al kernel, si hiciera return false ni llegaria al Kernel
+		return true;
 	}
 
 	while( quantumRestante > 0 && PCB_enEjecucion.lastErrorCode == 0 ) //Agregar condicion para salida por excepcion o llamada bloqueante

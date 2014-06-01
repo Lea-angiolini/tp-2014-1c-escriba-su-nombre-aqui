@@ -82,7 +82,7 @@ void irAlLabel(t_nombre_etiqueta t_nombre_etiqueta)
 {
 	log_trace( logger, "Llamada a irAlLabel" );
 	PCB_enEjecucion.programCounter = obtenerLineaDeLabel( t_nombre_etiqueta );
-	if( obtenerLineaDeLabel( t_nombre_etiqueta ) == -1 ){
+	if( PCB_enEjecucion.programCounter == -1 ){
 		PCB_enEjecucion.lastErrorCode = 5;
 		log_error( logger, "Se quiso saltar a un label inexistente: %s", t_nombre_etiqueta);
 		quantumRestante = 0;

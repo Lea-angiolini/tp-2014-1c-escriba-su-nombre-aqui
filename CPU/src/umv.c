@@ -5,6 +5,7 @@
 #include "commons/sockets.h"
 #include "commons/parser/parser.h"
 #include "commons/parser/metadata_program.h"
+#include "commons/string.h"
 
 #include <unistd.h>
 
@@ -97,7 +98,6 @@ bool obtenerEtiquetas(){
 		return false;
 	}
 
-	printf("Recibido %s\n", respuesta->data );
 	etiquetasCache = realloc( etiquetasCache, PCB_enEjecucion.etiquetasSize );
 	memcpy( etiquetasCache, respuesta->data, PCB_enEjecucion.etiquetasSize );
 	free( respuesta );
@@ -107,7 +107,19 @@ bool obtenerEtiquetas(){
 
 
 uint32_t obtenerLineaDeLabel( t_nombre_etiqueta t_nombre_etiqueta ) {
-	return metadata_buscar_etiqueta(t_nombre_etiqueta, etiquetasCache, PCB_enEjecucion.etiquetasSize);
+
+	t_nombre_etiqueta[ strlen(t_nombre_etiqueta) -1 ] = '\0';
+	int i=0;
+	int offset = 0;
+	char* nombre;
+	for(i=0;  offset < PCB_enEjecucion.etiquetasSize; i++){
+	nombre = etiquetasCache + offset;
+		if( string_equals_ignore_case(nombre, t_nombre_etiqueta) )
+			return *(nombre + 1 + strlen(nombre));
+		offset += strlen(nombre) + 1 + sizeof(t_puntero_instruccion);
+	}
+	return -1;
+
 }
 
 
