@@ -21,7 +21,7 @@ int conectar(char *ip, int port, t_log * log) {
 	//PF_INET: IPv4
 	//SOCK_STREAM: Los datos no se pierden ni se duplican
 	//IPPROTO_TCP: TCP
-	log_info(log, "Conectando");
+	log_debug(log, "Conectando");
 	int sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
 
 	if (sock < 0) {
@@ -114,7 +114,7 @@ int crearServidor(int puerto, void* (*fn_nuevo_cliente)(void * socket), t_log * 
 		pthread_t thread;
 		int * soc = malloc(sizeof(int));
 		*soc = socketNuevaConexion;
-		log_info(log, "Se establecio la nueva conexion, creando el thread...");
+		log_debug(log, "Se establecio la nueva conexion, creando el thread...");
 		pthread_create(&thread, NULL, fn_nuevo_cliente, (void*) soc);
 		log_info(log, "Nuevo thread creado");
 
@@ -156,7 +156,7 @@ int crearServidorNoBloqueante(int puerto, bool (*fn_nuevo_mensaje)(void *socket)
 	do {
 		memcpy(&working_set, &master_set, sizeof(master_set));
 
-		log_info(log, "Esperando en el select algun evento...");
+		log_debug(log, "Esperando en el select algun evento...");
 		rc = select(max_sd + 1, &working_set, NULL, NULL, NULL );
 
 		if (rc <= 0) {

@@ -191,7 +191,7 @@ static void _log_write_in_level(t_log* logger, t_log_level level, const char* me
 		}
 
 		if (logger->is_active_console) {
-			txt_write_in_stdout(buffer);
+			txt_write_in_stdout(buffer, log_level_as_string(level) );
 		}
 
 		free(time);

@@ -21,7 +21,7 @@
 
 FILE* txt_open_for_append(char* path);
 void txt_write_in_file(FILE* file, char* string);
-void txt_write_in_stdout(char* string);
+void txt_write_in_stdout(char* string, char * level);
 void txt_close_file(FILE* file);
 
 #endif /* TXT_H_ */
