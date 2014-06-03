@@ -249,29 +249,66 @@ uint32_t solicitarPosicionDeMemoria(uint32_t programa, uint32_t base,
 
 	Programa * prog = buscarPrograma(programa);
 	Segmento * segmento = buscarSegmentoEnPrograma(prog, base);
+	if( prog == NULL || segmento == NULL){
+		log_error( logger, "Programa o segmento solicitado no valido");
+		return -1;
+	}
 
 	if (chequearSegmentatiosFault(segmento, offset, tamanio)) {
 		return -1;
 	}
 
-	uint32_t alBuffer = (base + offset);
-	void * memoriaCorrida;
-	memoriaCorrida = memoria + alBuffer;
-	/*uint32_t j;
-	 for(j= 0; j< tamanio; j++){
+	uint32_t alBuffer = base + offset;
+	void * memoriaCorrida = memoria + alBuffer;
 
-	 memcpy(buffer[j], memoriaCorrida + j, sizeof(uint32_t));
-	 }
-	 */
+	uint32_t i, hastaLoQueDe= 0;
+	unsigned char * mem = memoriaCorrida;
 
-	uint32_t i;
+	printf("Direccion\t\t\tHex Dump\t\t\t\tASCII\n");
+	printf("---------------------------------------------------------------------------------\n");
+	printf("%p | ", mem);
+
 	for (i = 0; i < tamanio; i++) {
 
 		unsigned char * posicion = memoriaCorrida + i;
-		printf("Posicion %p \n %X\n\n", posicion, *posicion);
+		printf("%02X ", *posicion);
+		hastaLoQueDe++;
+
+		if( hastaLoQueDe != 16 && i == (tamanio - 1)){
+			uint32_t blancos;
+			for( blancos = 0; blancos < (16 - hastaLoQueDe); blancos++){
+				printf("-- ");
+				}
+			mostrarCaracteres( hastaLoQueDe, mem);
+		}
+		if (hastaLoQueDe == 16 ) {
+
+			mostrarCaracteres( hastaLoQueDe, mem);
+			printf("\n---------------------------------------------------------------------------------\n");
+			mem += hastaLoQueDe;
+			hastaLoQueDe = 0;
+			printf("%p | ", mem);
+		}
+
+
 	}
+	printf("\n\n");
+
 	return 1;
 
+}
+
+void mostrarCaracteres( uint32_t cantidad, unsigned char * mem){
+
+	printf(" | ");
+	uint32_t i;
+	for (i = 0; i < cantidad; i++) {
+		if (*(mem + i) == '\n' || *(mem + i) == '\t') {
+			printf(" ");
+		} else {
+			printf("%c", *(mem + i));
+		}
+	}
 }
 
 uint32_t escribirPosicionDeMemoria(uint32_t programa, uint32_t base,
@@ -279,6 +316,10 @@ uint32_t escribirPosicionDeMemoria(uint32_t programa, uint32_t base,
 
 	Programa * prog = buscarPrograma(programa);
 	Segmento * segmento = buscarSegmentoEnPrograma(prog, base);
+	if( prog == NULL || segmento == NULL){
+			log_error( logger, "Programa o segmento solicitado no valido");
+			return -1;
+		}
 
 	if (chequearSegmentatiosFault(segmento, offset, tamanio)) {
 		return -1;
