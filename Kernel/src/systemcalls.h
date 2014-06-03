@@ -11,12 +11,12 @@
 #include "commons/log.h"
 #include "commons/collections/dictionary.h"
 
-bool syscallIO(int socket);
-bool syscallObtenerValor(int socket);
-bool syscallGrabarValor(int socket);
-bool syscallWait(int socket);
-bool syscallSignal(int socket);
-bool syscallImprimirTexto(int socket);
+bool syscallIO(int socketCPU);
+bool syscallObtenerValor(int socketCPU);
+bool syscallGrabarValor(int socketCPU);
+bool syscallWait(int socketCPU);
+bool syscallSignal(int socketCPU);
+bool syscallImprimirTexto(int socketCPU);
 
 
 

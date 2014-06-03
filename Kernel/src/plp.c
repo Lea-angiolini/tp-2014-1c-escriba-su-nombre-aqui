@@ -30,8 +30,8 @@ void *IniciarPlp(void *arg) {
 
 bool iniciarServidorProgramas()
 {
-	bool nuevoMensaje(int socket) {
-		if (recibirYprocesarScript(socket) == false) {
+	bool nuevoMensaje(int socketPrograma) {
+		if (recibirYprocesarScript(socketPrograma) == false) {
 			desconexionCliente();
 			return false;
 		}
@@ -101,11 +101,11 @@ void desconexionCliente()
 	puedoMoverNewAReady();
 }
 
-bool recibirYprocesarScript(int socket) {
+bool recibirYprocesarScript(int socketPrograma) {
 	//Pidiendo script ansisop
 	socket_header header;
 
-	if( recv(socket, &header, sizeof(socket_header), MSG_WAITALL) != sizeof(socket_header) )
+	if( recv(socketPrograma, &header, sizeof(socket_header), MSG_WAITALL) != sizeof(socket_header) )
 		return false;
 
 	int scriptSize = header.size - sizeof(header);
@@ -115,7 +115,7 @@ bool recibirYprocesarScript(int socket) {
 
 	log_info(logplp, "Esperando a recibir un script ansisop");
 
-	if( recv(socket, script, scriptSize, MSG_WAITALL) != scriptSize )
+	if( recv(socketPrograma, script, scriptSize, MSG_WAITALL) != scriptSize )
 		return false;
 
 	log_info(logplp, "Script ansisop recibido");
@@ -165,7 +165,7 @@ bool recibirYprocesarScript(int socket) {
 		pcb->programCounter = scriptMetadata->instruccion_inicio;
 		pcb->contextSize = 0;
 
-		pcb->programaSocket = socket;
+		pcb->programaSocket = socketPrograma;
 		pcb->prioridad = CALCULAR_PRIORIDAD(scriptMetadata->cantidad_de_etiquetas, scriptMetadata->cantidad_de_funciones, scriptMetadata->instrucciones_size);
 		pcb->lastErrorCode = 0;
 
@@ -179,7 +179,7 @@ bool recibirYprocesarScript(int socket) {
 
 		socket_msg msg;
 		strcpy(msg.msg, "No hay memoria suficiente en este momento para ejecutar este script. Intentelo mas tarde");
-		send(socket, &msg, sizeof(socket_msg), 0);
+		send(socketPrograma, &msg, sizeof(socket_msg), 0);
 
 		return false;
 	}

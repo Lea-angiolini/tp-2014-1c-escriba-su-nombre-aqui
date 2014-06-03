@@ -26,11 +26,11 @@ void MoverReadyAExec();
 
 void bajarNivelMultiprogramacion();
 
-bool conexionCPU(int socket);
-void desconexionCPU(int socket);
-bool recibirYprocesarPedido(int socket);
+bool conexionCPU(int socketCPU);
+void desconexionCPU(int socketCPU);
+bool recibirYprocesarPedido(int socketCPU);
 
-bool terminoQuantumCPU(int socket);
+bool terminoQuantumCPU(int socketCPU);
 void mensajeYDesconexionPrograma(int programaSocket, char *mensaje);
 
 #endif /* PCP_H_ */

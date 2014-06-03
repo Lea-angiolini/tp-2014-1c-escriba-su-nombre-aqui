@@ -7,18 +7,18 @@ extern t_log *logpcp;
 
 extern sem_t dispatcherReady, dispatcherCpu;
 
-bool syscallIO(int socket)
+bool syscallIO(int socketCPU)
 {
 	socket_scIO io;
 	socket_pcb spcb;
 
-	if( recv(socket, &io, sizeof(socket_scIO), MSG_WAITALL) != sizeof(socket_scIO) )
+	if( recv(socketCPU, &io, sizeof(socket_scIO), MSG_WAITALL) != sizeof(socket_scIO) )
 		return false;
 
-	if( recv(socket, &spcb, sizeof(socket_pcb), MSG_WAITALL) != sizeof(socket_pcb) )
+	if( recv(socketCPU, &spcb, sizeof(socket_pcb), MSG_WAITALL) != sizeof(socket_pcb) )
 		return false;
 
-	log_debug(logpcp, "CPU: %d, mando nuevo trabajo de IO del dispositivo: %s", socket, io.identificador);
+	log_debug(logpcp, "CPU: %d, mando nuevo trabajo de IO del dispositivo: %s", socketCPU, io.identificador);
 	log_trace(logpcp, "Obteniendo dispositivo desde el diccionario de dispositivos");
 
 	io_t *disp = dictionary_get(dispositivos, io.identificador);
@@ -27,7 +27,7 @@ bool syscallIO(int socket)
 	pedido->pid = spcb.pcb.id;
 	pedido->tiempo = io.unidades;
 
-	moverCpuAReady(sacarCpuDeExec(socket));
+	moverCpuAReady(sacarCpuDeExec(socketCPU));
 
 	sem_post(&dispatcherCpu);
 
@@ -47,35 +47,35 @@ bool syscallIO(int socket)
 	return true;
 }
 
-bool syscallObtenerValor(int socket)
+bool syscallObtenerValor(int socketCPU)
 {
 	socket_scObtenerValor sObtenerValor;
 
-	if( recv(socket, &sObtenerValor, sizeof(socket_scObtenerValor), MSG_WAITALL) != sizeof(socket_scObtenerValor) )
+	if( recv(socketCPU, &sObtenerValor, sizeof(socket_scObtenerValor), MSG_WAITALL) != sizeof(socket_scObtenerValor) )
 		return false;
 
-	log_debug(logpcp, "CPU: %d, pidio el valor de la variable: %s", socket, sObtenerValor.identificador);
+	log_debug(logpcp, "CPU: %d, pidio el valor de la variable: %s", socketCPU, sObtenerValor.identificador);
 	log_trace(logpcp, "Obteniendo valor desde el diccionario de variables compartidas");
 
 	int32_t *valor = dictionary_get(variablesCompartidas, sObtenerValor.identificador);
 	sObtenerValor.valor = *valor;
 
-	if( send(socket, &sObtenerValor, sizeof(socket_scObtenerValor), 0) < 0 )
+	if( send(socketCPU, &sObtenerValor, sizeof(socket_scObtenerValor), 0) < 0 )
 		return false;
 
-	log_debug(logpcp, "Se envio el valor: %d, de la variable: %s al CPU: %d", sObtenerValor.valor, sObtenerValor.identificador, socket);
+	log_debug(logpcp, "Se envio el valor: %d, de la variable: %s al CPU: %d", sObtenerValor.valor, sObtenerValor.identificador, socketCPU);
 
 	return true;
 }
 
-bool syscallGrabarValor(int socket)
+bool syscallGrabarValor(int socketCPU)
 {
 	socket_scGrabarValor sGrabarValor;
 
-	if( recv(socket, &sGrabarValor, sizeof(socket_scGrabarValor), MSG_WAITALL) != sizeof(socket_scGrabarValor) )
+	if( recv(socketCPU, &sGrabarValor, sizeof(socket_scGrabarValor), MSG_WAITALL) != sizeof(socket_scGrabarValor) )
 		return false;
 
-	log_debug(logpcp, "CPU: %d, pidio grabar el valor: %d en la variable: %s", socket, sGrabarValor.valor, sGrabarValor.identificador);
+	log_debug(logpcp, "CPU: %d, pidio grabar el valor: %d en la variable: %s", socketCPU, sGrabarValor.valor, sGrabarValor.identificador);
 	log_trace(logpcp, "Grabando valor en el diccionario de variables compartidas");
 
 	int32_t *valor = dictionary_get(variablesCompartidas, sGrabarValor.identificador);
@@ -84,14 +84,14 @@ bool syscallGrabarValor(int socket)
 	return true;
 }
 
-bool syscallWait(int socket)
+bool syscallWait(int socketCPU)
 {
 	socket_scWait sWait;
 
-	if( recv(socket, &sWait, sizeof(socket_scWait), MSG_WAITALL) != sizeof(socket_scWait) )
+	if( recv(socketCPU, &sWait, sizeof(socket_scWait), MSG_WAITALL) != sizeof(socket_scWait) )
 			return false;
 
-	log_debug(logpcp, "CPU: %d, hizo wait en el semaforo: %s", socket, sWait.identificador);
+	log_debug(logpcp, "CPU: %d, hizo wait en el semaforo: %s", socketCPU, sWait.identificador);
 	log_trace(logpcp, "Decrementando semaforo en el diccionario de semaforos");
 
 	semaforo_t *semaforo = dictionary_get(semaforos, sWait.identificador);
@@ -107,10 +107,10 @@ bool syscallWait(int socket)
 		socket_pcb spcb;
 		res.valor = false;
 
-		if( send(socket, &res, sizeof(socket_respuesta), 0) < 0 )
+		if( send(socketCPU, &res, sizeof(socket_respuesta), 0) < 0 )
 			return false;
 
-		if( recv(socket, &spcb, sizeof(socket_pcb), MSG_WAITALL) != sizeof(socket_pcb) )
+		if( recv(socketCPU, &spcb, sizeof(socket_pcb), MSG_WAITALL) != sizeof(socket_pcb) )
 		    return false;
 
 		log_trace(logpcp, "PCB recibida. Agregandola a la cola del semaforo");
@@ -121,7 +121,7 @@ bool syscallWait(int socket)
 
 		//Moviendo cpu de cpuExec a cpuReady
 
-		moverCpuAReady(sacarCpuDeExec(socket));
+		moverCpuAReady(sacarCpuDeExec(socketCPU));
 
 		sem_post(&dispatcherCpu);
 
@@ -138,21 +138,21 @@ bool syscallWait(int socket)
 
 		res.valor = true;
 
-		if( send(socket, &res, sizeof(socket_respuesta), 0) < 0 )
+		if( send(socketCPU, &res, sizeof(socket_respuesta), 0) < 0 )
 			return false;
 	}
 
 	return true;
 }
 
-bool syscallSignal(int socket)
+bool syscallSignal(int socketCPU)
 {
 	socket_scSignal sSignal;
 
-	if( recv(socket, &sSignal, sizeof(socket_scSignal), MSG_WAITALL) != sizeof(socket_scSignal) )
+	if( recv(socketCPU, &sSignal, sizeof(socket_scSignal), MSG_WAITALL) != sizeof(socket_scSignal) )
 		return false;
 
-	log_debug(logpcp, "CPU: %d, hizo signal en el semaforo: %s", socket, sSignal.identificador);
+	log_debug(logpcp, "CPU: %d, hizo signal en el semaforo: %s", socketCPU, sSignal.identificador);
 	log_trace(logpcp, "Incrementando semaforo en el diccionario de semaforos");
 
 	semaforo_t *semaforo = dictionary_get(semaforos, sSignal.identificador);
@@ -176,14 +176,14 @@ bool syscallSignal(int socket)
 	return true;
 }
 
-bool syscallImprimirTexto(int socket)
+bool syscallImprimirTexto(int socketCPU)
 {
 	socket_imprimirTexto texto;
 
-	if( recv(socket, &texto, sizeof(socket_imprimirTexto), MSG_WAITALL) != sizeof(socket_imprimirTexto) )
+	if( recv(socketCPU, &texto, sizeof(socket_imprimirTexto), MSG_WAITALL) != sizeof(socket_imprimirTexto) )
 			return false;
 
-	log_debug(logpcp, "CPU: %d, envia un mensaje al Programa: %d", socket, texto.programaSocket);
+	log_debug(logpcp, "CPU: %d, envia un mensaje al Programa: %d", socketCPU, texto.programaSocket);
 	socket_msg msg;
 	msg.header.size = sizeof(socket_msg);
 

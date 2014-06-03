@@ -31,9 +31,9 @@ void *IniciarPcp(void *arg)
 
 bool iniciarServidorCpu()
 {
-	bool nuevoMensaje(int socket) {
-		if ( recibirYprocesarPedido(socket) == false ) {
-			desconexionCPU(socket);
+	bool nuevoMensaje(int socketCPU) {
+		if ( recibirYprocesarPedido(socketCPU) == false ) {
+			desconexionCPU(socketCPU);
 			return false;
 		}
 
@@ -122,18 +122,18 @@ void MoverReadyAExec()
 		desconexionCPU(cpuInfo->socketCPU);
 }
 
-bool conexionCPU(int socket)
+bool conexionCPU(int socketCPU)
 {
 	log_info(logpcp, "Se ha conectado un CPU");
 
 	socket_header header;
 
-	if( recv(socket, &header, sizeof(socket_header), MSG_WAITALL) != sizeof(socket_header) )
+	if( recv(socketCPU, &header, sizeof(socket_header), MSG_WAITALL) != sizeof(socket_header) )
 		return false;
 
 	//Agregandolo a la cpuReadyQueue
 	cpu_info_t *cpuInfo = malloc(sizeof(cpu_info_t));
-	cpuInfo->socketCPU = socket;
+	cpuInfo->socketCPU = socketCPU;
 
 	moverCpuAReady(cpuInfo);
 
@@ -146,7 +146,7 @@ bool conexionCPU(int socket)
 	cpucfg.quantum = config_get_int_value(config, "QUANTUM");
 	cpucfg.retardo = config_get_int_value(config, "RETARDO");
 
-	if( send(socket, &cpucfg, sizeof(socket_cpucfg), 0) <= 0 )
+	if( send(socketCPU, &cpucfg, sizeof(socket_cpucfg), 0) <= 0 )
 		return false;
 
 	//Llamanda a dispatcher para ver si hay algun trabajo pendiente para darle al CPU nuevo.
@@ -162,12 +162,12 @@ void bajarNivelMultiprogramacion()
 	pthread_mutex_unlock(&multiprogramacionMutex);
 }
 
-void desconexionCPU(int socket)
+void desconexionCPU(int socketCPU)
 {
 	log_info(logpcp, "Se ha desconectado un CPU");
 	log_info(logpcp, "Verificando si el CPU desconectado estaba corriendo algun programa");
 
-	cpu_info_t *cpuInfo = sacarCpuDeExec(socket);
+	cpu_info_t *cpuInfo = sacarCpuDeExec(socketCPU);
 
 	if( cpuInfo != NULL )
 	{
@@ -191,48 +191,48 @@ void desconexionCPU(int socket)
 	else
 	{
 		log_info(logpcp, "La CPU desconectada no se encontraba en ejecucion");
-		free(sacarCpuDeReady(socket));
+		free(sacarCpuDeReady(socketCPU));
 	}
 }
 
-bool recibirYprocesarPedido(int socket)
+bool recibirYprocesarPedido(int socketCPU)
 {
 	socket_header header;
-	if( recv(socket, &header, sizeof(header), MSG_WAITALL | MSG_PEEK) != sizeof(socket_header) )
+	if( recv(socketCPU, &header, sizeof(header), MSG_WAITALL | MSG_PEEK) != sizeof(socket_header) )
 		return false;
 
 	switch(header.code)
 	{
 	case 'h': //Conectado
-		return conexionCPU(socket);
+		return conexionCPU(socketCPU);
 	case 'i': //SC: IO
-		return syscallIO(socket);
+		return syscallIO(socketCPU);
 	case 'o': //SC: Obtener valor
-		return syscallObtenerValor(socket);
+		return syscallObtenerValor(socketCPU);
 	case 'g': //SC: Grabar valor
-		return syscallGrabarValor(socket);
+		return syscallGrabarValor(socketCPU);
 	case 'w': //SC: Wait
-		return syscallWait(socket);
+		return syscallWait(socketCPU);
 	case 's': //SC: Signal
-		return syscallSignal(socket);
+		return syscallSignal(socketCPU);
 	case 'p': //Termino Quantum
-		return terminoQuantumCPU(socket);
+		return terminoQuantumCPU(socketCPU);
 	case 'k': //SC: Imprimir Texto
-		return syscallImprimirTexto(socket);
+		return syscallImprimirTexto(socketCPU);
 	}
 	return true;
 }
 
-bool terminoQuantumCPU(int socket)
+bool terminoQuantumCPU(int socketCPU)
 {
 	socket_pcb spcb;
 
-	if( recv(socket, &spcb, sizeof(socket_pcb), MSG_WAITALL) != sizeof(socket_pcb) )
+	if( recv(socketCPU, &spcb, sizeof(socket_pcb), MSG_WAITALL) != sizeof(socket_pcb) )
 		return false;
 
-	log_debug(logpcp, "CPU: %d, termino quantum", socket);
+	log_debug(logpcp, "CPU: %d, termino quantum", socketCPU);
 
-	cpu_info_t *cpuInfo = sacarCpuDeExec(socket);
+	cpu_info_t *cpuInfo = sacarCpuDeExec(socketCPU);
 
 	//CHECK
 	if(cpuInfo == NULL)
