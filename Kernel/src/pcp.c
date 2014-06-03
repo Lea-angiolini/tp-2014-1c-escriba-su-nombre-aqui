@@ -269,30 +269,35 @@ bool terminoQuantumCPU(int socket)
 			log_trace(logpcp, "El programa finalizo correctamente");
 			moverAExit(pcb);
 			shutdown(pcb->programaSocket, SHUT_RDWR);
+			bajarNivelMultiprogramacion();
 			break;
 
 		case 2: //Segmentation fault
 			log_trace(logpcp, "Segmentation fault");
 			moverAExit(pcb);
 			mensajeYDesconexionPrograma(pcb->programaSocket,"Segmentation fault");
+			bajarNivelMultiprogramacion();
 			break;
 
 		case 3: //Se solicito la posicion de memoria inexistente
 			log_trace(logpcp, "Se solicito la posicion de memoria inexistente");
 			moverAExit(pcb);
 			mensajeYDesconexionPrograma(pcb->programaSocket,"Se solicito la posicion de memoria inexistente");
+			bajarNivelMultiprogramacion();
 			break;
 
 		case 4: //UMV error
 			log_trace(logpcp, "UMV error");
 			moverAExit(pcb);
 			mensajeYDesconexionPrograma(pcb->programaSocket,"UMV error");
+			bajarNivelMultiprogramacion();
 			break;
 
 		case 5: //Label error
 			log_trace(logpcp, "Label error");
 			moverAExit(pcb);
 			mensajeYDesconexionPrograma(pcb->programaSocket,"Label error");
+			bajarNivelMultiprogramacion();
 	}
 
 	return true;
