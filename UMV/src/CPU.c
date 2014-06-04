@@ -52,7 +52,7 @@ int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud )
 	Programa * programa;
 	programa = buscarPrograma( solicitud->pdi );
 	Segmento * segmento;
-	segmento = buscarSegmentoEnPrograma( programa, solicitud->base);
+	segmento = buscarSegmentoEnPrograma(programa, solicitud->base);
 
 	if( segmento == NULL ) {
 		log_error(logger, "No se encuentra el segmento especificado | UMV/src/cpu.c -> procesarSolicitudLecturaMemoria");
@@ -104,7 +104,7 @@ int procesarSolicitudEscrituraMemoria( CPU * cpu, socket_guardarEnMemoria * soli
 	Programa * programa;
 	programa = buscarPrograma( solicitud->pdi);
 	Segmento * segmento;
-	segmento = buscarSegmentoEnPrograma( programa, solicitud->offset);
+	segmento = buscarSegmentoEnPrograma(programa, solicitud->base);
 
 	if( segmento == NULL ) {
 		log_error(logger, "No se encuentra el segmento especificado | UMV/src/cpu.c -> procesarSolicitudEscrituraMemoria");
