@@ -79,7 +79,8 @@ char * solicitarLineaPrograma() {
 		return (char *)-1;
 	}
 
-	char * respuesta = paqueteRespuesta->data;
+	char * respuesta = malloc(instruct->offset);
+	memcpy(respuesta, paqueteRespuesta->data, instruct->offset);
 	free(paqueteRespuesta);
 	return respuesta;
 
