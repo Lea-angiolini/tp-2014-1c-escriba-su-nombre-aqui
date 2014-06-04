@@ -24,7 +24,15 @@ bool crearConexionUMV() {
 		close( socketUMV );
 		return false;
 	}
-	return true;
+
+	socket_header handshake;
+	handshake.code = 'c';
+	handshake.size = sizeof(socket_header);
+	if(send(socketUMV, &handshake, handshake.size, 0 ) > 0 ) {
+		return true;
+	}
+	log_error(logger, "Error al enviar el handshake a la UMV");
+	return false;
 }
 
 
@@ -50,9 +58,9 @@ char * solicitarLineaPrograma() {
 	}
 
 	t_intructions * instruct = (t_intructions *) respuestaCodeIndex->data ;
-	log_info( logger, "Se leyo el codeIndex, la proxima instruccion esta en %d - %d", instruct->offset, instruct->start );
+	log_debug( logger, "Se leyo el codeIndex, la proxima instruccion esta en %d - %d", instruct->offset, instruct->start );
 
-	if( instruct->offset == 0){
+	if(instruct->offset == 0){
 		log_error( logger, "Llego un code index con length 0 | ( %s ) %s - %s",  __func__, __FILE__, __LINE__  );
 		return (char *) -1;
 	}else if( instruct->offset <= 3 ){
@@ -144,9 +152,6 @@ int enviarFinPrograma( uint32_t pid ){
 	log_debug( logger, "Enviando a umv fin de programa" );
 	return 1;
 }
-
-
-
 
 /*
  * Envia el mensaje que se termino el tiempo de ejecucion.
