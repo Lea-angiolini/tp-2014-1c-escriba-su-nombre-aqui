@@ -23,4 +23,6 @@ void puedoMoverNewAReady();
 void desconexionCliente();
 bool recibirYprocesarScript(int socketPrograma);
 
+extern void mensajeYDesconexionPrograma(int programaSocket, char *mensaje);
+
 #endif /* PLP_H_ */

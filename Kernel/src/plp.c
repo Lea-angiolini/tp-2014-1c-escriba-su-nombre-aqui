@@ -186,9 +186,7 @@ bool recibirYprocesarScript(int socketPrograma) {
 		log_error(logplp, "La UMV informo que no pudo alojar la memoria necesaria para el script ansisop");
 		log_info(logplp, "Informandole a Programa que el script no se puede procesar por el momento");
 
-		socket_msg msg;
-		strcpy(msg.msg, "No hay memoria suficiente en este momento para ejecutar este script. Intentelo mas tarde");
-		send(socketPrograma, &msg, sizeof(socket_msg), 0);
+		mensajeYDesconexionPrograma(socketPrograma, "No hay memoria suficiente en este momento para ejecutar este script. Intentelo mas tarde");
 
 		return false;
 	}

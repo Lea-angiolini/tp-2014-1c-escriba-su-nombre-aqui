@@ -17,6 +17,7 @@ typedef struct {
 
 typedef struct {
 	socket_header header;
+	unsigned char type; //0: log_info 1: log_error
 	char msg[255];
 }  __attribute__((packed)) socket_msg ;
 

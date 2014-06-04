@@ -186,6 +186,7 @@ bool syscallImprimirTexto(int socketCPU)
 	log_debug(logpcp, "CPU: %d, envia un mensaje al Programa: %d", socketCPU, texto.programaSocket);
 	socket_msg msg;
 	msg.header.size = sizeof(socket_msg);
+	msg.type = 0; //log_info
 
 	strcpy(msg.msg, texto.texto);
 	send(texto.programaSocket, &msg, sizeof(socket_msg), 0);

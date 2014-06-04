@@ -179,12 +179,7 @@ void desconexionCPU(int socketCPU)
 
 		log_info(logpcp, "Informandole a Programa que el script no pudo concluir su ejecucion");
 
-		socket_msg msg;
-		msg.header.size = sizeof(socket_msg);
-
-		strcpy(msg.msg, "El script no pudo concluir su ejecucion debido a la desconexion de un CPU");
-		send(pcb->programaSocket, &msg, sizeof(socket_msg), 0);
-		shutdown(pcb->programaSocket, SHUT_RDWR);
+		mensajeYDesconexionPrograma(pcb->programaSocket, "El script no pudo concluir su ejecucion debido a la desconexion de un CPU");
 
 		bajarNivelMultiprogramacion();
 	}
@@ -307,11 +302,12 @@ void mensajeYDesconexionPrograma(int programaSocket, char *mensaje)
 {
 	socket_msg msg;
 	msg.header.size = sizeof(socket_msg);
+	msg.type = 1; //log_error
 
 	strcpy(msg.msg, mensaje);
 	send(programaSocket, &msg, sizeof(socket_msg), 0);
 
-	log_trace(logpcp, "Mensaje de error enviado al programa. Apagando socket: %d",programaSocket);
+	log_trace(logpcp, "Mensaje de error enviado al programa. Apagando socket: %d", programaSocket);
 
 	shutdown(programaSocket, SHUT_RDWR);
 }
