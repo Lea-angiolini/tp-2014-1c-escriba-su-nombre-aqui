@@ -31,4 +31,6 @@ Programa * buscarPrograma( uint32_t pdi);
 
 Segmento * buscarSegmentoEnPrograma( Programa * programa, uint32_t offset);
 
+bool destruirPrograma( uint32_t pid);
+
 #endif /*PROGRAMA_H_*/

@@ -90,3 +90,22 @@ Segmento * buscarSegmentoEnPrograma(Programa * programa, uint32_t base) {
 
 }
 
+bool destruirPrograma( uint32_t pid ){
+	bool matchearPrograma(Programa *nodoPrograma) {
+			return nodoPrograma->pid == pid;
+		}
+
+	Programa * programaAborrar;
+	programaAborrar = list_remove_by_condition( programas, matchearPrograma);
+
+	if( programaAborrar != NULL){
+
+		free( programaAborrar->stack );
+		free( programaAborrar->script );
+		free( programaAborrar->etiquetas );
+		free( programaAborrar->instrucciones );
+		free( programaAborrar );
+		return true;
+	}else return false;
+}
+

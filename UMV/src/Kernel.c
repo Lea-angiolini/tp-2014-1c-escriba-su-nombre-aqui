@@ -114,12 +114,12 @@ int tamanioSegmentos(socket_pedirMemoria * segmentosAreservar) {
 			+ segmentosAreservar->instruccionesSegmentSize + segmentosAreservar->stackSegmentSize);
 }
 
-void * fnKernelConectado(void * socketPtr) {
+void * fnKernelConectado(int * socketPtr) {
 
 	log_info(logger, "Se conecto el Kernel");
 
 	Kernel * kernel = malloc(sizeof(Kernel));
-	kernel->socket = *((int*) socketPtr);
+	kernel->socket = * socketPtr;
 	free(socketPtr);
 
 	if (recibirYProcesarMensajesKernel(kernel) > 0) {

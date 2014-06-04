@@ -152,7 +152,16 @@ int recibirYProcesarMensajesCpu( CPU * cpu ) {
 		void * paquete = recibirPaquete( cpu->socket , 0, 'a', logger );
 
 		if( paquete == NULL ){
-			break;
+			log_error( logger, "Se ha desconectado la CPU%d por causas desconocidas", cpu->cpuId);
+			log_info( logger, "Destruyendo programa activo de la CPU%d", cpu->cpuId);
+			uint32_t programaDestruido;
+			programaDestruido = destruirPrograma( cpu->pidProcesando);
+			if( programaDestruido == true){
+				log_info( logger, "El programa activo de la CPU%d se ha destruido correctamente", cpu->cpuId);
+			}else
+				log_error( logger, "El programa activo de la CPU%d no se ha destruido correctamente", cpu->cpuId);
+
+			return -1;
 		}
 
 		socket_header * header = ( socket_header * ) paquete;
@@ -187,7 +196,7 @@ int recibirYProcesarMensajesCpu( CPU * cpu ) {
 
 
 
-void * fnNuevoCpu( void * socketPtr ){
+void * fnNuevoCpu( int * socketPtr ){
 
 	log_info( logger, "Se conecto un nuevo CPU" );
 
@@ -195,7 +204,7 @@ void * fnNuevoCpu( void * socketPtr ){
 	//TODO al desconectar sacar el cpu de la lista de CPUs
 	contadorCpuId++;
 	CPU * cpu = malloc(sizeof(CPU));
-	cpu->socket = *(( int * ) socketPtr);
+	cpu->socket = * socketPtr;
 	cpu->cpuId = contadorCpuId;
 	free( socketPtr );
 	list_add( cpus, cpu );
