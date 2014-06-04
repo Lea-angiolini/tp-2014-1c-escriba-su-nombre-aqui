@@ -59,6 +59,15 @@ bool conectarUMV()
 	}
 
 	log_info(logplp, "Conectado con la UMV");
+
+	socket_header handshake;
+
+	handshake.size = sizeof(socket_header);
+	handshake.code = 'k'; //Kernel
+
+	if( send(socketUMV, &handshake, sizeof(socket_header), 0) <= 0 )
+		return false;
+
 	return true;
 }
 
