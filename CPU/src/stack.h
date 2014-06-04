@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "commons/parser/parser.h"
+
 /*
  * Esta estructura tiene una porcion del stack. Puede ser cualquier porcion.
  * Lo importante es que una vez que inicia el quantum, se solicita el stack
@@ -27,8 +29,22 @@ typedef struct {
 	uint32_t offset;
 	uint32_t dataLength;
 	char data[1000];
+	bool modificado;
 
 } __attribute__((packed)) Stack;
+
+
+typedef struct {
+	uint32_t lastContextInit;
+	uint32_t lastProgramCounter;
+} __attribute__((packed)) StackFuncion;
+
+
+typedef struct {
+	uint32_t lastContextInit;
+	uint32_t lastProgramCounter;
+	uint32_t variableRetorno;
+} __attribute__((packed)) StackFuncionConRetorno;
 
 
 Stack new_Stack();
@@ -43,7 +59,7 @@ bool apilarFuncionSinRetorno( );
 
 bool obtenerContextStack();
 bool guardarStack();
-bool obtenerContextStackAnterior();
+bool obtenerContextStackAnterior(t_valor_variable retorno);
 
 #endif /* STACK_H_ */
 
