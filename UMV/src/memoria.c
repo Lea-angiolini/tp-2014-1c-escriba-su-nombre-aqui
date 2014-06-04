@@ -23,10 +23,16 @@ Segmento * crearYllenarSegmento(uint32_t tamanio, void * segmento) { //TODO Habr
 
 Segmento * crearSegmento(uint32_t tamanio) {
 
+
 	log_info(logger, "Creando segmento, ahora hay %d",
 			list_size(tabla_segmentos));
 
 	Segmento * elNuevo = NULL;
+
+	if( tamanio == 0){
+
+		elNuevo = new_Segmento(-1,0);
+	}
 
 	if (list_size(tabla_segmentos) == 0 && memoria_size > tamanio) {
 
@@ -208,7 +214,14 @@ uint32_t memoriaLibre() {
 
 void compactar() {
 	ordenarTablaSegmentos();
-	Segmento * primerSegmento = (Segmento *) list_get(tabla_segmentos, 0);
+	uint32_t u = 0;
+	Segmento * primerSegmento = (Segmento *) list_get(tabla_segmentos, u);
+
+	while( primerSegmento->inicioReal == -1){
+		u++;
+		primerSegmento = (Segmento *) list_get(tabla_segmentos, u);
+		}
+
 	if (primerSegmento->inicioReal != 0) {
 		moverSegmento(primerSegmento, 0);
 	}
@@ -249,6 +262,10 @@ uint32_t solicitarPosicionDeMemoria(uint32_t programa, uint32_t base,
 
 	Programa * prog = buscarPrograma(programa);
 	Segmento * segmento = buscarSegmentoEnPrograma(prog, base);
+	if( segmento->inicioReal == -1){
+		log_info( logger, "El segmento solicitado es de tamaño 0, y no se puede obtener nada de el mismo");
+		return -1;
+	}
 	if( prog == NULL || segmento == NULL){
 		log_error( logger, "Programa o segmento solicitado no valido");
 		return -1;
@@ -257,6 +274,14 @@ uint32_t solicitarPosicionDeMemoria(uint32_t programa, uint32_t base,
 	if (chequearSegmentatiosFault(segmento, offset, tamanio)) {
 		return -1;
 	}
+	imprimirBytes( base, offset, tamanio);
+
+
+	return 1;
+
+}
+
+void imprimirBytes( uint32_t base, uint32_t offset, uint32_t tamanio){
 
 	uint32_t alBuffer = base + offset;
 	void * memoriaCorrida = memoria + alBuffer;
@@ -293,9 +318,6 @@ uint32_t solicitarPosicionDeMemoria(uint32_t programa, uint32_t base,
 
 	}
 	printf("\n\n");
-
-	return 1;
-
 }
 
 void mostrarCaracteres( uint32_t cantidad, unsigned char * mem){
@@ -316,6 +338,12 @@ uint32_t escribirPosicionDeMemoria(uint32_t programa, uint32_t base,
 
 	Programa * prog = buscarPrograma(programa);
 	Segmento * segmento = buscarSegmentoEnPrograma(prog, base);
+
+	if( segmento->inicioReal == -1){
+		log_error( logger, "El segmento solicitado es de tamaño 0, y no se puede obtener nada de el mismo");
+		return -1;
+	}
+
 	if( prog == NULL || segmento == NULL){
 			log_error( logger, "Programa o segmento solicitado no valido");
 			return -1;

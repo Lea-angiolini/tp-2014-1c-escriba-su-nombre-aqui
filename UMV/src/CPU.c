@@ -196,7 +196,7 @@ int recibirYProcesarMensajesCpu( CPU * cpu ) {
 
 
 
-void * fnNuevoCpu( int * socketPtr ){
+void  fnNuevoCpu( int * socketPtr ){
 
 	log_info( logger, "Se conecto un nuevo CPU" );
 
@@ -219,7 +219,7 @@ void * fnNuevoCpu( int * socketPtr ){
 	//TODO !!!! IMPORTANTE que paso acaaa ??
 	close( cpu->socket );
 
-	return NULL;
+
 
 }
 

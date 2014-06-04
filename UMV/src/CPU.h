@@ -15,7 +15,7 @@ typedef struct {
 
 
 int		procesarSolicitudDeLinea	( CPU * cpu, socket_obtenerLineaCodigo * solicitud );
-void *	fnNuevoCpu					( int * socketPtr );
+void 	fnNuevoCpu					( int * socketPtr );
 int 	recibirYProcesarMensajesCpu	( CPU * cpu );
 
 

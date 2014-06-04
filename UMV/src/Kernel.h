@@ -9,7 +9,7 @@ typedef struct {
 
 } Kernel;
 
-void * fnKernelConectado(int * socketPtr);
+void  fnKernelConectado(int * socketPtr);
 int procesarMenssajeKernel(Kernel * kernel,	socket_pedirMemoria * segmentosAreservar);
 int recibirYProcesarMensajesKernel(Kernel * kernel);
 int tamanioSegmentos(socket_pedirMemoria * segmentosAreservar);

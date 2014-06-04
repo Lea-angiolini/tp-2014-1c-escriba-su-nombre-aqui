@@ -77,9 +77,9 @@ void * handShake( void * socket ){
 
 void * crearConexiones(){
 
-	while(1){
+
 	crearServidor( config_get_int_value( umvConfig, "PUERTO"), handShake, logger);
-	}
+
 	return NULL;
 }
 

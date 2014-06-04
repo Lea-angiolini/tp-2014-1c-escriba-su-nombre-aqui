@@ -249,11 +249,26 @@ void generarDump() {
 		ordenarTablaSegmentos();
 		printSegmentos(tabla_segmentos);
 		break;
-	case 'd':
+	case 'd': imprimirMemoria();
+				break;
 	default:
 		log_error(logger, "El comando ingresado es invalido");
 
 	}
+}
+
+void imprimirMemoria(){
+	uint32_t offset, tamanio;
+	printf("Indique un offset desde el comienzo de la memoria");
+	scanf("%d", &offset);
+	while( getchar() != '\n');
+	printf("Indique una cantidad de bytes");
+	scanf("%d", &tamanio);
+	while( getchar() != '\n');
+
+	imprimirBytes( 0, offset, tamanio);
+
+
 }
 
 void printSegmentosHeaders() {
@@ -313,6 +328,9 @@ void printSegmentos(t_list * segmentos) {
 }
 
 void printSegmento(Segmento * segmento) {
+	if( segmento->inicioReal == -1)
+		printf("Este segmento tiene tamanio 0");
+
 	printf(">>>\t\t%d\t\t%d\t\t%d\n", segmento->inicioReal, segmento->finReal,
 			segmento->finReal - segmento->inicioReal + 1);
 }

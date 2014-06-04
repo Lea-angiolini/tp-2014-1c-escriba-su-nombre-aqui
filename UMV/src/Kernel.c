@@ -114,7 +114,7 @@ int tamanioSegmentos(socket_pedirMemoria * segmentosAreservar) {
 			+ segmentosAreservar->instruccionesSegmentSize + segmentosAreservar->stackSegmentSize);
 }
 
-void * fnKernelConectado(int * socketPtr) {
+void  fnKernelConectado(int * socketPtr) {
 
 	log_info(logger, "Se conecto el Kernel");
 
@@ -132,7 +132,7 @@ void * fnKernelConectado(int * socketPtr) {
 
 	free(kernel);
 
-	return 0x0000;
+
 
 }
 
