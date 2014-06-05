@@ -129,6 +129,7 @@ void retornar(t_valor_variable retorno)
 t_valor_variable obtenerValorCompartida(t_nombre_compartida variable)
 {
 	log_trace( logger, "Llamada a obtenerValorCompartida" );
+	variable[ strlen(variable) -1 ] = '\0';
 	return solcitarVariableCompartidaAKernel(variable);
 }
 
