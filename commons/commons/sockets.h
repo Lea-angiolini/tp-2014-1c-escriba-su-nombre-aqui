@@ -171,7 +171,7 @@ typedef struct {
 
 int conectar					(char *ip, int port, t_log * log);
 int crearYbindearSocket			(int puerto, t_log * log);
-int crearServidor				(int puerto, void* (*fn_nuevo_cliente)( void * socket ), t_log * log);
+int crearServidor(int puerto, void* (*fn_nuevo_cliente)(void * socket), t_log * log, uint32_t (*condicion) ());
 int crearServidorNoBloqueante	(int puerto, bool (*fn_nuevo_mensaje)(void *socket), t_log * log);
 
 

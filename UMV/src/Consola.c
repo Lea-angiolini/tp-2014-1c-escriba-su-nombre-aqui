@@ -57,9 +57,7 @@ void * iniciarConsola(void * params) {
 		case 'e':
 			generarDump();
 			break;
-		case 'f':
-			break;
-
+		case 'f': break;
 		default:
 			log_error(logger, "El comando ingresado no es valido");
 			break;

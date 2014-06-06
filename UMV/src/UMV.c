@@ -27,8 +27,8 @@
 
 
 
+uint32_t socketKernel;
 
-int socketKernel;
 t_log * logger;
 t_list * cpus; //Lista en la que se van a guardar toda la info de cada cpu que se conecte
 t_list * programas;
@@ -51,6 +51,7 @@ void * memoria;
 uint32_t memoria_size;
 uint32_t retardoUMV;
 char * modoActualCreacionSegmentos;
+uint32_t kernelConectado = 1;
 
 
 
@@ -78,8 +79,7 @@ void * handShake( void * socket ){
 void * crearConexiones(){
 
 
-	crearServidor( config_get_int_value( umvConfig, "PUERTO"), handShake, logger);
-
+	crearServidor( config_get_int_value( umvConfig, "PUERTO"), handShake, logger, condicionKernelConectado);
 	return NULL;
 }
 
@@ -149,11 +149,12 @@ int startThreads() {
 	pthread_create(&threadCpus, NULL, iniciarServidorCpu, NULL);*/
 	pthread_create( &threadConexiones, NULL, crearConexiones, NULL);
 
-	if ( pthread_join(threadConsola, NULL) || pthread_join(threadConexiones, NULL)) {
-			log_error(logger, "Hubo un error esperando a algun hilo");
-			return -1;
-	}
-
+	//if ( pthread_join(threadConsola, NULL) || pthread_join(threadConexiones, NULL)) {
+			//log_error(logger, "Hubo un error esperando a algun hilo");
+			//return -1;
+	//}
+	while( condicionKernelConectado() );
+	pthread_cancel(threadConsola);
 	/*if ( pthread_join(threadConsola, NULL) || pthread_join(threadKernel, NULL) || pthread_join(threadCpus, NULL) ) {
 		log_error(logger, "Hubo un error esperando a algun hilo");
 		return -1;
@@ -180,6 +181,7 @@ int main( int argc, char * argv[]) {
 
 	free(memoria);
 	config_destroy(umvConfig);
+	log_info( logger, "Finalizando UMV...");
 	log_destroy(logger);
 
 	return EXIT_SUCCESS;

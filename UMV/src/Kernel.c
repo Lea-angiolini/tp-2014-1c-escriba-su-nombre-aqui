@@ -13,19 +13,30 @@
 
 
 extern t_log * logger;
+extern uint32_t kernelConectado;
 
+uint32_t condicionKernelConectado(){
+	return kernelConectado;
+}
 
 //TODO se podria reusar lo de cpu ??
 int recibirYProcesarMensajesKernel( Kernel * kernel ) {
 
 	socket_pedirMemoria * buffer = malloc(sizeof(socket_pedirMemoria));
+	uint32_t todoSaleBien = 1;
 
-	while (sizeof(socket_pedirMemoria) == recv(kernel->socket, buffer, sizeof(socket_pedirMemoria), MSG_WAITALL) ) {
+	while ( todoSaleBien) {
+		todoSaleBien = recv(kernel->socket, buffer, sizeof(socket_pedirMemoria), MSG_WAITALL);
 
+		if( sizeof(socket_pedirMemoria) ==  todoSaleBien){
 			log_info(logger, "Procesando mensaje del Kernel");
 			procesarMenssajeKernel(kernel, buffer);
-		}
 
+		}else{
+			free(buffer);
+			return 0;
+		}
+	}
 	free(buffer);
 	return 1;
 }
@@ -114,6 +125,7 @@ int tamanioSegmentos(socket_pedirMemoria * segmentosAreservar) {
 			+ segmentosAreservar->instruccionesSegmentSize + segmentosAreservar->stackSegmentSize);
 }
 
+
 void  fnKernelConectado(int * socketPtr) {
 
 	log_info(logger, "Se conecto el Kernel");
@@ -122,17 +134,13 @@ void  fnKernelConectado(int * socketPtr) {
 	kernel->socket = * socketPtr;
 	free(socketPtr);
 
-	if (recibirYProcesarMensajesKernel(kernel) > 0) {
-		log_info(logger, "El Kernel se desconecto correctamente");
-	} else {
-		log_error(logger, "Hubo un problema con el Kernel");
-	}
+	if (recibirYProcesarMensajesKernel(kernel) == 0)
+		log_info(logger, "El Kernel se ha desconectado");
+
+	kernelConectado = 0;
 
 	//TODO hacer que cuando se desconecte el kernel finalice la UMV
-
 	free(kernel);
-
-
 
 }
 

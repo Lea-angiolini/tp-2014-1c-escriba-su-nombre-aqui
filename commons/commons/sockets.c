@@ -11,7 +11,7 @@
 #include <sys/ioctl.h>
 #include <errno.h>
 #include <unistd.h>
-
+#include <fcntl.h>
 /*
  * Funcion que crea un socket cliente para conectarlo a la ip y puerto pasados como parametros
  * Devuelve -1 si hubo error o el valor del socket
@@ -84,12 +84,11 @@ int crearYbindearSocket(int puerto, t_log * log)
  *	con parametro el nuevo socket del nuevo cliente.
  *
  */
-int crearServidor(int puerto, void* (*fn_nuevo_cliente)(void * socket), t_log * log) {
+int crearServidor(int puerto, void* (*fn_nuevo_cliente)(void * socket), t_log * log, uint32_t (*condicion) ()) {
 
 	int socketEscucha, socketNuevaConexion;
 
 	socketEscucha = crearYbindearSocket(puerto, log);
-
 	if(socketEscucha == -1)
 		return -1;
 
@@ -101,14 +100,18 @@ int crearServidor(int puerto, void* (*fn_nuevo_cliente)(void * socket), t_log * 
 	}
 
 	log_info(log, "Escuchando conexiones entrantes...");
-
-	while (1) {
+	uint32_t servidorAbierto = 1;
+	while ( servidorAbierto) {
 
 		// Aceptar una nueva conexion entrante. Se genera un nuevo socket con la nueva conexion.
 		log_info(log, "Esperando nueva conexion...");
-		if ((socketNuevaConexion = accept(socketEscucha, NULL, 0)) < 0) {
-			log_error(log, "Error al aceptar conexion entrante !! ");
+	    while( !((socketNuevaConexion = accept(socketEscucha, NULL, 0)) == EAGAIN) && condicion() ){
+		//if (((socketNuevaConexion = accept(socketEscucha, NULL, 0)) < 0) ) {
+	    	if( socketNuevaConexion < 0){
+			log_error(log, "Error al aceptar conexion entrante!! ");
 			return -1;
+	    	}else if( socketNuevaConexion != EAGAIN && socketNuevaConexion >= 0)
+	    		break;
 		}
 
 		pthread_t thread;
@@ -117,9 +120,9 @@ int crearServidor(int puerto, void* (*fn_nuevo_cliente)(void * socket), t_log * 
 		log_debug(log, "Se establecio la nueva conexion, creando el thread...");
 		pthread_create(&thread, NULL, fn_nuevo_cliente, (void*) soc);
 		log_info(log, "Nuevo thread creado");
+		servidorAbierto = condicion();
 
 	}
-
 	return 0;
 
 }

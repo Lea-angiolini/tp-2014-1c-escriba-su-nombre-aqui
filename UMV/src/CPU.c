@@ -218,6 +218,7 @@ void  fnNuevoCpu( int * socketPtr ){
 
 	//TODO !!!! IMPORTANTE que paso acaaa ??
 	close( cpu->socket );
+	free( cpu );
 
 
 
