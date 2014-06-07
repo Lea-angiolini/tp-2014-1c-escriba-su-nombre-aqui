@@ -52,14 +52,16 @@ AnSISOP_kernel * crearAnSISOP_kernel()
 
 t_puntero definirVariable(t_nombre_variable identificador_variable)
 {
-	log_trace( logger, "Llamada a definirVariable, el identificador es: %c", identificador_variable );
-	return apilarVariable( identificador_variable );
+	uint32_t puntero = apilarVariable( identificador_variable );
+	log_trace( logger, "Llamada a definirVariable, el identificador es: %c y esta en la posicion %d", identificador_variable, puntero );
+	return puntero;
 }
 
 t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable)
 {
-	log_trace( logger, "Llamada a obtenerPosicionVariable, el identificador es: %c", identificador_variable );
-	return (t_puntero) obtenerOffsetVarible( identificador_variable );
+	uint32_t puntero = obtenerOffsetVarible( identificador_variable );
+	log_trace( logger, "Llamada a obtenerPosicionVariable, el identificador es: %c, y esta en %d", identificador_variable, puntero );
+	return (t_puntero) puntero;
 }
 
 t_valor_variable dereferenciar(t_puntero direccion_variable)
@@ -80,7 +82,6 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor)
 
 void irAlLabel(t_nombre_etiqueta t_nombre_etiqueta)
 {
-	log_trace( logger, "Llamada a irAlLabel" );
 	PCB_enEjecucion.programCounter = obtenerLineaDeLabel( t_nombre_etiqueta );
 	if( PCB_enEjecucion.programCounter == -1 ){
 		PCB_enEjecucion.lastErrorCode = 5;
@@ -88,7 +89,7 @@ void irAlLabel(t_nombre_etiqueta t_nombre_etiqueta)
 		quantumRestante = 0;
 		return;
 	}
-	log_debug( logger, "Se seteo el programCounter = %d", PCB_enEjecucion.programCounter );
+	log_trace( logger, "Saltando al label %s con programCounter = %d", t_nombre_etiqueta, PCB_enEjecucion.programCounter );
 }
 
 
@@ -170,8 +171,10 @@ void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo)
 
 void scWait(t_nombre_semaforo identificador_semaforo)
 {
-	log_trace( logger, "Llamada a Wait" );
-	enviarAKernelWait(identificador_semaforo);
+	log_trace( logger, "Llamada a Wait, semaforo: %s", identificador_semaforo );
+	if( !enviarAKernelWait(identificador_semaforo)){
+		PCB_enEjecucion.lastErrorCode = 6;
+	}
 }
 
 void scSignal(t_nombre_semaforo identificador_semaforo)

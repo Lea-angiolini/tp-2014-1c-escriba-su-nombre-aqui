@@ -59,8 +59,7 @@ bool recibirYProcesarMensajesKernel()
 	socket_pcb pcbNuevo;
 	while(1)
 	{
-
-		log_info(logger, "Esperando nueva PCB del Kernel");
+		log_debug(logger, "Esperando nueva PCB del Kernel");
 
 		if( recv(socketKernel, &pcbNuevo, sizeof(socket_pcb), MSG_WAITALL) != sizeof(socket_pcb) )
 			return false;
@@ -82,7 +81,6 @@ bool recibirYProcesarMensajesKernel()
 		}else{
 			log_trace( logger, "Se le devolvio el PCB al Kernel" );
 		}
-
 	}
 
 	return true;
@@ -187,10 +185,13 @@ bool enviarAKernelSignal(t_nombre_semaforo identificador_semaforo)
 	socket_scSignal sSignal;
 	sSignal.header.code = 's';
 	sSignal.header.size = sizeof(socket_scSignal);
+	identificador_semaforo[ strlen( identificador_semaforo ) - 1 ] = '\0';
 	strcpy(sSignal.identificador, identificador_semaforo );
 
-	if( send(socketKernel, &sSignal, sizeof(socket_scSignal), 0) < 0 )
+	if(send(socketKernel, &sSignal, sizeof(socket_scSignal), 0) < 0){
+		log_error(logger, "No se pudo enviar al kernel el Signal");
 		return false;
+	}
 
 	return true;
 }
@@ -200,23 +201,24 @@ bool enviarAKernelWait(t_nombre_semaforo identificador_semaforo)
 	socket_scWait sWait;
 	sWait.header.code = 'w';
 	sWait.header.size = sizeof(socket_scWait);
+	identificador_semaforo[ strlen( identificador_semaforo ) - 1 ] = '\0';
 	strcpy(sWait.identificador, identificador_semaforo );
 
-	if( send(socketKernel, &sWait, sizeof(socket_scWait), 0) < 0 )
+	if( send(socketKernel, &sWait, sizeof(socket_scWait), 0) < 0 ){
+		log_error(logger, "No se puede enviar al kernel el Wait");
 		return false;
+	}
+
 
 	socket_respuesta res;
 
-	if( recv(socketKernel, &res, sizeof(socket_respuesta), MSG_WAITALL) != sizeof(socket_respuesta) )
+	if(recv(socketKernel, &res, sizeof(socket_respuesta), MSG_WAITALL) != sizeof(socket_respuesta))
 		return false;
 
 	if(!res.valor)
 	{
 		//Enviar pcb y detener ejecucion
-
-		if(!enviarPCB())
-			return false;
-
+		quantumRestante = 0;
 		//Detener ejecucion ???
 	}
 

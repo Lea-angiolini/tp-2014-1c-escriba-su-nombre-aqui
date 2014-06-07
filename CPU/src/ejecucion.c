@@ -22,7 +22,7 @@ bool ejecutar () {
 
 	log_info( logger, "Inicio la ejecucion del programa %d", PCB_enEjecucion.id );
 
-	log_trace( logger, "Solicito el stack a la UMV");
+	log_debug( logger, "Solicito el stack a la UMV");
 	if( !obtenerContextStack() || !obtenerEtiquetas() ) {
 		PCB_enEjecucion.lastErrorCode = 4;
 		//No hago un return false porque la cpu respondio bien, pero se debe informar al kernel, si hiciera return false ni llegaria al Kernel
@@ -39,27 +39,22 @@ bool ejecutar () {
 			return false;
 		}
 
-		log_trace( logger, "Incrementando el program counter" );
+		log_debug( logger, "Incrementando el program counter" );
 		PCB_enEjecucion.programCounter++;
 		quantumRestante--;
 		log_info( logger, "Ejecutando la linea obtenida: %s", instruccion );
 		analizadorLinea( instruccion, ansisop_funciones, ansisop_Kernelfunciones );
 		free(instruccion);
-		log_trace( logger, "Finalizo la linea" );
+		log_debug( logger, "Finalizo la linea" );
 		usleep(retardoQuantum*1000);
 
 	}
 
-	if( PCB_enEjecucion.lastErrorCode > 0 ) {
-		//TODO informar a la UMV
-	}
-
-
 	if( quantumRestante == 0 ) {
-		log_info( logger, "Finalizo el quantum");
+		log_debug( logger, "Finalizo el quantum");
 	}
 
-	log_info( logger, "Guardando el stack en la UMV");
+	log_debug( logger, "Guardando el stack en la UMV");
 
 	if( ! guardarStack() || ! enviarFinQuantum( PCB_enEjecucion.id ) ){
 		log_error( logger, "Hubo un problema al sincronizar los datos con la UMV" );

@@ -44,7 +44,7 @@ bool crearConexionUMV() {
 
 char * solicitarLineaPrograma() {
 
-	log_trace( logger, "Solicitando linea de programa a la UMV para el programCounter: %d", PCB_enEjecucion.programCounter );
+	log_debug( logger, "Solicitando linea de programa a la UMV para el programCounter: %d", PCB_enEjecucion.programCounter );
 
 	socket_leerMemoria sLeerCodeIndex;
 	sLeerCodeIndex.pdi = PCB_enEjecucion.id;
@@ -82,6 +82,7 @@ char * solicitarLineaPrograma() {
 	char * respuesta = malloc(instruct->offset);
 	memcpy(respuesta, paqueteRespuesta->data, instruct->offset);
 	free(paqueteRespuesta);
+	respuesta[ instruct->offset ] = '\0';
 	return respuesta;
 
 }
@@ -116,7 +117,6 @@ bool obtenerEtiquetas(){
 
 
 uint32_t obtenerLineaDeLabel( t_nombre_etiqueta t_nombre_etiqueta ) {
-
 	t_nombre_etiqueta[ strlen(t_nombre_etiqueta) -1 ] = '\0';
 	int i=0;
 	int offset = 0;
@@ -128,7 +128,6 @@ uint32_t obtenerLineaDeLabel( t_nombre_etiqueta t_nombre_etiqueta ) {
 		offset += strlen(nombre) + 1 + sizeof(t_puntero_instruccion);
 	}
 	return -1;
-
 }
 
 
