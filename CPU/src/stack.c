@@ -15,8 +15,6 @@ Stack stackCache;
 Stack new_Stack()
 {
 	Stack stack;
-	stack.dataLength = 0;
-	stack.offset = 0;
 	return stack;
 }
 
@@ -25,12 +23,11 @@ Stack new_Stack()
 //TODO, verificar si la variable no existe
 uint32_t apilarVariable(char identificador)
 {
-	stackCache.data[stackCache.dataLength] = identificador;
-	stackCache.dataLength += 5;
+	stackCache.data[PCB_enEjecucion.stackCursor] = identificador;
 	stackCache.modificado = true;
 	PCB_enEjecucion.contextSize += 5;
 	PCB_enEjecucion.stackCursor += 5;
-	return stackCache.dataLength - 4;
+	return PCB_enEjecucion.stackCursor - 4;
 }
 
 
@@ -40,12 +37,14 @@ uint32_t apilarVariable(char identificador)
 
 uint32_t obtenerOffsetVarible(char variable)
 {
-	int i = 0;
-	for( i = 0; i < stackCache.dataLength ; i +=5 ) {
+	int i = PCB_enEjecucion.stackCursor - PCB_enEjecucion.contextSize;
+	log_debug(logger, "Analizando el stack desde: %d hasta: %d", i, PCB_enEjecucion.stackCursor);
+	for(; i < PCB_enEjecucion.stackCursor; i +=5 ) {
 		if( stackCache.data[i] == variable ) {
 			return i+1;
 		}
 	}
+	PCB_enEjecucion.lastErrorCode = 3;
 	log_error( logger, "Se solicito la posicion de memoria de una variable inexistente" );
 	return 0;
 }
@@ -76,34 +75,42 @@ void modificarVariable(uint32_t pos, uint32_t valor)
  */
 bool apilarFuncionConRetorno(uint32_t variableRetorno)
 {
-	log_warning(logger, "Funcion no implementada");
-	apilarFuncionSinRetorno();
-	stackCache.data[stackCache.dataLength] = variableRetorno;
-	stackCache.dataLength += sizeof( uint32_t );
-	PCB_enEjecucion.stackCursor += stackCache.dataLength;
-	stackCache.modificado = true;
+	log_error(logger, "Funcion no implementada");
 	return guardarStack();
 }
 
 
+
 bool apilarFuncionSinRetorno()
 {
-	printf("\n\nGuardando el contexto: %d - stackCursor, %d - contextSize, %d - ProgramCounter \n\n", PCB_enEjecucion.stackCursor, PCB_enEjecucion.contextSize, PCB_enEjecucion.programCounter);
+	guardarStack();
+	printf("\nGuardando el contexto: stackCursor = %d, contextSize = %d, ProgramCounter = %d \n\n", PCB_enEjecucion.stackCursor, PCB_enEjecucion.contextSize, PCB_enEjecucion.programCounter);
 	StackFuncion llamada;
 	llamada.lastContextInit = PCB_enEjecucion.stackCursor - PCB_enEjecucion.contextSize;
 	llamada.lastProgramCounter = PCB_enEjecucion.programCounter;
-	memcpy(stackCache.data + stackCache.dataLength, &llamada, sizeof(StackFuncion)); //Copia la llamada al stackCache
+	memcpy(stackCache.data + PCB_enEjecucion.stackCursor, &llamada, sizeof(StackFuncion)); //Copia la llamada al stackCache
+
+	socket_guardarEnMemoria sGuardarEnMemoria;
+	sGuardarEnMemoria.offset	= PCB_enEjecucion.stackCursor;
+	sGuardarEnMemoria.pdi		= PCB_enEjecucion.id;
+	sGuardarEnMemoria.length	= sizeof(StackFuncion);
+	sGuardarEnMemoria.base		= PCB_enEjecucion.stackSegment;
+	memcpy(sGuardarEnMemoria.data, &llamada, sizeof(StackFuncion));
 
 	PCB_enEjecucion.stackCursor += sizeof(StackFuncion);
-	PCB_enEjecucion.contextSize = sizeof(StackFuncion);
-	stackCache.modificado = true;
-	if(!guardarStack()){ //Guarda en la UMV solo la llamada, con length sizeof(StackFuncion) y offset en donde arranca la llamada
-		log_error(logger, "Error al guardar la llamda a la funcion en el stack");
-		return false;
-	}
-
 	PCB_enEjecucion.contextSize = 0;
+	stackCache.modificado = false;
+
+	socket_RespuestaGuardarEnMemoria * respuesta = (socket_RespuestaGuardarEnMemoria*) enviarYRecibirPaquete( socketUMV, &sGuardarEnMemoria, sizeof(socket_guardarEnMemoria) , 0, 'c', 'a', logger );
+	if(respuesta == NULL || respuesta->status == false ) {
+		log_error( logger, "Error al apilar la funcion en la UMV" );
+		return false;
+	}else{
+		log_debug( logger, "Funcion guardada correctamente en la UMV" );
+		return true;
+	}
 	return true;
+
 }
 
 
@@ -111,7 +118,6 @@ bool apilarFuncionSinRetorno()
 /*
  * Guarda en la umv el stack con el que estabamos trabajando
  */
-//TODO manejar tamaño
 bool guardarStack()
 {
 
@@ -131,7 +137,7 @@ bool guardarStack()
 	sGuardarEnMemoria.pdi		= PCB_enEjecucion.id;
 	sGuardarEnMemoria.length	= PCB_enEjecucion.contextSize;
 	sGuardarEnMemoria.base		= PCB_enEjecucion.stackSegment;
-	memcpy(sGuardarEnMemoria.data, &stackCache.data, 100) ;
+	memcpy(sGuardarEnMemoria.data, stackCache.data + sGuardarEnMemoria.offset, sGuardarEnMemoria.length) ;
 
 	socket_RespuestaGuardarEnMemoria * respuesta = (socket_RespuestaGuardarEnMemoria*) enviarYRecibirPaquete( socketUMV, &sGuardarEnMemoria, sizeof(socket_guardarEnMemoria) , 0, 'c', 'a', logger );
 	if(respuesta == NULL || respuesta->status == false ) {
@@ -189,16 +195,21 @@ bool obtenerContextStack()
 bool obtenerContextStackAnterior(t_valor_variable retorno)
 {
 
-	printf("\nAhora el contexto es: %d - stackCursor, %d - contextSize, %d - ProgramCounter \n", PCB_enEjecucion.stackCursor, PCB_enEjecucion.contextSize, PCB_enEjecucion.programCounter);
+	printf("\nAhora el contexto es: stackCursor = %d, contextSize = %d, ProgramCounter = %d \n", PCB_enEjecucion.stackCursor, PCB_enEjecucion.contextSize, PCB_enEjecucion.programCounter);
 
 	socket_leerMemoria sLeerStack;
 	sLeerStack.pdi		= PCB_enEjecucion.id;
 	sLeerStack.base		= PCB_enEjecucion.stackSegment;
 	sLeerStack.length	= sizeof(StackFuncion);
-	PCB_enEjecucion.stackCursor = PCB_enEjecucion.stackCursor - PCB_enEjecucion.contextSize - sizeof(StackFuncion) + 1;
+	PCB_enEjecucion.stackCursor = PCB_enEjecucion.stackCursor - PCB_enEjecucion.contextSize - sizeof(StackFuncion);
 	sLeerStack.offset	= PCB_enEjecucion.stackCursor;
 
-	printf("Solicitando una lecutura con offset %d", sLeerStack.offset);
+	if( ((int)sLeerStack.offset) < 0){
+		log_error(logger, "Intetando retornar de la funcion Main");
+		return false;
+	}
+
+	printf("Solicitando una lecutura para recuperar el stack con offset = %d y length = %d\n", sLeerStack.offset, sLeerStack.length);
 	socket_RespuestaLeerMemoria * respuesta = (socket_RespuestaLeerMemoria *) enviarYRecibirPaquete(socketUMV, &sLeerStack, sizeof(socket_leerMemoria), sizeof(socket_RespuestaLeerMemoria) , 'b', 'a', logger) ;
 
 	if( respuesta == NULL || respuesta->status == false ){
@@ -207,12 +218,11 @@ bool obtenerContextStackAnterior(t_valor_variable retorno)
 	}
 
 	StackFuncion * respuestaStack	= (StackFuncion *) respuesta->data;
-
 	PCB_enEjecucion.programCounter	= respuestaStack->lastProgramCounter;
 	PCB_enEjecucion.contextSize		= PCB_enEjecucion.stackCursor - respuestaStack->lastContextInit;
 
-	printf("Recibi la respuesat con lastProgramCounter: %d, lastContextInit: %d", respuestaStack->lastProgramCounter, respuestaStack->lastContextInit);
-	printf("\nSe recupero el contexto: %d - stackCursor, %d - contextSize, %d - ProgramCounter \n\n", PCB_enEjecucion.stackCursor, PCB_enEjecucion.contextSize, PCB_enEjecucion.programCounter);
+	printf("Recibi la respuesta con lastProgramCounter: %d, lastContextInit: %d", respuestaStack->lastProgramCounter, respuestaStack->lastContextInit);
+	printf("\nSe recupero el contexto: stackCursor = %d, contextSize = %d, ProgramCounter = %d \n\n", PCB_enEjecucion.stackCursor, PCB_enEjecucion.contextSize, PCB_enEjecucion.programCounter);
 	if( !obtenerContextStack() ){
 		log_error(logger,"Error al obtener el contexto");
 		return false;
@@ -222,10 +232,6 @@ bool obtenerContextStackAnterior(t_valor_variable retorno)
 
 	return true;
 }
-
-
-
-
 
 
 

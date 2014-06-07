@@ -117,7 +117,9 @@ void finalizar(void)
 void retornar(t_valor_variable retorno)
 {
 	log_trace( logger, "Llamada a retornar" );
-	obtenerContextStackAnterior(retorno);
+	if (!obtenerContextStackAnterior(retorno)){
+		PCB_enEjecucion.lastErrorCode = 6;
+	}
 }
 
 

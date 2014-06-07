@@ -26,8 +26,6 @@
 //TODO crear el tamaño total para verificar segmentation fault
 typedef struct {
 
-	uint32_t offset;
-	uint32_t dataLength;
 	char data[1000];
 	bool modificado;
 
