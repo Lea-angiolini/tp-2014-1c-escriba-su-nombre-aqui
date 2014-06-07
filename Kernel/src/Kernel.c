@@ -7,6 +7,8 @@
 #include "colas.h"
 #include "config.h"
 
+sem_t semKernel;
+
 int main(int argc, char *argv[]) {
 	if (argc != 2) {
 		printf("Modo de empleo: ./Kernel config.cfg\n");
@@ -20,13 +22,29 @@ int main(int argc, char *argv[]) {
 
 	crear_colas();
 
+
+	sem_init(&semKernel, 0, 0);
+
 	pthread_t plpThread, pcpThread;
 
-	pthread_create(&plpThread, NULL, &IniciarPlp, NULL);
-	pthread_create(&pcpThread, NULL, &IniciarPcp, NULL);
+	if (pthread_create(&plpThread, NULL, &IniciarPlp, NULL)){
+		destruir_colas();
+		destruir_config();
+		return EXIT_SUCCESS;
+	}
 
-	pthread_join(plpThread, NULL);
-	pthread_join(pcpThread, NULL);
+	if (pthread_create(&pcpThread, NULL, &IniciarPcp, NULL)){
+		destruir_colas();
+		destruir_config();
+		return EXIT_SUCCESS;
+	}
+
+	sem_wait(&semKernel);
+
+	pthread_cancel(plpThread);
+	pthread_cancel(pcpThread);
+
+	sem_destroy(&semKernel);
 
 	destruir_colas();
 	destruir_config();

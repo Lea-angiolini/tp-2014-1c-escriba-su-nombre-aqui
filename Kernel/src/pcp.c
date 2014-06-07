@@ -8,6 +8,7 @@ t_log *logpcp;
 
 extern uint32_t multiprogramacion;
 extern pthread_mutex_t multiprogramacionMutex;
+extern sem_t semKernel;
 
 sem_t dispatcherReady, dispatcherCpu;
 
@@ -26,6 +27,7 @@ void *IniciarPcp(void *arg)
 	log_debug(logpcp, "Thread concluido");
 	log_destroy(logpcp);
 
+	sem_post(&semKernel);
 	return NULL;
 }
 

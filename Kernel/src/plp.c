@@ -10,6 +10,7 @@ uint32_t nextProcessId = 1;
 uint32_t multiprogramacion = 0;
 pthread_mutex_t multiprogramacionMutex = PTHREAD_MUTEX_INITIALIZER;
 
+extern sem_t semKernel;
 extern sem_t dispatcherReady;
 
 int socketUMV;
@@ -25,6 +26,7 @@ void *IniciarPlp(void *arg) {
 	log_debug(logplp, "Thread concluido");
 	log_destroy(logplp);
 
+	sem_post(&semKernel);
 	return NULL;
 }
 
@@ -142,24 +144,56 @@ bool recibirYprocesarScript(int socketPrograma) {
 	pedirMemoria.etiquetasSegmentSize = scriptMetadata->etiquetas_size;
 	pedirMemoria.instruccionesSegmentSize = scriptMetadata->instrucciones_size * sizeof(t_intructions);
 
-	send(socketUMV, &pedirMemoria, sizeof(socket_pedirMemoria), 0);
+	if( send(socketUMV, &pedirMemoria, sizeof(socket_pedirMemoria), 0) < 0 ){
+		log_error(logplp,"No se puedo pedir memoria a la UMV. Desconectando");
+		sem_post(&semKernel);
+		return false;
+	}
 
 	socket_respuesta respuesta;
 
-	recv(socketUMV, &respuesta, sizeof(socket_respuesta), MSG_WAITALL);
+	if( recv(socketUMV, &respuesta, sizeof(socket_respuesta), MSG_WAITALL) != sizeof(socket_respuesta) ){
+		log_error(logplp,"No se recibio respuesta de la UMV. Desconectando");
+		sem_post(&semKernel);
+		return false;
+	}
 
 	if(respuesta.valor == true)
 	{
 		log_info(logplp, "La UMV informo que pudo alojar la memoria necesaria para el script ansisop");
 		log_info(logplp, "Enviando a la UMV los datos a guardar en los segmentos");
 
-		send(socketUMV, &nextProcessId, sizeof(nextProcessId), 0);
-		send(socketUMV, script, pedirMemoria.codeSegmentSize, 0);
-		send(socketUMV, scriptMetadata->etiquetas, pedirMemoria.etiquetasSegmentSize, 0);
-		send(socketUMV, scriptMetadata->instrucciones_serializado, pedirMemoria.instruccionesSegmentSize, 0);
+		if( send(socketUMV, &nextProcessId, sizeof(nextProcessId), 0) < 0 ){
+			log_error(logplp,"No se pudo enviar nextProcessId a la UMV. Desconectando");
+			sem_post(&semKernel);
+			return false;
+		}
+
+		if( send(socketUMV, script, pedirMemoria.codeSegmentSize, 0) < 0 ){
+			log_error(logplp,"No se pudo enviar script a la UMV. Desconectando");
+			sem_post(&semKernel);
+			return false;
+		}
+
+		if( send(socketUMV, scriptMetadata->etiquetas, pedirMemoria.etiquetasSegmentSize, 0) < 0 ){
+			log_error(logplp,"No se pudo enviar etiquetas a la UMV. Desconectando");
+			sem_post(&semKernel);
+			return false;
+		}
+
+		if( send(socketUMV, scriptMetadata->instrucciones_serializado, pedirMemoria.instruccionesSegmentSize, 0) < 0 ){
+			log_error(logplp,"No se puedo enviar instrucciones serializado a la UMV. Desconectando");
+			sem_post(&semKernel);
+			return false;
+		}
 
 		socket_umvpcb umvpcb;
-		recv(socketUMV, &umvpcb, sizeof(socket_umvpcb), MSG_WAITALL);
+
+		if( recv(socketUMV, &umvpcb, sizeof(socket_umvpcb), MSG_WAITALL) != sizeof(socket_umvpcb) ){
+			log_error(logplp,"No se recibio pcb de la UMV. Desconectando");
+			sem_post(&semKernel);
+			return false;
+		}
 
 		pcb_t *pcb = malloc(sizeof(pcb_t));
 
