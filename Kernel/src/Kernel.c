@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
 
 	if( pthread_create(&pcpThread, NULL, &IniciarPcp, NULL) != 0 )
 	{
-		log_error(logplp, "Error al iniciar el hilo de PCP");
+		log_error(logpcp, "Error al iniciar el hilo de PCP");
 		sem_post(&semKernel);
 	}
 
