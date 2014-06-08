@@ -1,111 +1,55 @@
 #!/bin/bash
 
-
 ubicacion=$(pwd)
 clear
-echo "Usar solo en gnome (exec gnome-terminal)"
-echo "Ingrese cantidad de CPU - 1 - 2 - 3 - 4 -"
+echo "Ingrese cantidad de CPU (max  8)"
 read n
 
-case $n in
-2)
 cd $ubicacion
 cd UMV/Debug
-gnome-terminal --title=UMV -e "./UMV ../resources/config.cfg"
+xterm -T UMV -hold -e "./UMV ../resources/config.cfg" &
+sleep 0.5
 
 cd $ubicacion
 cd Kernel/Debug
-gnome-terminal --title=Kernel -e "./Kernel ../resources/config.cfg"
+xterm -T Kernel -hold -e "./Kernel ../resources/config.cfg" &
+sleep 0.5
+
+cant=1
+
+if [ $n -gt 8 ]; then
+   n=8
+fi
 
 cd $ubicacion
 cd CPU/Debug
-gnome-terminal --title=CPU1 -e "./CPU ../resources/config.cfg"
+while [ $cant -le $n ]; do
+	xterm -T CPU$cant -hold -e "./CPU ../resources/config.cfg" &
+    	let cant=$cant+1
+done
+
 
 cd $ubicacion
-cd CPU/Debug
-gnome-terminal --title=CPU2 -e "./CPU ../resources/config.cfg"
+cd Programa/resources
+echo "Ingrese script a ejecutar (no hace falta .ansisop)"
+echo " "
+ls
+read s
 
-;;
-3)
-cd $ubicacion
-cd UMV/Debug
-gnome-terminal --title=UMV -e "./UMV ../resources/config.cfg"
-
-cd $ubicacion
-cd Kernel/Debug
-gnome-terminal --title=Kernel -e "./Kernel ../resources/config.cfg"
-
-cd $ubicacion
-cd CPU/Debug
-gnome-terminal --title=CPU1 -e "./CPU ../resources/config.cfg"
-
-cd $ubicacion
-cd CPU/Debug
-gnome-terminal --title=CPU2 -e "./CPU ../resources/config.cfg"
-
-cd $ubicacion
-cd CPU/Debug
-gnome-terminal --title=CPU3 -e "./CPU ../resources/config.cfg"
-;;
-4)
-cd $ubicacion
-cd UMV/Debug
-gnome-terminal --title=UMV -e "./UMV ../resources/config.cfg"
-
-cd $ubicacion
-cd Kernel/Debug
-gnome-terminal --title=Kernel -e "./Kernel ../resources/config.cfg"
-
-cd $ubicacion
-cd CPU/Debug
-gnome-terminal --title=CPU1 -e "./CPU ../resources/config.cfg"
-
-cd $ubicacion
-cd CPU/Debug
-gnome-terminal --title=CPU2 -e "./CPU ../resources/config.cfg"
-
-cd $ubicacion
-cd CPU/Debug
-gnome-terminal --title=CPU3 -e "./CPU ../resources/config.cfg"
-
-cd $ubicacion
-cd CPU/Debug
-gnome-terminal --title=CPU4 -e "./CPU ../resources/config.cfg"
-;;
-*)
-cd $ubicacion
-cd UMV/Debug
-gnome-terminal --title=UMV -e "./UMV ../resources/config.cfg"
-
-cd $ubicacion
-cd Kernel/Debug
-gnome-terminal --title=Kernel -e "./Kernel ../resources/config.cfg"
-
-cd $ubicacion
-cd CPU/Debug
-gnome-terminal --title=CPU1 -e "./CPU ../resources/config.cfg"
-
-#gnome-terminal --maximize --tab --title=UMV -e "bash -c './umv.sh / && sleep 0'" --tab --title=Kernel -e "bash -c './Kernel.sh / && sleep 0'"  --tab --title=CPU -e "bash -c './CPU.sh / && sleep 0'"
-;;
-esac
-
-s=1
-
-while [ $s != 0 ]
- 	do
-		echo "Ingrese script a ejecutar (no hace falta .ansisop)"
-		echo " "
-		cd $ubicacion
-		cd Programa/resources
-		ls
-		read s
+while [ $s != 0 ]; do
+		
 		cd $ubicacion
 		cd Programa/Debug
 		export ANSISOP_CONFIG=../resources/config.cfg
-
-		gnome-terminal --title=$s -e "./Programa ../resources/$s.ansisop"
-
+		xterm -T $s -hold -e "./Programa ../resources/$s.ansisop" &
+			
 		clear
+		cd $ubicacion
+		cd Programa/resources
+		echo "Ingrese script a ejecutar (no hace falta .ansisop)"
+		echo " "
+		ls
+		read s
 
 	done
 
