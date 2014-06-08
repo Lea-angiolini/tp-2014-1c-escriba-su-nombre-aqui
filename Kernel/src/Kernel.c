@@ -7,6 +7,7 @@
 #include "colas.h"
 #include "config.h"
 
+extern t_log *logplp, *logpcp;
 sem_t semKernel;
 
 int main(int argc, char *argv[]) {
@@ -27,16 +28,16 @@ int main(int argc, char *argv[]) {
 
 	pthread_t plpThread, pcpThread;
 
-	if (pthread_create(&plpThread, NULL, &IniciarPlp, NULL)){
-		destruir_colas();
-		destruir_config();
-		return EXIT_SUCCESS;
+	if( pthread_create(&plpThread, NULL, &IniciarPlp, NULL) != 0 )
+	{
+		log_error(logplp, "Error al iniciar el hilo de PLP");
+		sem_post(&semKernel);
 	}
 
-	if (pthread_create(&pcpThread, NULL, &IniciarPcp, NULL)){
-		destruir_colas();
-		destruir_config();
-		return EXIT_SUCCESS;
+	if( pthread_create(&pcpThread, NULL, &IniciarPcp, NULL) != 0 )
+	{
+		log_error(logplp, "Error al iniciar el hilo de PCP");
+		sem_post(&semKernel);
 	}
 
 	sem_wait(&semKernel);
