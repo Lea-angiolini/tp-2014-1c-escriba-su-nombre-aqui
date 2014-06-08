@@ -55,5 +55,3 @@ while [ $s != 0 ]; do
 
 clear
 exit 0
-
-
