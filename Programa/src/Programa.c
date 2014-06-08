@@ -15,9 +15,16 @@ int main(int argc, char *argv[]) {
 		return EXIT_SUCCESS;
 	}
 
+	char *config_path = getenv("ANSISOP_CONFIG");
+
+	if(config_path == NULL) {
+		printf("Falta definir la variable de entorno ANSISOP_CONFIG\n");
+		return EXIT_SUCCESS;
+	}
+
 	t_log *log = log_create("log.txt", "Programa", 1, LOG_LEVEL_TRACE);
 
-	t_config *config = config_create(getenv("ANSISOP_CONFIG"));
+	t_config *config = config_create(config_path);
 	if( !config_has_property(config, "IP") || !config_has_property(config, "Puerto") ) {
 		log_error(log, "Configuracion invalida");
 		return EXIT_SUCCESS;
