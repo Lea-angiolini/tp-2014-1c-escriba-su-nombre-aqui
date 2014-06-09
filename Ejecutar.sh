@@ -29,22 +29,30 @@ done
 
 cd $ubicacion
 cd Programa/resources
-echo "Ingrese script a ejecutar (no hace falta .ansisop). Ingrese '0' para salir"
+echo "Ingrese script a ejecutar (no hace falta .ansisop).  Ingrese '1' para agregar una CPU. Ingrese '0' para salir"
 echo " "
 ls
 read s
 
 while [ $s != 0 ]; do
 		
-		cd $ubicacion
-		cd Programa/Debug
-		export ANSISOP_CONFIG=../resources/config.cfg
-		xterm -T $s -hold -geometry "120x25" -e "./Programa ../resources/$s.ansisop" &
-		
+		if [ $s = 1 ]; then
+			cd $ubicacion
+			cd CPU/Debug
+			xterm -T CPU$cant -hold -geometry "120x30" -e "./CPU ../resources/config.cfg" &
+    			let cant=$cant+1
+		else
+
+			cd $ubicacion
+			cd Programa/Debug
+			export ANSISOP_CONFIG=../resources/config.cfg
+			xterm -T $s -hold -geometry "120x25" -e "./Programa ../resources/$s.ansisop" &
+		fi
+
 		clear
 		cd $ubicacion
 		cd Programa/resources
-		echo "Ingrese script a ejecutar (no hace falta .ansisop). Ingrese '0' para salir"
+		echo "Ingrese script a ejecutar (no hace falta .ansisop).  Ingrese '1' para agregar una CPU. Ingrese '0' para salir"
 		echo " "
 		ls
 		read s
