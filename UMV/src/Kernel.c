@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 #include "memoria.h"
 #include "Programa.h"
@@ -15,10 +16,11 @@
 
 extern t_log * logger;
 extern pthread_t threadConexiones;
-
+extern uint32_t retardoUMV;
 //TODO se podria reusar lo de cpu ??
 int recibirYProcesarMensajesKernel( Kernel * kernel ) {
 
+	usleep( retardoUMV * 1000);
 	socket_pedirMemoria * buffer = malloc(sizeof(socket_pedirMemoria));
 	uint32_t todoSaleBien = 1;
 
@@ -46,6 +48,7 @@ int procesarMenssajeKernel( Kernel * kernel, socket_pedirMemoria * segmentosAres
 	memoriaDisponible = memoriaLibre();
 
 	if (tamanioTotalSegmentos > memoriaDisponible)
+		log_error( logger, "No se ha podido reservar segmentos enviados por el Kernel");
 		respuesta = false;
 
 	socket_respuesta respuestaSegmentos;

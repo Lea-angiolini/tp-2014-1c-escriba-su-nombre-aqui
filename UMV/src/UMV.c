@@ -25,7 +25,8 @@
 
 #include "commons/collections/list.h"
 
-
+#define WORSTFIT 1
+#define FIRSTFIT 0
 
 uint32_t socketKernel;
 
@@ -50,7 +51,7 @@ pthread_t threadCpus;
 void * memoria;
 uint32_t memoria_size;
 uint32_t retardoUMV;
-char * modoActualCreacionSegmentos;
+uint32_t modoActualCreacionSegmentos;
 
 
 
@@ -99,8 +100,8 @@ void * iniciarServidorKernel() {
 }
 */
 
-int leerConfiguraciones() {
-	umvConfig = config_create("config.cfg");
+int leerConfiguraciones( char * config) {
+	umvConfig = config_create(config);
 
 	if (!config_has_property(umvConfig, "PUERTO") || !config_has_property(umvConfig, "MEMORIA") || !config_has_property(umvConfig, "RETARDOUMV") || !config_has_property(umvConfig, "MODOCREACIONSEGMENTOS")) {
 			log_error(logger, "Archivo de configuracion invalido");
@@ -120,9 +121,9 @@ int leerConfiguraciones() {
 
 
 
-int setUp() {
+int setUp(char * config) {
 
-	leerConfiguraciones();
+	leerConfiguraciones(config);
 
 	cpus				= list_create();
 	programas			= list_create();
@@ -130,7 +131,11 @@ int setUp() {
 
 	memoria_size = config_get_int_value(umvConfig, "MEMORIA");
 	retardoUMV = config_get_int_value(umvConfig, "RETARDOUMV");
-	modoActualCreacionSegmentos = config_get_string_value(umvConfig, "MODOCREACIONSEGMENTOS");
+	if( config_get_string_value(umvConfig, "MODOCREACIONSEGMENTOS") == "WORSTFIT"){
+		modoActualCreacionSegmentos = WORSTFIT;
+	}else {
+		modoActualCreacionSegmentos = FIRSTFIT;
+	}
 
 	log_info( logger, "Reservando %d Bytes de memoria", memoria_size );
 	memoria = malloc( memoria_size );
@@ -164,11 +169,11 @@ int main( int argc, char * argv[]) {
 		return EXIT_SUCCESS;
 	}
 
-	logger = log_create("log.txt", "UMV", 1, LOG_LEVEL_TRACE);
+	logger = log_create("log.txt", "UMV", 0, LOG_LEVEL_TRACE);
 
 	log_info(logger, "Iniciando UMV...");
 
-	setUp();
+	setUp(argv[1]);
 	//ejecutar();
 	startThreads();
 

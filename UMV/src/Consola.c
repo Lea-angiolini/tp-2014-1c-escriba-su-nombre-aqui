@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 
+
 #include "Consola.h"
 #include "Segmento.h"
 #include "Programa.h"
@@ -12,11 +13,14 @@
 #include "commons/collections/list.h"
 #include "memoria.h"
 
+#define WORSTFIT 1
+#define FIRSTFIT 0
+
 char comandosBuffer[200];
 extern t_log * logger;
 extern t_list * tabla_segmentos;
 extern uint32_t retardoUMV;
-extern char * modoActualCreacionSegmentos;
+extern uint32_t modoActualCreacionSegmentos;
 extern t_list *programas;
 extern uint32_t memoria_size;
 
@@ -112,7 +116,7 @@ void operacionesConSegmentos() {
 }
 
 void requisitosOperacionSegmento(char operacion) {
-
+	usleep( retardoUMV * 1000);
 	printSegmentosPorPrograma();
 	printf("Ingrese un PID de Programa del que quiere solicitar la posicion\n");
 	uint32_t programa;
@@ -189,31 +193,26 @@ void modificarRetardoUMV() {
 
 void modificarAlgoCreacionSegmentos() {
 
-	char modo;
+	printf("El algoritmo actual de creacion de segmentos es ");
+	if( modoActualCreacionSegmentos == WORSTFIT){
+		printf("WORS-FIT\n");
+	} else printf("FIRST-FIT\n");
 
-	printf("Indique el modo con el que quiere crear segmentos\n");
-	printf("a - Worst-Fit \n b - First-Fit\n");
-
-	modo = getchar();
-	while (getchar() != '\n')
-		;
-
-	switch (modo) {
-	case 'a':
-		if (string_starts_with(modoActualCreacionSegmentos, "WORSTFIT"))
-			break;
-		modoActualCreacionSegmentos = "WORSTFIT";
-		break;
-
-	case 'b':
-		if (string_starts_with(modoActualCreacionSegmentos, "FIRSTFIT"))
-			break;
-		modoActualCreacionSegmentos = "FIRSTFIT";
-		break;
-	default:
-		log_error(logger,
-				"El comando ingresado para modificar el modo con el que quiere crear segmentos es invalido");
+	printf("Desea cambiarlo? \ns- Si \nn- No\n");
+	char cambio;
+	cambio = getchar();
+	while(getchar()!='\n');
+	if( cambio == 's'){
+		if( modoActualCreacionSegmentos == WORSTFIT){
+			modoActualCreacionSegmentos = FIRSTFIT;
+		} else modoActualCreacionSegmentos = WORSTFIT;
 	}
+
+	printf("El algoritmo actual de creacion de segmentos es ");
+	if( modoActualCreacionSegmentos == WORSTFIT){
+		printf("WORS-FIT\n");
+	} else printf("FIRST-FIT\n");
+
 }
 
 void generarDump() {

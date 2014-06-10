@@ -14,8 +14,8 @@ extern t_log * logger;
 
 //TODO liberar esta lista al finalizar el programa
 extern t_list * cpus;
-
-int contadorCpuId;
+extern uint32_t retardoUMV;
+uint32_t contadorCpuId;
 
 
 
@@ -143,7 +143,7 @@ int procesarSolicitudEscrituraMemoria( CPU * cpu, socket_guardarEnMemoria * soli
 
 
 int recibirYProcesarMensajesCpu( CPU * cpu ) {
-
+	usleep( retardoUMV * 1000);
 	int todoSaleBien = 1;
 
 	while( todoSaleBien > 0 ){
