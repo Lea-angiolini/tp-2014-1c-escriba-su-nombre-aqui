@@ -35,7 +35,6 @@ void * iniciarConsola(void * params) {
 		printf("c - Modificar algoritmo de modificacion de segmentos\n");
 		printf("d - Compactar tabla de segmentos\n");
 		printf("e - Generar dump\n");
-		printf("f - Finalizar consola\n");
 
 		comando = getchar();
 		while (getchar() != '\n')
@@ -57,17 +56,11 @@ void * iniciarConsola(void * params) {
 		case 'e':
 			generarDump();
 			break;
-		case 'f': break;
 		default:
 			log_error(logger, "El comando ingresado no es valido");
 			break;
 		}
-		if (comando == 'f')
-			break;
-
 	}
-
-	log_info(logger, "\n\nFinalizando la consola ...\n");
 	return NULL ;
 }
 

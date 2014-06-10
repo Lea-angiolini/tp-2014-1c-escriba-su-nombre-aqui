@@ -1,4 +1,5 @@
 #include "Kernel.h"
+#include <pthread.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -13,11 +14,7 @@
 
 
 extern t_log * logger;
-extern uint32_t kernelConectado;
-
-uint32_t condicionKernelConectado(){
-	return kernelConectado;
-}
+extern pthread_t threadConexiones;
 
 //TODO se podria reusar lo de cpu ??
 int recibirYProcesarMensajesKernel( Kernel * kernel ) {
@@ -137,7 +134,7 @@ void  fnKernelConectado(int * socketPtr) {
 	if (recibirYProcesarMensajesKernel(kernel) == 0)
 		log_info(logger, "El Kernel se ha desconectado");
 
-	kernelConectado = 0;
+	pthread_cancel( threadConexiones );
 
 	//TODO hacer que cuando se desconecte el kernel finalice la UMV
 	free(kernel);

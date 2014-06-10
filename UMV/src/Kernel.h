@@ -10,7 +10,7 @@ typedef struct {
 } Kernel;
 
 
-uint32_t condicionKernelConectado();
+
 void  fnKernelConectado(int * socketPtr);
 int procesarMenssajeKernel(Kernel * kernel,	socket_pedirMemoria * segmentosAreservar);
 int recibirYProcesarMensajesKernel(Kernel * kernel);
