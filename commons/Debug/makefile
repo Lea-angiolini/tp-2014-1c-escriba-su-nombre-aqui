@@ -8,6 +8,7 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include commons/parser/subdir.mk
 -include commons/collections/subdir.mk
 -include commons/subdir.mk
 -include subdir.mk

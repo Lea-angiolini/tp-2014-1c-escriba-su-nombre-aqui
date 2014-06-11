@@ -8,6 +8,7 @@ C_SRCS += \
 ../commons/config.c \
 ../commons/error.c \
 ../commons/log.c \
+../commons/pcb.c \
 ../commons/process.c \
 ../commons/sockets.c \
 ../commons/string.c \
@@ -20,6 +21,7 @@ OBJS += \
 ./commons/config.o \
 ./commons/error.o \
 ./commons/log.o \
+./commons/pcb.o \
 ./commons/process.o \
 ./commons/sockets.o \
 ./commons/string.o \
@@ -32,6 +34,7 @@ C_DEPS += \
 ./commons/config.d \
 ./commons/error.d \
 ./commons/log.d \
+./commons/pcb.d \
 ./commons/process.d \
 ./commons/sockets.d \
 ./commons/string.d \
