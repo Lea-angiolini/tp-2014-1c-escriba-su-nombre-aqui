@@ -6,18 +6,17 @@
 
 typedef struct {
 
-	int cpuId;
-	int pidProcesando;
-	int socket;
+	uint32_t cpuId;
+	uint32_t pidProcesando;
+	uint32_t socket;
 
 } CPU;
 
 
 
-int		procesarSolicitudDeLinea	( CPU * cpu, socket_obtenerLineaCodigo * solicitud );
-void 	fnNuevoCpu					( int * socketPtr );
-int 	recibirYProcesarMensajesCpu	( CPU * cpu );
-
-
+void fnNuevoCpu	( uint32_t * socketPtr );
+uint32_t 	recibirYProcesarMensajesCpu	( CPU * cpu );
+void borrarCPU( CPU * cpu );
+void destruirTodasLasCPUS();
 
 #endif /* CPU_H_ */

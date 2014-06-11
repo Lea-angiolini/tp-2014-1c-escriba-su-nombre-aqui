@@ -2,6 +2,7 @@
 #include "memoria.h"
 
 extern t_list * programas;
+extern t_log * logger;
 
 Programa * crearPrograma(uint32_t pid, void * script, void * etiquetas,
 		void * instrucciones_serializado, uint32_t tamanioScript,
@@ -50,6 +51,10 @@ socket_umvpcb crearEstructuraParaPCB(Programa * programa) {
 Segmento * crearDireccionesVirtuales(Segmento * segmento,
 		uint32_t tamanioSegmento, uint32_t finVirtualDelAnterior) {
 
+	if( segmento->inicioReal == SEGMENTOVACIO){
+		segmento->inicioVirtual = SEGMENTOVACIO;
+	}
+
 	segmento->inicioVirtual = finVirtualDelAnterior + 1;
 	segmento->finVirtual = segmento->inicioVirtual + (tamanioSegmento - 1);
 
@@ -90,22 +95,34 @@ Segmento * buscarSegmentoEnPrograma(Programa * programa, uint32_t base) {
 
 }
 
-bool destruirPrograma( uint32_t pid ){
+void destruirTodosLosProgramas(){
+	uint32_t i;
+	for( i = 0; i < (list_size( programas) - 1); i++){
+		Programa * programa = list_get( programas, i);
+		destruirPrograma( programa);
+	}
+
+}
+bool destruirPrograma( Programa * programa ){
 	bool matchearPrograma(Programa *nodoPrograma) {
-			return nodoPrograma->pid == pid;
+			return nodoPrograma->pid == programa->pid;
 		}
 
-	Programa * programaAborrar;
-	programaAborrar = list_remove_by_condition( programas, matchearPrograma);
+		list_remove_by_condition( programas, matchearPrograma);
 
-	if( programaAborrar != NULL){
+		if( programa != NULL){
+			log_info( logger, "Destruyendo programa con pid: %d", programa->pid);
 
-		free( programaAborrar->stack );
-		free( programaAborrar->script );
-		free( programaAborrar->etiquetas );
-		free( programaAborrar->instrucciones );
-		free( programaAborrar );
-		return true;
-	}else return false;
+			borrarSegmento( programa->stack );
+			borrarSegmento( programa->script );
+			borrarSegmento( programa->etiquetas );
+			borrarSegmento( programa->instrucciones );
+			free( programa );
+
+			return true;
+		}else{
+			log_error( logger, "El programa con pid: %d no se ha podido destruir", programa->pid);
+			return false;
+		}
 }
 

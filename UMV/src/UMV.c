@@ -16,7 +16,7 @@
 #include "Consola.h"
 #include "Kernel.h"
 #include "CPU.h"
-
+#include "Programa.h"
 #include "mocks.h"
 
 #include "commons/sockets.h"
@@ -40,14 +40,7 @@ t_config * umvConfig;
 
 pthread_t threadConsola;
 pthread_t threadConexiones;
-/*pthread_t threadKernel;
-pthread_t threadCpus;
-*/
-/*
- *
- * ACA, en este puntero se va a guardar toda la memoria virtual
- *
- */
+
 void * memoria;
 uint32_t memoria_size;
 uint32_t retardoUMV;
@@ -60,14 +53,14 @@ uint32_t modoActualCreacionSegmentos;
 
 void * handShake( void * socket ){
 	socket_header * quienSos = malloc( sizeof( socket_header));
-	if( sizeof(socket_header) == recv( *( int *)socket, quienSos, sizeof( socket_header), MSG_WAITALL)){
+	if( sizeof(socket_header) == recv( *( uint32_t *)socket, quienSos, sizeof( socket_header), MSG_WAITALL)){
 
 	switch( quienSos->code){
 
-	case 'k': fnKernelConectado( (int *) socket);
+	case 'k': fnKernelConectado( (uint32_t *) socket);
 			  break;
 
-	case 'c': fnNuevoCpu( (int *) socket);
+	case 'c': fnNuevoCpu( (uint32_t *) socket);
 			  break;
 
 	default: log_error( logger, "El codigo enviado por quien trataba de conectarse es invalido");
@@ -85,22 +78,9 @@ void * crearConexiones(){
 }
 
 
-//TODO enviar codigo de error si no se puede bindear el socket
-/*void * iniciarServidorCpu() {
 
-	crearServidor(config_get_int_value(umvConfig, "PUERTOCPU"), fnNuevoCpu, logger);
-	return NULL;
 
-}
-
-//TODO enviar codigo de error si no se puede bindear el socket
-void * iniciarServidorKernel() {
-	crearServidor(config_get_int_value(umvConfig, "PUERTOKERNEL"), fnKernelConectado, logger);
-	return NULL;
-}
-*/
-
-int leerConfiguraciones( char * config) {
+uint32_t leerConfiguraciones( char * config) {
 	umvConfig = config_create(config);
 
 	if (!config_has_property(umvConfig, "PUERTO") || !config_has_property(umvConfig, "MEMORIA") || !config_has_property(umvConfig, "RETARDOUMV") || !config_has_property(umvConfig, "MODOCREACIONSEGMENTOS")) {
@@ -108,20 +88,14 @@ int leerConfiguraciones( char * config) {
 			config_destroy(umvConfig);
 			return -1;
 	}
-	/*if (!config_has_property(umvConfig, "PUERTOCPU")
-			|| !config_has_property(umvConfig, "PUERTOKERNEL")
-			|| !config_has_property(umvConfig, "MEMORIA") || !config_has_property(umvConfig, "MODOCREACIONSEGMENTOS") || !config_has_property(umvConfig, "RETARDOUMV")) {
-		log_error(logger, "Archivo de configuracion invalido");
-		config_destroy(umvConfig);
-		return -1;
-	}*/
+
 
 	return 1;
 }
 
 
 
-int setUp(char * config) {
+uint32_t setUp(char * config) {
 
 	leerConfiguraciones(config);
 
@@ -150,8 +124,7 @@ int setUp(char * config) {
 
 int startThreads() {
 	pthread_create(&threadConsola, NULL, iniciarConsola, NULL);
-	/*pthread_create(&threadKernel, NULL, iniciarServidorKernel, NULL);
-	pthread_create(&threadCpus, NULL, iniciarServidorCpu, NULL);*/
+
 	pthread_create( &threadConexiones, NULL, crearConexiones, NULL);
 
 	pthread_join(threadConexiones, NULL);
@@ -162,22 +135,22 @@ int startThreads() {
 }
 
 
-int main( int argc, char * argv[]) {
+uint32_t main( uint32_t argc, char * argv[]) {
 
 	if (argc != 2) {
 		printf("Modo de empleo: ./UMV config.cfg\n");
 		return EXIT_SUCCESS;
 	}
 
-	logger = log_create("log.txt", "UMV", 0, LOG_LEVEL_TRACE);
+	logger = log_create("log.txt", "UMV", 1, LOG_LEVEL_TRACE);
 
 	log_info(logger, "Iniciando UMV...");
 
 	setUp(argv[1]);
-	//ejecutar();
 	startThreads();
 
-
+	destruirTodasLasCPUS();
+	destruirTodosLosProgramas();
 	free(memoria);
 	config_destroy(umvConfig);
 	log_info( logger, "Finalizando UMV...");

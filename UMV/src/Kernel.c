@@ -1,24 +1,13 @@
 #include "Kernel.h"
-#include <pthread.h>
-
-#include <stdlib.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <unistd.h>
-
-#include "memoria.h"
-#include "Programa.h"
-
-#include "commons/log.h"
-#include "commons/sockets.h"
 
 
 
 extern t_log * logger;
 extern pthread_t threadConexiones;
 extern uint32_t retardoUMV;
-//TODO se podria reusar lo de cpu ??
-int recibirYProcesarMensajesKernel( Kernel * kernel ) {
+
+
+uint32_t recibirYProcesarMensajesKernel( Kernel * kernel ) {
 
 	usleep( retardoUMV * 1000);
 	socket_pedirMemoria * buffer = malloc(sizeof(socket_pedirMemoria));
@@ -40,16 +29,17 @@ int recibirYProcesarMensajesKernel( Kernel * kernel ) {
 	return 1;
 }
 
-int procesarMenssajeKernel( Kernel * kernel, socket_pedirMemoria * segmentosAreservar ) {
+uint32_t procesarMenssajeKernel( Kernel * kernel, socket_pedirMemoria * segmentosAreservar ) {
 
 	bool respuesta = true;
-	int memoriaDisponible;
-	int tamanioTotalSegmentos = tamanioSegmentos(segmentosAreservar);
+	uint32_t memoriaDisponible;
+	uint32_t tamanioTotalSegmentos = tamanioSegmentos(segmentosAreservar);
 	memoriaDisponible = memoriaLibre();
 
-	if (tamanioTotalSegmentos > memoriaDisponible)
-		log_error( logger, "No se ha podido reservar segmentos enviados por el Kernel");
+	if (tamanioTotalSegmentos > memoriaDisponible){
+		log_error( logger, "Memory Overload/ No se ha podido reservar segmentos enviados por el Kernel");
 		respuesta = false;
+	}
 
 	socket_respuesta respuestaSegmentos;
 	respuestaSegmentos.header.size = sizeof(respuestaSegmentos);
@@ -119,14 +109,14 @@ int procesarMenssajeKernel( Kernel * kernel, socket_pedirMemoria * segmentosAres
 
 }
 
-int tamanioSegmentos(socket_pedirMemoria * segmentosAreservar) {
+uint32_t tamanioSegmentos(socket_pedirMemoria * segmentosAreservar) {
 	return (segmentosAreservar->codeSegmentSize
 			+ segmentosAreservar->etiquetasSegmentSize
 			+ segmentosAreservar->instruccionesSegmentSize + segmentosAreservar->stackSegmentSize);
 }
 
 
-void  fnKernelConectado(int * socketPtr) {
+void  fnKernelConectado(uint32_t * socketPtr) {
 
 	log_info(logger, "Se conecto el Kernel");
 
@@ -139,7 +129,6 @@ void  fnKernelConectado(int * socketPtr) {
 
 	pthread_cancel( threadConexiones );
 
-	//TODO hacer que cuando se desconecte el kernel finalice la UMV
 	free(kernel);
 
 }

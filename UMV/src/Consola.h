@@ -5,7 +5,7 @@
 #include "commons/collections/list.h"
 
 void * iniciarConsola(void * params);
-int parsearComando(char * comando);
+uint32_t parsearComando(char * comando);
 void operacionesConSegmentos();
 void modificarAlgoCreacionSegmentos();
 void modificarRetardoUMV();

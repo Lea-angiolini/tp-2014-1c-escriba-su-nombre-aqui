@@ -1,26 +1,32 @@
 #include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
 
 #include "Segmento.h"
+#include "Consola.h"
 
 #include "commons/collections/list.h"
-
+#include "commons/log.h"
+#include "commons/sockets.h"
 
 #ifndef MEMORIA_H_
 #define MEMORIA_H_
 
-
+#define WORSTFIT 1
+#define FIRSTFIT 0
+#define SEGMENTOVACIO -45
 
 bool segmentoEsAnterior( void * seg1, void * seg2 );
 t_list * crearListaEspacioDisponible();
 
 Segmento * crearYllenarSegmento( uint32_t tamanio, void * segmento );
 Segmento * crearSegmento		( uint32_t tamanio );
-Segmento * crearSegmentoFistFit	( t_list * huequitos, uint32_t tamanio );
+Segmento * crearSegmentoFirstFit	( t_list * huequitos, uint32_t tamanio );
 Segmento * crearSegmentoWorstFit( t_list * huequitos, uint32_t tamanio );
 Segmento * buscarSegmentoEnTabla( uint32_t idSeg);
 void borrarSegmento( Segmento * segmentoABorrar );
 void moverSegmento(Segmento * segmento, uint32_t posicion) ;
-int tamanioSegmento(Segmento * segmento);
+uint32_t tamanioSegmento(Segmento * segmento);
 
 void ordenarTablaSegmentos();
 void compactar();

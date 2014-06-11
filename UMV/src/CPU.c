@@ -7,32 +7,13 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
-
-#define BUFF_SIZE 1024
+#include "memoria.h"
 
 extern t_log * logger;
 
-//TODO liberar esta lista al finalizar el programa
 extern t_list * cpus;
 extern uint32_t retardoUMV;
 uint32_t contadorCpuId;
-
-
-
-
- int procesarSolicitudDeLinea( CPU * cpu, socket_obtenerLineaCodigo * solicitud ) {
-	//log_info( logger, "La CPU ID: %d solicito la linea de programa: %d del pid XXX", cpu->cpuId, solicitud->numero_linea_Codigo );
-	log_info( logger, "Alguna cpu solicito una linea de codigo" );
-
-	socket_responderLineaCodigo * paquete = malloc( sizeof( socket_responderLineaCodigo ) ) ;
-	//respuesta->lineaCodigo = "a = 3";
-	paquete->numero_linea_Codigo = 3;
-
-	return enviarPaquete( cpu->socket, (void *) paquete, sizeof( socket_responderLineaCodigo ) , 'a', logger );
-
-}
-
-
 
 
 
@@ -44,11 +25,7 @@ uint32_t contadorCpuId;
 
 int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud ) {
 
-	/*if( cpu->pidProcesando != solicitud->pdi) {
-		log_error(logger, "La cpu solicito un pedido de memoria de un pid que no esta procesando UMV/src/CPU.c -> procesarSolicitudLecturaMemoria ");
-		return -1;
-	}*/
-
+	cpu->pidProcesando = solicitud->pdi;
 	Programa * programa;
 	programa = buscarPrograma( solicitud->pdi );
 	Segmento * segmento;
@@ -60,8 +37,7 @@ int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud )
 	}
 
 	uint32_t tamanioParaOperar;
-	tamanioParaOperar = segmento->finReal - (segmento->inicioReal + solicitud->offset) + 1;
-	tamanioParaOperar = 2000000000;
+	tamanioParaOperar = tamanioSegmento(segmento) - solicitud->offset;
 
 	socket_RespuestaLeerMemoria * respuesta = malloc(sizeof (socket_RespuestaLeerMemoria));
 	memset( respuesta, 0, sizeof (socket_RespuestaLeerMemoria) );
@@ -85,7 +61,8 @@ int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud )
 	}
 
 	log_info(logger, "La respuesta a lectura de memoria se ha realizado con exito");
-
+	if(respuesta == false)
+		return -1;
 	return 1;
 
 }
@@ -96,11 +73,8 @@ int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud )
 int procesarSolicitudEscrituraMemoria( CPU * cpu, socket_guardarEnMemoria * solicitud ) {
 
 
-	/*if( cpu->pidProcesando != solicitud->pdi){
-		log_error(logger, "La cpu solicito un pedido de memoria de un pid que no esta procesando  UMV/src/CPU.c -> procesarSolicitudEscrituraMemoria ");
-		return -1;
-	}*/
 
+	cpu->pidProcesando = solicitud->pdi;
 	Programa * programa;
 	programa = buscarPrograma( solicitud->pdi);
 	Segmento * segmento;
@@ -112,7 +86,7 @@ int procesarSolicitudEscrituraMemoria( CPU * cpu, socket_guardarEnMemoria * soli
 	}
 
 	uint32_t tamanioParaOperar;
-	tamanioParaOperar = segmento->finReal - (segmento->inicioReal + solicitud->offset) + 1;
+	tamanioParaOperar = tamanioSegmento(segmento) - solicitud->offset;
 
 	socket_RespuestaGuardarEnMemoria * respuesta = malloc(sizeof (socket_RespuestaGuardarEnMemoria));
 	respuesta->header.size = sizeof(socket_RespuestaGuardarEnMemoria);
@@ -135,14 +109,18 @@ int procesarSolicitudEscrituraMemoria( CPU * cpu, socket_guardarEnMemoria * soli
 	}
 
 	log_info(logger, "La respuesta a escribir en memoria se ha realizado con exito");
-
+	if(respuesta->status == false){
+		free(respuesta);
+		return -1;
+	}
+	free(respuesta);
 	return 1;
 }
 
 
 
 
-int recibirYProcesarMensajesCpu( CPU * cpu ) {
+uint32_t recibirYProcesarMensajesCpu( CPU * cpu ) {
 	usleep( retardoUMV * 1000);
 	int todoSaleBien = 1;
 
@@ -155,7 +133,8 @@ int recibirYProcesarMensajesCpu( CPU * cpu ) {
 			log_error( logger, "Se ha desconectado la CPU%d por causas desconocidas", cpu->cpuId);
 			log_info( logger, "Destruyendo programa activo de la CPU%d", cpu->cpuId);
 			uint32_t programaDestruido;
-			programaDestruido = destruirPrograma( cpu->pidProcesando);
+			Programa * programa = buscarPrograma( cpu->pidProcesando);
+			programaDestruido = destruirPrograma( programa);
 			if( programaDestruido == true){
 				log_info( logger, "El programa activo de la CPU%d se ha destruido correctamente", cpu->cpuId);
 			}else
@@ -167,9 +146,7 @@ int recibirYProcesarMensajesCpu( CPU * cpu ) {
 		socket_header * header = ( socket_header * ) paquete;
 
 		switch ( header->code ){
-			case 'a':
-				todoSaleBien = procesarSolicitudDeLinea( cpu, (socket_obtenerLineaCodigo *) paquete );
-				break;
+
 			case 'b':
 				todoSaleBien = procesarSolicitudLecturaMemoria( cpu, (socket_leerMemoria *) paquete );
 								break;
@@ -191,12 +168,26 @@ int recibirYProcesarMensajesCpu( CPU * cpu ) {
 	return todoSaleBien;
 
 }
+void destruirTodasLasCPUS(){
+	uint32_t i;
+	for( i = 0; i < ( list_size(cpus) - 1) ; i++){
+		CPU * cpu = list_get( cpus, i);
+		borrarCPU( cpu);
+	}
+}
+void borrarCPU( CPU * cpu ){
+	bool matchearCPU( CPU * cpuAmatchear ){
+		return cpuAmatchear->cpuId == cpu->cpuId;
+	}
+	list_remove_by_condition( cpus, matchearCPU);
+	close( cpu->socket );
+	free( cpu );
+}
 
 
 
 
-
-void  fnNuevoCpu( int * socketPtr ){
+void  fnNuevoCpu( uint32_t * socketPtr ){
 
 	log_info( logger, "Se conecto un nuevo CPU" );
 
@@ -216,11 +207,9 @@ void  fnNuevoCpu( int * socketPtr ){
 		log_error( logger, "Hubo un problema con el cpu ID %d: " , cpu->cpuId );
 	}
 
-	//TODO !!!! IMPORTANTE que paso acaaa ??
-	close( cpu->socket );
-	free( cpu );
-
-
+	contadorCpuId--;
+	log_info( logger, "Borrando  CPU%d", cpu->cpuId);
+	borrarCPU( cpu);
 
 }
 

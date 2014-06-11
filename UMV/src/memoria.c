@@ -1,19 +1,14 @@
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdbool.h>
-
-#include "Segmento.h"
 #include "memoria.h"
-#include "Consola.h"
-
-#include "commons/collections/list.h"
-#include "commons/log.h"
-#include "commons/sockets.h"
 
 extern t_list * tabla_segmentos;
-extern uint32_t memoria_size;
-extern void * memoria;
 extern t_log * logger;
+
+extern void * memoria;
+
+extern uint32_t memoria_size;
+extern uint32_t modoActualCreacionSegmentos;
+
+
 
 Segmento * crearYllenarSegmento(uint32_t tamanio, void * segmento) { //TODO Habria que agregarle un id de tipo al segmento
 	Segmento * segmentoAllenar = crearSegmento(tamanio);
@@ -30,9 +25,11 @@ Segmento * crearSegmento(uint32_t tamanio) {
 	Segmento * elNuevo = NULL;
 
 	if( tamanio == 0){
-
-		elNuevo = new_Segmento(-1,0);
+		printf("Paso por aca para decir que hay un segmento vacio");
+		elNuevo = new_Segmento(SEGMENTOVACIO,0);
+		return elNuevo;
 	}
+
 
 	if (list_size(tabla_segmentos) == 0 && memoria_size > tamanio) {
 
@@ -41,7 +38,11 @@ Segmento * crearSegmento(uint32_t tamanio) {
 	} else {
 
 		t_list * huequitos = crearListaEspacioDisponible();
+		if(modoActualCreacionSegmentos == WORSTFIT){
 		elNuevo = crearSegmentoWorstFit(huequitos, tamanio);
+		}else{
+			elNuevo = crearSegmentoFirstFit(huequitos, tamanio);
+		}
 		list_destroy(huequitos);
 
 	}
@@ -55,9 +56,9 @@ Segmento * crearSegmento(uint32_t tamanio) {
 
 }
 
-Segmento * crearSegmentoFistFit(t_list * huequitos, uint32_t tamanio) {
+Segmento * crearSegmentoFirstFit(t_list * huequitos, uint32_t tamanio) {
 
-	int i = 0;
+	uint32_t i = 0;
 	Segmento * huequito = malloc(sizeof(Segmento));
 	for (i = 0; i < list_size(huequitos); i++) {
 		huequito = (Segmento*) list_get(huequitos, i);
@@ -66,6 +67,9 @@ Segmento * crearSegmentoFistFit(t_list * huequitos, uint32_t tamanio) {
 			Segmento * elNuevo = new_Segmento(huequito->inicioReal,
 					huequito->inicioReal + tamanio);
 			return elNuevo;
+		}else {
+			compactar();
+			crearSegmentoFirstFit( huequitos, tamanio);
 		}
 	}
 
@@ -77,7 +81,7 @@ Segmento * crearSegmentoFistFit(t_list * huequitos, uint32_t tamanio) {
 
 Segmento * crearSegmentoWorstFit(t_list * huequitos, uint32_t tamanio) {
 
-	int i = 0, tamanioMax = 0, tamanioHuequito = 0;
+	uint32_t i = 0, tamanioMax = 0, tamanioHuequito = 0;
 	Segmento * nuevoSegmento = NULL;
 
 	for (i = 0; i < list_size(huequitos); i++) {
@@ -92,10 +96,11 @@ Segmento * crearSegmentoWorstFit(t_list * huequitos, uint32_t tamanio) {
 	if (tamanioMax >= tamanio) {
 		return new_Segmento(nuevoSegmento->inicioReal,
 				nuevoSegmento->inicioReal + tamanio);
-	} else {
-		return NULL ;
-	}
-
+	}  else {
+		compactar();
+		crearSegmentoFirstFit( huequitos, tamanio);
+		}
+	return NULL ;
 }
 
 bool segmentoEsAnterior(void * seg1, void * seg2) {
@@ -104,10 +109,7 @@ bool segmentoEsAnterior(void * seg1, void * seg2) {
 	return segmento1->inicioReal < segmento2->inicioReal;
 }
 
-/*
- * Ordena la tabla de segmentos segun su inicio
- *	TODO usar semaforo
- */
+
 void ordenarTablaSegmentos() {
 	list_sort(tabla_segmentos, &segmentoEsAnterior);
 }
@@ -141,29 +143,40 @@ t_list * crearListaEspacioDisponible() {
 			list_add(lista, segmentoInicial);
 		}
 
-		int i = 0;
+		uint32_t i = 0;
 		for (i = 0; i < list_size(tabla_segmentos) - 1; i++) {
 
 			Segmento * segmento1 = (Segmento *) list_get(tabla_segmentos, i);
 			Segmento * segmento2 = (Segmento *) list_get(tabla_segmentos,
 					i + 1);
 
+			if(segmento1->inicioReal != SEGMENTOVACIO){
 			//Si el espacio entre esos 2 segmentos no es contino no es contiguo...
 			if (segmento1->finReal != segmento2->inicioReal - 1) {
 				Segmento * segmentoIntermedio = new_Segmento(
 						segmento1->finReal + 1, segmento2->inicioReal);
 				list_add(lista, segmentoIntermedio);
+				}
 			}
 
 		}
 
 		Segmento * ultimoSegmento = (Segmento *) list_get(tabla_segmentos,
-				list_size(tabla_segmentos) - 1);
-		if (ultimoSegmento->finReal != memoria_size) {
-			Segmento * segmentoFinal = new_Segmento(ultimoSegmento->finReal + 1,
-					memoria_size);
-			list_add(lista, segmentoFinal);
-		}
+					list_size(tabla_segmentos) - 1);
+			if ( ultimoSegmento->finReal != memoria_size ) {
+				Segmento * segmentoFinal;
+				if( ultimoSegmento->finReal != SEGMENTOVACIO-1 ){
+				segmentoFinal = new_Segmento(ultimoSegmento->finReal + 1,memoria_size);
+
+			}else{
+				ultimoSegmento = (Segmento *) list_get(tabla_segmentos,
+						list_size(tabla_segmentos) - 2);
+				segmentoFinal = new_Segmento(ultimoSegmento->finReal + 1,
+						memoria_size);
+				}
+				list_add(lista, segmentoFinal);
+			}
+
 
 	}
 
@@ -177,7 +190,7 @@ t_list * crearListaEspacioDisponible() {
 }
 
 void borrarSegmento(Segmento * segmentoABorrar) {
-	int i = 0;
+	uint32_t i = 0;
 	for (i = 0; i < list_size(tabla_segmentos); i++) {
 		Segmento * segmento = (Segmento *) list_get(tabla_segmentos, i);
 		if (segmento->id == segmentoABorrar->id) {
@@ -200,10 +213,10 @@ Segmento * buscarSegmentoEnTabla( uint32_t idSeg){
 
 
 uint32_t memoriaOcupada() {
-	int i = 0, sumador = 0;
+	uint32_t i = 0, sumador = 0;
 	for (i = 0; i < list_size(tabla_segmentos); i++) {
 		Segmento * segmento = (Segmento *) list_get(tabla_segmentos, i);
-		sumador += segmento->finReal - segmento->inicioReal + 1;
+		sumador += tamanioSegmento( segmento );
 	}
 	return sumador;
 }
@@ -217,7 +230,7 @@ void compactar() {
 	uint32_t u = 0;
 	Segmento * primerSegmento = (Segmento *) list_get(tabla_segmentos, u);
 
-	while( primerSegmento->inicioReal == -1){
+	while( primerSegmento->inicioReal == SEGMENTOVACIO){
 		u++;
 		primerSegmento = (Segmento *) list_get(tabla_segmentos, u);
 		}
@@ -225,7 +238,7 @@ void compactar() {
 	if (primerSegmento->inicioReal != 0) {
 		moverSegmento(primerSegmento, 0);
 	}
-	int i = 0;
+	uint32_t i = 0;
 	for (i = 0; i < list_size(tabla_segmentos) - 1; i++) {
 		Segmento * segmentoMovido = (Segmento *) list_get(tabla_segmentos, i);
 		Segmento * segmentoAmover = (Segmento *) list_get(tabla_segmentos,
@@ -253,8 +266,10 @@ void moverSegmento(Segmento * segmento, uint32_t posicion) {
 
 }
 
-int tamanioSegmento(Segmento * segmento) {
-	return (segmento->finReal - segmento->inicioReal);
+uint32_t tamanioSegmento(Segmento * segmento) {
+	if(segmento->inicioReal == SEGMENTOVACIO)
+		return 0;
+	return (segmento->finReal - segmento->inicioReal + 1);
 }
 
 uint32_t solicitarPosicionDeMemoria(uint32_t programa, uint32_t base,
@@ -262,7 +277,7 @@ uint32_t solicitarPosicionDeMemoria(uint32_t programa, uint32_t base,
 
 	Programa * prog = buscarPrograma(programa);
 	Segmento * segmento = buscarSegmentoEnPrograma(prog, base);
-	if( segmento->inicioReal == -1){
+	if( segmento->inicioReal == SEGMENTOVACIO){
 		log_info( logger, "El segmento solicitado es de tamaño 0, y no se puede obtener nada de el mismo");
 		return -1;
 	}
@@ -339,7 +354,7 @@ uint32_t escribirPosicionDeMemoria(uint32_t programa, uint32_t base,
 	Programa * prog = buscarPrograma(programa);
 	Segmento * segmento = buscarSegmentoEnPrograma(prog, base);
 
-	if( segmento->inicioReal == -1){
+	if( segmento->inicioReal == SEGMENTOVACIO){
 		log_error( logger, "El segmento solicitado es de tamaño 0, y no se puede obtener nada de el mismo");
 		return -1;
 	}

@@ -195,7 +195,7 @@ void modificarAlgoCreacionSegmentos() {
 
 	printf("El algoritmo actual de creacion de segmentos es ");
 	if( modoActualCreacionSegmentos == WORSTFIT){
-		printf("WORS-FIT\n");
+		printf("WORST-FIT\n");
 	} else printf("FIRST-FIT\n");
 
 	printf("Desea cambiarlo? \ns- Si \nn- No\n");
