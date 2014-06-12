@@ -256,9 +256,11 @@ void imprimirMemoria(){
 	scanf("%d", &tamanio);
 	while( getchar() != '\n');
 
-	imprimirBytes( 0, offset, tamanio);
-
-
+	if( memoria_size < (tamanio + offset)){
+		log_error( logger, "Se ha producido Segmentation Fault a causa de indicar una cantidad de bytes que sobrepasa el tamaño de la memoria");
+		}else{
+		imprimirBytes( 0, offset, tamanio);
+		}
 }
 
 void printSegmentosHeaders() {

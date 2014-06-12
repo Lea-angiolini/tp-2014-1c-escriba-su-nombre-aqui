@@ -149,8 +149,7 @@ int main(int argc, char * argv[]) {
 	setUp(argv[1]);
 	startThreads();
 
-	log_info(logger, "Creando segmento, ahora hay %d",
-			list_size(tabla_segmentos));
+
 	list_destroy_and_destroy_elements( tabla_segmentos, free );
 	log_info(logger, "Todos los segmentos han sido liberados");
 	list_destroy_and_destroy_elements( programas, free);
