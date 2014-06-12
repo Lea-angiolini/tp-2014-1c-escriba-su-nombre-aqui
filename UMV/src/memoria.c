@@ -18,17 +18,17 @@ Segmento * crearYllenarSegmento(uint32_t tamanio, void * segmento) { //TODO Habr
 
 Segmento * crearSegmento(uint32_t tamanio) {
 
-
+	log_info(logger, "El tamanio del segmento es %d", tamanio);
 	log_info(logger, "Creando segmento, ahora hay %d",
 			list_size(tabla_segmentos));
 
 	Segmento * elNuevo = NULL;
 
 	if( tamanio == 0){
-		printf("Paso por aca para decir que hay un segmento vacio");
+		log_info(logger,"Estoy creando un segmento vacio!");
 		elNuevo = new_Segmento(SEGMENTOVACIO,0);
-		return elNuevo;
-	}
+
+	}else{
 
 
 	if (list_size(tabla_segmentos) == 0 && memoria_size > tamanio) {
@@ -46,11 +46,12 @@ Segmento * crearSegmento(uint32_t tamanio) {
 		list_destroy(huequitos);
 
 	}
-
+}
 	if (elNuevo != NULL ) {
 		list_add(tabla_segmentos, elNuevo);
 	}
-
+	printSegmento(elNuevo);
+	printf("%d\n", elNuevo->id);
 	//log_info( logger, "Termine de crear el segmento, ahora hay %d", list_size( tabla_segmentos ) );
 	return elNuevo;
 
@@ -264,8 +265,12 @@ void moverSegmento(Segmento * segmento, uint32_t posicion) {
 }
 
 uint32_t tamanioSegmento(Segmento * segmento) {
-	if(segmento->inicioReal == SEGMENTOVACIO)
+
+
+	if(segmento->inicioReal == SEGMENTOVACIO){
 		return 0;
+	}
+	log_info(logger, "%d %d", segmento->finReal, segmento->inicioReal);
 	return (segmento->finReal - segmento->inicioReal + 1);
 }
 

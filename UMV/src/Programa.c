@@ -22,15 +22,23 @@ Programa * crearPrograma(uint32_t pid, void * script, void * etiquetas,
 			programa->stack->finVirtual);
 
 	programa->etiquetas = crearYllenarSegmento(tamanioEtiquetas, etiquetas);
-	crearDireccionesVirtuales(programa->etiquetas, tamanioEtiquetas,
+	if( programa->etiquetas->inicioReal ==SEGMENTOVACIO){
+		crearDireccionesVirtuales( programa->etiquetas, tamanioEtiquetas, 0);
+		}else{
+			crearDireccionesVirtuales(programa->etiquetas, tamanioEtiquetas,
 			programa->script->finVirtual);
+			}
 
 	programa->instrucciones = crearYllenarSegmento(tamanioInstrucciones,
 			instrucciones_serializado);
-	crearDireccionesVirtuales(programa->instrucciones, tamanioInstrucciones,
+	if(programa->etiquetas->inicioVirtual == SEGMENTOVACIO){
+		crearDireccionesVirtuales( programa->instrucciones, tamanioInstrucciones, programa->script->finVirtual);
+	}else{
+		crearDireccionesVirtuales(programa->instrucciones, tamanioInstrucciones,
 			programa->etiquetas->finVirtual);
-
+		}
 	list_add(programas, programa);
+
 
 	return programa;
 
@@ -53,11 +61,11 @@ Segmento * crearDireccionesVirtuales(Segmento * segmento,
 
 	if( segmento->inicioReal == SEGMENTOVACIO){
 		segmento->inicioVirtual = SEGMENTOVACIO;
-	}
+	}else{
 
 	segmento->inicioVirtual = finVirtualDelAnterior + 1;
 	segmento->finVirtual = segmento->inicioVirtual + (tamanioSegmento - 1);
-
+	}
 	return segmento;
 }
 
@@ -82,15 +90,23 @@ Programa * buscarPrograma(uint32_t pid) {
 }
 
 Segmento * buscarSegmentoEnPrograma(Programa * programa, uint32_t base) {
+	log_info(logger, "La base que estoy buscando es %d 2", base);
 
-	if (base == programa->stack->inicioVirtual)
-		return programa->stack;
-	if (base == programa->script->inicioVirtual)
-		return programa->script;
-	if (base == programa->etiquetas->inicioVirtual)
-		return programa->etiquetas;
-	if (base == programa->instrucciones->inicioVirtual)
-		return programa->instrucciones;
+	if (base == programa->stack->inicioVirtual){
+		log_info(logger,"Es el stack!");
+		return programa->stack;}
+	if (base == programa->script->inicioVirtual){
+		log_info(logger,"Es el script!");
+
+		return programa->script;}
+	if (base == programa->etiquetas->inicioVirtual){
+		log_info(logger,"Es el de etiquetas!");
+
+		return programa->etiquetas;}
+	if (base == programa->instrucciones->inicioVirtual){
+		log_info(logger,"Es el de instrucciones!");
+
+		return programa->instrucciones;}
 	return NULL ;
 
 }

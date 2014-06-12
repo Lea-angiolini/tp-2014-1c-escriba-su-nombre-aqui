@@ -342,11 +342,12 @@ void printSegmentos(t_list * segmentos) {
 }
 
 void printSegmento(Segmento * segmento) {
-	if( segmento->inicioReal == -1)
-		printf("Este segmento tiene tamanio 0");
-
+	if( segmento->inicioReal == SEGMENTOVACIO){
+		printf("Este segmento esta vacio");
+	}else{
 	printf(">>>\t\t%d\t\t%d\t\t%d\n", segmento->inicioReal, segmento->finReal,
 			segmento->finReal - segmento->inicioReal + 1);
+	}
 }
 
 void printEspacioLibre(uint32_t inicioEspacio, uint32_t finEspacio) {

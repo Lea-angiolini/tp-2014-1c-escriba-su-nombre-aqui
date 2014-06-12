@@ -51,6 +51,7 @@ uint32_t modoActualCreacionSegmentos;
 
 
 
+
 void * handShake( void * socket ){
 	socket_header * quienSos = malloc( sizeof( socket_header));
 	if( sizeof(socket_header) == recv( *( int *)socket, quienSos, sizeof( socket_header), MSG_WAITALL)){

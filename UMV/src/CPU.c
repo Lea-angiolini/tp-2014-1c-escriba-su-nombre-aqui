@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include "memoria.h"
+#include "Consola.h"
 
 extern t_log * logger;
 
@@ -44,6 +45,8 @@ int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud )
 	respuesta->header.size = sizeof(socket_RespuestaLeerMemoria);
 
 	if(	solicitud->length > tamanioParaOperar ) {
+		log_info(logger, "La solicitud pide %d y el offset %d", solicitud->length, solicitud->offset);
+
 		log_error(logger, "Segmentation fault, length: %d, tamanioParaOperar: %d, base: %d, offset: %d | UMV/src/cpu.c -> procesarSolicitudLecturaMemoria", solicitud->length, tamanioParaOperar, solicitud->base, solicitud->offset );
 		respuesta->status = false;
 	}else{
