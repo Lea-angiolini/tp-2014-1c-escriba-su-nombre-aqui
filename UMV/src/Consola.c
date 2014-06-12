@@ -141,15 +141,37 @@ void requisitosOperacionSegmento(char operacion) {
 	scanf("%d", &tamanio);
 	while (getchar() != '\n')
 		;
+	bool requisitosCorrectos = verificarRequisitos( programa, base);
+	if(!requisitosCorrectos){
+		printf("Los datos ingresados no son validos\n");
+		log_error( logger, "Los datos ingresados para solicitar/escribir posiciones en memoria no son validos");
 
-	if (operacion == 'a') {
-		solicitarPosicion(programa, base, offset, tamanio);
+	}else{
+		switch (operacion) {
+		case 'a':solicitarPosicion(programa, base, offset, tamanio);
+				break;
+
+		case 'b': escribirPosicion(programa, base, offset, tamanio);
+				break;
+
+		default: break;
+		}
 	}
-	if (operacion == 'b') {
-		escribirPosicion(programa, base, offset, tamanio);
-	}
+}
+
+bool verificarRequisitos( uint32_t programa, uint32_t base){
+	Programa * prog = buscarPrograma( programa);
+
+	if( prog == NULL )
+		return false;
+
+	Segmento * seg = buscarSegmentoEnPrograma( prog, base);
+	if( seg == NULL )
+		return false;
+	return true;
 
 }
+
 void solicitarPosicion(uint32_t programa, uint32_t base, uint32_t offset,
 		uint32_t tamanio) {
 
