@@ -132,14 +132,17 @@ uint32_t recibirYProcesarMensajesCpu( CPU * cpu ) {
 		if( paquete == NULL ){
 			log_error( logger, "Se ha desconectado la CPU%d por causas desconocidas", cpu->cpuId);
 			log_info( logger, "Destruyendo programa activo de la CPU%d", cpu->cpuId);
+
+			if( cpu->pidProcesando != SINPROCESOACTIVO){
 			uint32_t programaDestruido;
 			Programa * programa = buscarPrograma( cpu->pidProcesando);
 			programaDestruido = destruirPrograma( programa);
+
 			if( programaDestruido == true){
 				log_info( logger, "El programa activo de la CPU%d se ha destruido correctamente", cpu->cpuId);
 			}else
 				log_error( logger, "El programa activo de la CPU%d no se ha destruido correctamente", cpu->cpuId);
-
+			}
 			return -1;
 		}
 
@@ -154,10 +157,18 @@ uint32_t recibirYProcesarMensajesCpu( CPU * cpu ) {
 			case 'c':
 				todoSaleBien = procesarSolicitudEscrituraMemoria( cpu, (socket_guardarEnMemoria *) paquete );
 								break;
-			default:
-				//TODO decidir que hacer aca
-				log_error( logger, "La CPU ID: %d envio un mensaje que no se entiende... ???", cpu->cpuId );
+			case 'd':
+				log_info( logger, "La CPU ID: %d informo que el programa activo con PID: %d ha finalizado", cpu->cpuId, cpu->pidProcesando);
+				Programa * programa = buscarPrograma( cpu->pidProcesando);
+				destruirPrograma( programa);
+				cpu->pidProcesando = -1;
 				break;
+
+			default:
+
+				log_error( logger, "La CPU ID: %d envio un codigo de mensaje invalido", cpu->cpuId );
+				return -1;
+
 
 		}
 
@@ -168,13 +179,7 @@ uint32_t recibirYProcesarMensajesCpu( CPU * cpu ) {
 	return todoSaleBien;
 
 }
-void destruirTodasLasCPUS(){
-	uint32_t i;
-	for( i = 0; i < ( list_size(cpus) - 1) ; i++){
-		CPU * cpu = list_get( cpus, i);
-		borrarCPU( cpu);
-	}
-}
+
 void borrarCPU( CPU * cpu ){
 	bool matchearCPU( CPU * cpuAmatchear ){
 		return cpuAmatchear->cpuId == cpu->cpuId;
@@ -187,16 +192,16 @@ void borrarCPU( CPU * cpu ){
 
 
 
-void  fnNuevoCpu( uint32_t * socketPtr ){
+void  fnNuevoCpu( int * socketPtr ){
 
 	log_info( logger, "Se conecto un nuevo CPU" );
 
 
-	//TODO al desconectar sacar el cpu de la lista de CPUs
 	contadorCpuId++;
 	CPU * cpu = malloc(sizeof(CPU));
 	cpu->socket = * socketPtr;
 	cpu->cpuId = contadorCpuId;
+	cpu->pidProcesando = SINPROCESOACTIVO;
 	free( socketPtr );
 	list_add( cpus, cpu );
 

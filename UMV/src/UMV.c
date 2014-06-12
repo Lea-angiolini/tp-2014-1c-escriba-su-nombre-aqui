@@ -53,14 +53,14 @@ uint32_t modoActualCreacionSegmentos;
 
 void * handShake( void * socket ){
 	socket_header * quienSos = malloc( sizeof( socket_header));
-	if( sizeof(socket_header) == recv( *( uint32_t *)socket, quienSos, sizeof( socket_header), MSG_WAITALL)){
+	if( sizeof(socket_header) == recv( *( int *)socket, quienSos, sizeof( socket_header), MSG_WAITALL)){
 
 	switch( quienSos->code){
 
-	case 'k': fnKernelConectado( (uint32_t *) socket);
+	case 'k': fnKernelConectado( (int *) socket);
 			  break;
 
-	case 'c': fnNuevoCpu( (uint32_t *) socket);
+	case 'c': fnNuevoCpu( (int *) socket);
 			  break;
 
 	default: log_error( logger, "El codigo enviado por quien trataba de conectarse es invalido");
@@ -135,7 +135,7 @@ int startThreads() {
 }
 
 
-uint32_t main( uint32_t argc, char * argv[]) {
+int main(int argc, char * argv[]) {
 
 	if (argc != 2) {
 		printf("Modo de empleo: ./UMV config.cfg\n");
@@ -149,8 +149,15 @@ uint32_t main( uint32_t argc, char * argv[]) {
 	setUp(argv[1]);
 	startThreads();
 
-	destruirTodasLasCPUS();
-	destruirTodosLosProgramas();
+	log_info(logger, "Creando segmento, ahora hay %d",
+			list_size(tabla_segmentos));
+	list_destroy_and_destroy_elements( tabla_segmentos, free );
+	log_info(logger, "Todos los segmentos han sido liberados");
+	list_destroy_and_destroy_elements( programas, free);
+	log_info( logger, "Todos los programas han sido liberados");
+	list_destroy_and_destroy_elements( cpus, free );
+	log_info( logger, "Todas las CPUs han sido liberadas");
+
 	free(memoria);
 	config_destroy(umvConfig);
 	log_info( logger, "Finalizando UMV...");

@@ -95,14 +95,7 @@ Segmento * buscarSegmentoEnPrograma(Programa * programa, uint32_t base) {
 
 }
 
-void destruirTodosLosProgramas(){
-	uint32_t i;
-	for( i = 0; i < (list_size( programas) - 1); i++){
-		Programa * programa = list_get( programas, i);
-		destruirPrograma( programa);
-	}
 
-}
 bool destruirPrograma( Programa * programa ){
 	bool matchearPrograma(Programa *nodoPrograma) {
 			return nodoPrograma->pid == programa->pid;

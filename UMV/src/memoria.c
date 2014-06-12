@@ -190,17 +190,14 @@ t_list * crearListaEspacioDisponible() {
 }
 
 void borrarSegmento(Segmento * segmentoABorrar) {
-	uint32_t i = 0;
-	for (i = 0; i < list_size(tabla_segmentos); i++) {
-		Segmento * segmento = (Segmento *) list_get(tabla_segmentos, i);
-		if (segmento->id == segmentoABorrar->id) {
-			list_remove(tabla_segmentos, i);
-			free(segmentoABorrar);
-			log_info(logger, "Se borro el segmento correctamente");
-			return;
-		}
+	bool matchearSegmento( Segmento * segmento){
+		return segmento->id == segmentoABorrar->id;
 	}
-	log_error(logger, "No pudo borrarse el segmento");
+
+	list_remove_by_condition( tabla_segmentos, matchearSegmento);
+	free(segmentoABorrar);
+
+
 }
 
 

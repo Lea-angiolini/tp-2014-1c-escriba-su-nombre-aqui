@@ -116,7 +116,7 @@ uint32_t tamanioSegmentos(socket_pedirMemoria * segmentosAreservar) {
 }
 
 
-void  fnKernelConectado(uint32_t * socketPtr) {
+void  fnKernelConectado(int * socketPtr) {
 
 	log_info(logger, "Se conecto el Kernel");
 
