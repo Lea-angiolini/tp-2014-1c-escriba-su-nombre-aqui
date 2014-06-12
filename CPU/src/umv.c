@@ -83,9 +83,20 @@ char * solicitarLineaPrograma() {
 	memcpy(respuesta, paqueteRespuesta->data, instruct->offset);
 	free(paqueteRespuesta);
 	respuesta[ instruct->offset ] = '\0';
+	eliminarSaltoLinea(respuesta);
 	return respuesta;
 
 }
+
+void eliminarSaltoLinea(char * linea){
+	int i = 0;
+	for(i = 0; i < strlen(linea); i++){
+		if (linea[i] == '\n'){
+			linea[i] = '\0';
+		};
+	}
+}
+
 
 
 bool obtenerEtiquetas(){
@@ -117,7 +128,7 @@ bool obtenerEtiquetas(){
 
 
 uint32_t obtenerLineaDeLabel( t_nombre_etiqueta t_nombre_etiqueta ) {
-	t_nombre_etiqueta[ strlen(t_nombre_etiqueta) -1 ] = '\0';
+	//t_nombre_etiqueta[ strlen(t_nombre_etiqueta) -1 ] = '\0';
 	int i=0;
 	int offset = 0;
 	char* nombre;

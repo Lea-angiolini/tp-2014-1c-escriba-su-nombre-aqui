@@ -185,7 +185,7 @@ bool enviarAKernelSignal(t_nombre_semaforo identificador_semaforo)
 	socket_scSignal sSignal;
 	sSignal.header.code = 's';
 	sSignal.header.size = sizeof(socket_scSignal);
-	identificador_semaforo[ strlen( identificador_semaforo ) - 1 ] = '\0';
+	//identificador_semaforo[ strlen( identificador_semaforo ) - 1 ] = '\0';
 	strcpy(sSignal.identificador, identificador_semaforo );
 
 	if(send(socketKernel, &sSignal, sizeof(socket_scSignal), 0) < 0){
@@ -201,7 +201,7 @@ bool enviarAKernelWait(t_nombre_semaforo identificador_semaforo)
 	socket_scWait sWait;
 	sWait.header.code = 'w';
 	sWait.header.size = sizeof(socket_scWait);
-	identificador_semaforo[ strlen( identificador_semaforo ) - 1 ] = '\0';
+	//identificador_semaforo[ strlen( identificador_semaforo ) - 1 ] = '\0';
 	strcpy(sWait.identificador, identificador_semaforo );
 
 	if( send(socketKernel, &sWait, sizeof(socket_scWait), 0) < 0 ){

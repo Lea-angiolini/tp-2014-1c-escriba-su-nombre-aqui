@@ -10,6 +10,7 @@ bool crearConexionUMV();
 
 char * solicitarLineaPrograma();
 uint32_t obtenerLineaDeLabel( t_nombre_etiqueta t_nombre_etiqueta );
+void eliminarSaltoLinea(char * linea);
 
 int enviarCambioContexto( uint32_t pid );
 int enviarFinPrograma( uint32_t pid );

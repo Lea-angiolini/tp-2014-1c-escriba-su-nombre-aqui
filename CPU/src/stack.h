@@ -57,7 +57,9 @@ bool apilarFuncionSinRetorno( );
 
 bool obtenerContextStack();
 bool guardarStack();
-bool obtenerContextStackAnterior(t_valor_variable retorno);
+
+bool retornarVoid();
+bool retornarValor(t_valor_variable retorno);
 
 #endif /* STACK_H_ */
 

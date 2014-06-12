@@ -109,15 +109,20 @@ void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar)
 
 void finalizar(void)
 {
-	log_trace( logger, "Llamada a finalizar" );
-	PCB_enEjecucion.lastErrorCode = 1;
-	quantumRestante = 0;
+	if(PCB_enEjecucion.stackCursor - PCB_enEjecucion.contextSize == 0){
+		log_trace( logger, "Finalizando el programa" );
+		PCB_enEjecucion.lastErrorCode = 1;
+		quantumRestante = 0;
+	}else{
+		log_trace( logger, "Retornando VOID" );
+		retornarVoid();
+	}
 }
 
 void retornar(t_valor_variable retorno)
 {
 	log_trace( logger, "Llamada a retornar" );
-	if (!obtenerContextStackAnterior(retorno)){
+	if (!retornarValor(retorno)){
 		PCB_enEjecucion.lastErrorCode = 6;
 	}
 }
@@ -132,7 +137,6 @@ void retornar(t_valor_variable retorno)
 t_valor_variable obtenerValorCompartida(t_nombre_compartida variable)
 {
 	log_trace( logger, "Llamada a obtenerValorCompartida" );
-	variable[ strlen(variable) -1 ] = '\0';
 	return solcitarVariableCompartidaAKernel(variable);
 }
 
