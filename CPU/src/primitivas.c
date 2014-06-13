@@ -148,7 +148,7 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
 
 void imprimir(t_valor_variable valor_mostrar)
 {
-	log_trace( logger, "Llamada a imprimir variable: %c", valor_mostrar );
+	log_trace( logger, "Llamada a imprimir variable: %d", valor_mostrar);
 	enviarAKernelImprimir( valor_mostrar );
 }
 

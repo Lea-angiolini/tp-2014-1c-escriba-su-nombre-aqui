@@ -1,4 +1,5 @@
 #include "stack.h"
+#include "umv.h"
 
 #include "commons/pcb.h"
 #include "commons/log.h"
@@ -44,7 +45,7 @@ uint32_t obtenerOffsetVarible(char variable)
 			return i+1;
 		}
 	}
-	//PCB_enEjecucion.lastErrorCode = 3;
+	PCB_enEjecucion.lastErrorCode = 3;
 	log_error( logger, "Se solicito la posicion de memoria de una variable inexistente: %c", variable );
 	return 0;
 }
@@ -53,18 +54,37 @@ uint32_t obtenerOffsetVarible(char variable)
 //TODO ver segmentation fault
 uint32_t obtenerValor(uint32_t pos)
 {
-	return (uint32_t)stackCache.data[pos];
+	if(estaEnContexto(pos)){
+		uint32_t* data = (uint32_t*) leerStack(pos, sizeof(uint32_t));
+		uint32_t valor = *data;
+		free(data);
+		log_warning(logger, "Se leyo fuera del contexto");
+		return valor;
+	}else{
+		return (uint32_t)stackCache.data[pos];
+	}
+
 }
 
 
 //TODO verificar segmentation fault
 void modificarVariable(uint32_t pos, uint32_t valor)
 {
-	stackCache.data[pos] = valor;
-	stackCache.modificado = true;
+	if(estaEnContexto(pos)){
+		uint32_t * data = malloc(sizeof(uint32_t));
+		*data = valor;
+		escribirStack(pos, sizeof(uint32_t), (void *) data);
+		log_warning(logger, "Se escribio fuera del contexto actual");
+	}else{
+		stackCache.data[pos] = valor;
+		stackCache.modificado = true;
+	}
 }
 
 
+bool estaEnContexto(uint32_t pos){
+	return (pos > PCB_enEjecucion.stackCursor) || pos < (PCB_enEjecucion.stackCursor - PCB_enEjecucion.contextSize);
+}
 
 
 /*
@@ -111,7 +131,7 @@ bool apilarFuncionConRetorno(uint32_t variableRetorno)
 bool apilarFuncionSinRetorno()
 {
 	guardarStack();
-	printf("\nGuardando el contexto: stackCursor = %d, contextSize = %d, ProgramCounter = %d \n\n", PCB_enEjecucion.stackCursor, PCB_enEjecucion.contextSize, PCB_enEjecucion.programCounter);
+	log_trace(logger, "Guardando el contexto: stackCursor = %d, contextSize = %d, ProgramCounter = %d", PCB_enEjecucion.stackCursor, PCB_enEjecucion.contextSize, PCB_enEjecucion.programCounter);
 	StackFuncion llamada;
 	llamada.lastContextInit = PCB_enEjecucion.stackCursor - PCB_enEjecucion.contextSize;
 	llamada.lastProgramCounter = PCB_enEjecucion.programCounter;
@@ -222,7 +242,7 @@ bool obtenerContextStack()
 bool retornarVoid()
 {
 
-	printf("\nAhora el contexto es: stackCursor = %d, contextSize = %d, ProgramCounter = %d \n", PCB_enEjecucion.stackCursor, PCB_enEjecucion.contextSize, PCB_enEjecucion.programCounter);
+	//printf("\nAhora el contexto es: stackCursor = %d, contextSize = %d, ProgramCounter = %d \n", PCB_enEjecucion.stackCursor, PCB_enEjecucion.contextSize, PCB_enEjecucion.programCounter);
 
 	socket_leerMemoria sLeerStack;
 	sLeerStack.pdi		= PCB_enEjecucion.id;
@@ -232,7 +252,7 @@ bool retornarVoid()
 	sLeerStack.offset	= PCB_enEjecucion.stackCursor;
 
 
-	printf("Solicitando una lecutura para recuperar el stack con offset = %d y length = %d\n", sLeerStack.offset, sLeerStack.length);
+	//printf("Solicitando una lecutura para recuperar el stack con offset = %d y length = %d\n", sLeerStack.offset, sLeerStack.length);
 	socket_RespuestaLeerMemoria * respuesta = (socket_RespuestaLeerMemoria *) enviarYRecibirPaquete(socketUMV, &sLeerStack, sizeof(socket_leerMemoria), sizeof(socket_RespuestaLeerMemoria) , 'b', 'a', logger) ;
 
 	if( respuesta == NULL || respuesta->status == false ){
@@ -244,8 +264,8 @@ bool retornarVoid()
 	PCB_enEjecucion.programCounter	= respuestaStack->lastProgramCounter;
 	PCB_enEjecucion.contextSize		= PCB_enEjecucion.stackCursor - respuestaStack->lastContextInit;
 
-	printf("Recibi la respuesta con lastProgramCounter: %d, lastContextInit: %d", respuestaStack->lastProgramCounter, respuestaStack->lastContextInit);
-	printf("\nSe recupero el contexto: stackCursor = %d, contextSize = %d, ProgramCounter = %d \n\n", PCB_enEjecucion.stackCursor, PCB_enEjecucion.contextSize, PCB_enEjecucion.programCounter);
+	//printf("Recibi la respuesta con lastProgramCounter: %d, lastContextInit: %d", respuestaStack->lastProgramCounter, respuestaStack->lastContextInit);
+	log_trace(logger, "Se recupero el contexto: stackCursor = %d, contextSize = %d, ProgramCounter = %d", PCB_enEjecucion.stackCursor, PCB_enEjecucion.contextSize, PCB_enEjecucion.programCounter);
 	free(respuesta);
 	if( !obtenerContextStack() ){
 		log_error(logger,"Error al obtener el contexto");

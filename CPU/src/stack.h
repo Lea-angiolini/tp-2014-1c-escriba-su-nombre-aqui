@@ -55,6 +55,8 @@ void modificarVariable( uint32_t pos, uint32_t valor );
 bool apilarFuncionConRetorno( uint32_t variableRetorno );
 bool apilarFuncionSinRetorno( );
 
+bool estaEnContexto(uint32_t pos);
+
 bool obtenerContextStack();
 bool guardarStack();
 

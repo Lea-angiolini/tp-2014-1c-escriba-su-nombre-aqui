@@ -96,8 +96,6 @@ void eliminarSaltoLinea(char * linea){
 	}
 }
 
-
-
 bool obtenerEtiquetas(){
 
 	if( PCB_enEjecucion.etiquetasSize == 0 ){
@@ -125,7 +123,6 @@ bool obtenerEtiquetas(){
 
 }
 
-
 uint32_t obtenerLineaDeLabel( t_nombre_etiqueta t_nombre_etiqueta ) {
 	//t_nombre_etiqueta[ strlen(t_nombre_etiqueta) -1 ] = '\0';
 	int i=0;
@@ -141,12 +138,60 @@ uint32_t obtenerLineaDeLabel( t_nombre_etiqueta t_nombre_etiqueta ) {
 }
 
 
+
+
+bool escribirStack(uint32_t offset, uint32_t length, void * data){
+	return escribirMemoria(PCB_enEjecucion.stackSegment, offset, length, data);
+}
+
+bool escribirMemoria(uint32_t base, uint32_t offset, uint32_t length, void * data){
+
+	//TODO
+	uint32_t totalLengt 		= sizeof(StackFuncionConRetorno);
+	socket_guardarEnMemoria sGuardarEnMemoria;
+
+	sGuardarEnMemoria.offset	= offset;
+	sGuardarEnMemoria.pdi		= PCB_enEjecucion.id;
+	sGuardarEnMemoria.length	= length;
+	sGuardarEnMemoria.base		= base;
+	memcpy(sGuardarEnMemoria.data, data, length) ;
+
+	socket_RespuestaGuardarEnMemoria * respuesta = (socket_RespuestaGuardarEnMemoria*) enviarYRecibirPaquete( socketUMV, &sGuardarEnMemoria, totalLengt, 0, 'c', 'a', logger );
+	return (respuesta != NULL && respuesta->status != false);
+
+}
+
+void * leerMemoria(uint32_t base, uint32_t offset, uint32_t length){
+	socket_leerMemoria sLeer;
+	sLeer.pdi = PCB_enEjecucion.id;
+	sLeer.base = base;
+	sLeer.offset = offset;
+	sLeer.length = length;
+	socket_RespuestaLeerMemoria * respuesta = (socket_RespuestaLeerMemoria *) enviarYRecibirPaquete(socketUMV, (void*)&sLeer, sizeof(socket_leerMemoria), sizeof(socket_RespuestaLeerMemoria) , 'b', 'a', logger) ;
+	if( respuesta == NULL || respuesta->status == false ){
+		return NULL;
+	}
+
+	printf("Leido: %d\n", respuesta->data);
+	void * data = malloc(length);
+	memcpy(data, respuesta->data, length);
+	return data;
+
+}
+
+void * leerStack(uint32_t offset, uint32_t length){
+	return leerMemoria(PCB_enEjecucion.stackSegment, offset, length);
+}
+
+
+
+
 /*
  * Informa a la UMV que este CPU ahora esta procesando el programa con PID pid
  * Siempre despues de este mensaje, cuando se termine el quantum se debe enviar el enviarFinQuantum
  *
  */
-int enviarCambioContexto( uint32_t pid ) {
+bool enviarCambioContexto( uint32_t pid ) {
 
 	//TODO
 	log_debug( logger, "Enviando a umv cambio de contexto" );
@@ -157,10 +202,16 @@ int enviarCambioContexto( uint32_t pid ) {
  * Envia que el programa finalizo para que destruya el segmento de memoria correspondiente
  *
  */
-int enviarFinPrograma( uint32_t pid ){
-	//TODO
-	log_debug( logger, "Enviando a umv fin de programa" );
-	return 1;
+bool enviarFinPrograma( uint32_t pid ){
+	log_debug(logger, "Enviando a umv fin de programa");
+	socket_header mensaje;
+	mensaje.code = 'd';
+	mensaje.size = sizeof(socket_header);
+	if(send(socketUMV, &mensaje, mensaje.size, 0) <= 0){
+		log_error(logger, "No se pudo enviar a la umv el fin del programa");
+		return false;
+	}
+	return true;
 }
 
 /*
@@ -169,7 +220,7 @@ int enviarFinPrograma( uint32_t pid ){
  * El CPU se desconecta. La UMV eliminara el segmento de memoria.
  *
  */
-int enviarFinQuantum( uint32_t pid ){
+bool enviarFinQuantum( uint32_t pid ){
 	//TODO
 	log_debug( logger, "Enviando umv fin de quantum" );
 
