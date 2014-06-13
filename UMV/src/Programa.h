@@ -1,3 +1,5 @@
+#ifndef PROGRAMA_H_
+#define PROGRAMA_H_
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -6,9 +8,6 @@
 #include "commons/config.h"
 #include "commons/collections/list.h"
 #include "Segmento.h"
-
-#ifndef PROGRAMA_H_
-#define PROGRAMA_H_
 
 typedef struct {
 	uint32_t pid;

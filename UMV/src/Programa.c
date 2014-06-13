@@ -1,7 +1,7 @@
 #include "Programa.h"
 #include "memoria.h"
+#include "config.h"
 
-extern t_list * programas;
 extern t_log * logger;
 
 Programa * crearPrograma(uint32_t pid, void * script, void * etiquetas,

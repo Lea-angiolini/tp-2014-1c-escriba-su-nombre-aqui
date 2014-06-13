@@ -1,28 +1,13 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
-
 #include "Consola.h"
 #include "Segmento.h"
 #include "Programa.h"
 
-#include "commons/log.h"
-#include "commons/string.h"
-#include "commons/collections/list.h"
 #include "memoria.h"
+#include "config.h"
 
-#define WORSTFIT 1
-#define FIRSTFIT 0
+extern t_log * logger;
 
 char comandosBuffer[200];
-extern t_log * logger;
-extern t_list * tabla_segmentos;
-extern uint32_t retardoUMV;
-extern uint32_t modoActualCreacionSegmentos;
-extern t_list *programas;
-extern uint32_t memoria_size;
 
 void * iniciarConsola(void * params) {
 

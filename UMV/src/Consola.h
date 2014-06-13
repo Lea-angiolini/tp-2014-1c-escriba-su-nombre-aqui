@@ -1,8 +1,18 @@
+#ifndef CONSOLA_H_
+#define CONSOLA_H_
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include "commons/log.h"
+#include "commons/string.h"
+#include "commons/collections/list.h"
+
 #include "Segmento.h"
 #include "Programa.h"
 #include <pthread.h>
-#include "commons/log.h"
-#include "commons/collections/list.h"
 
 void * iniciarConsola(void * params);
 uint32_t parsearComando(char * comando);
@@ -24,3 +34,5 @@ void printEspacioLibre(uint32_t inicioEspacio, uint32_t finEspacio);
 bool verificarRequisitos( uint32_t programa, uint32_t base);
 
 void imprimirSegmentosDe(Programa * programaAImprimir);
+
+#endif

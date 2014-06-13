@@ -1,14 +1,7 @@
 #include "memoria.h"
+#include "config.h"
 
-extern t_list * tabla_segmentos;
 extern t_log * logger;
-
-extern void * memoria;
-
-extern uint32_t memoria_size;
-extern uint32_t modoActualCreacionSegmentos;
-
-
 
 Segmento * crearYllenarSegmento(uint32_t tamanio, void * segmento) { //TODO Habria que agregarle un id de tipo al segmento
 	Segmento * segmentoAllenar = crearSegmento(tamanio);

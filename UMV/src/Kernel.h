@@ -15,14 +15,11 @@
 
 
 typedef struct {
-
 	int socket;
-
 } Kernel;
 
 
-
-void  fnKernelConectado(int * socketPtr);
+void  fnKernelConectado(int socket);
 uint32_t procesarMenssajeKernel(Kernel * kernel,	socket_pedirMemoria * segmentosAreservar);
 uint32_t recibirYProcesarMensajesKernel(Kernel * kernel);
 uint32_t tamanioSegmentos(socket_pedirMemoria * segmentosAreservar);

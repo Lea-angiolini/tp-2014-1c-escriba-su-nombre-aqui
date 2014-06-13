@@ -116,20 +116,18 @@ uint32_t tamanioSegmentos(socket_pedirMemoria * segmentosAreservar) {
 }
 
 
-void  fnKernelConectado(int * socketPtr) {
+void  fnKernelConectado(int socket) {
 
 	log_info(logger, "Se conecto el Kernel");
 
 	Kernel * kernel = malloc(sizeof(Kernel));
-	kernel->socket = * socketPtr;
-	free(socketPtr);
+	kernel->socket = socket;
 
 	if (recibirYProcesarMensajesKernel(kernel) == 0)
-		log_info(logger, "El Kernel se ha desconectado");
+		log_error(logger, "El Kernel se ha desconectado");
 
 	pthread_cancel( threadConexiones );
 
 	free(kernel);
-
 }
 

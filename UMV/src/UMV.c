@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <sys/socket.h>
 
 #include "config.h"
-
+#include "handshake.h"
+#include "mocks.h"
 
 t_log * logger;
 
@@ -28,11 +28,11 @@ int main(int argc, char * argv[]) {
 	}
 
 	pthread_create(&threadConsola, NULL, iniciarConsola, NULL);
-	pthread_create( &threadConexiones, NULL, crearConexiones, NULL);
+	pthread_create(&threadConexiones, NULL, crearConexiones, NULL);
 
 	pthread_join(threadConexiones, NULL);
 	log_info(logger, "Finalizando la consola ...");
-	pthread_cancel( threadConsola);
+	pthread_cancel(threadConsola);
 
 	destruir_config();
 
@@ -40,6 +40,4 @@ int main(int argc, char * argv[]) {
 	log_destroy(logger);
 
 	return EXIT_SUCCESS;
-
-
 }

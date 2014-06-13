@@ -6,14 +6,10 @@
 
 #include "commons/collections/list.h"
 #include "commons/log.h"
-
+#include "config.h"
 
 extern t_log * logger;
-extern t_list * cpus; //Lista en la que se van a guardar toda la info de cada cpu que se conecte
-extern t_list * programas;
-extern t_list * tabla_segmentos;
 
-extern uint32_t memoria_size;
 
 void ejecutar(){
 

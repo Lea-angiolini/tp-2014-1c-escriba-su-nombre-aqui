@@ -195,17 +195,16 @@ void borrarCPU( CPU * cpu ){
 
 
 
-void  fnNuevoCpu( int * socketPtr ){
+void fnNuevoCpu(int socket){
 
 	log_info( logger, "Se conecto un nuevo CPU" );
 
 
 	contadorCpuId++;
 	CPU * cpu = malloc(sizeof(CPU));
-	cpu->socket = * socketPtr;
+	cpu->socket = socket;
 	cpu->cpuId = contadorCpuId;
 	cpu->pidProcesando = SINPROCESOACTIVO;
-	free( socketPtr );
 	list_add( cpus, cpu );
 
 
@@ -220,16 +219,4 @@ void  fnNuevoCpu( int * socketPtr ){
 	borrarCPU( cpu);
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
 

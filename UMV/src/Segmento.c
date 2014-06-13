@@ -1,13 +1,5 @@
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "Segmento.h"
-
-#include "commons/log.h"
-
-
-extern void * memoria;
+#include "config.h"
 
 uint32_t contadorId = 0;
 

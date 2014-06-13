@@ -82,7 +82,6 @@ char * solicitarLineaPrograma() {
 	char * respuesta = malloc(instruct->offset);
 	memcpy(respuesta, paqueteRespuesta->data, instruct->offset);
 	free(paqueteRespuesta);
-	respuesta[ instruct->offset ] = '\0';
 	eliminarSaltoLinea(respuesta);
 	return respuesta;
 
@@ -93,7 +92,7 @@ void eliminarSaltoLinea(char * linea){
 	for(i = 0; i < strlen(linea); i++){
 		if (linea[i] == '\n'){
 			linea[i] = '\0';
-		};
+		}
 	}
 }
 

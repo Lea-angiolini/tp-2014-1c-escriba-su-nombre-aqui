@@ -1,8 +1,12 @@
-#include <stdint.h>
-
 #ifndef SEGMENTO_H_
 #define SEGMENTO_H_
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 
+#include <stdint.h>
+
+#include "commons/log.h"
 
 typedef struct {
 
