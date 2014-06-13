@@ -15,6 +15,7 @@ extern t_log * logger;
 extern t_list * cpus;
 extern uint32_t retardoUMV;
 uint32_t contadorCpuId;
+extern pthread_rwlock_t lockEscrituraLectura;
 
 
 
@@ -29,11 +30,13 @@ int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud )
 	cpu->pidProcesando = solicitud->pdi;
 	Programa * programa;
 	programa = buscarPrograma( solicitud->pdi );
+	pthread_rwlock_rdlock(&lockEscrituraLectura);
 	Segmento * segmento;
 	segmento = buscarSegmentoEnPrograma(programa, solicitud->base);
 
 	if( segmento == NULL ) {
 		log_error(logger, "No se encuentra el segmento especificado | UMV/src/cpu.c -> procesarSolicitudLecturaMemoria");
+		pthread_rwlock_unlock(&lockEscrituraLectura);
 		return -1;
 	}
 
@@ -60,12 +63,15 @@ int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud )
 
 	if( enviado == -1 ) {
 		log_error(logger, "La respuesta a lectura de memoria no se ha realizado con exito | UMV/src/cpu.c -> procesarSolicitudLecturaMemoria");
+		pthread_rwlock_unlock(&lockEscrituraLectura);
 		return -1;
 	}
 
 	log_info(logger, "La respuesta a lectura de memoria se ha realizado con exito");
-	if(respuesta == false)
+	if(respuesta == false){
+		pthread_rwlock_unlock(&lockEscrituraLectura);
 		return -1;
+	}
 	return 1;
 
 }
@@ -80,11 +86,13 @@ int procesarSolicitudEscrituraMemoria( CPU * cpu, socket_guardarEnMemoria * soli
 	cpu->pidProcesando = solicitud->pdi;
 	Programa * programa;
 	programa = buscarPrograma( solicitud->pdi);
+	pthread_rwlock_rdlock(&lockEscrituraLectura);
 	Segmento * segmento;
 	segmento = buscarSegmentoEnPrograma(programa, solicitud->base);
 
 	if( segmento == NULL ) {
 		log_error(logger, "No se encuentra el segmento especificado | UMV/src/cpu.c -> procesarSolicitudEscrituraMemoria");
+		pthread_rwlock_unlock(&lockEscrituraLectura);
 		return -1;
 	}
 
@@ -108,15 +116,18 @@ int procesarSolicitudEscrituraMemoria( CPU * cpu, socket_guardarEnMemoria * soli
 
 	if( enviado == -1 ) {
 		log_error(logger, "La respuesta a escribir en memoria no se ha realizado con exito | UMV/src/cpu.c -> procesarSolicitudEscrituraMemoria");
+		pthread_rwlock_unlock(&lockEscrituraLectura);
 		return -1;
 	}
 
 	log_info(logger, "La respuesta a escribir en memoria se ha realizado con exito");
 	if(respuesta->status == false){
 		free(respuesta);
+		pthread_rwlock_unlock(&lockEscrituraLectura);
 		return -1;
 	}
 	free(respuesta);
+	pthread_rwlock_unlock(&lockEscrituraLectura);
 	return 1;
 }
 

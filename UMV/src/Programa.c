@@ -3,12 +3,13 @@
 #include "config.h"
 
 extern t_log * logger;
+extern pthread_rwlock_t lockEscrituraLectura;
 
 Programa * crearPrograma(uint32_t pid, void * script, void * etiquetas,
 		void * instrucciones_serializado, uint32_t tamanioScript,
 		uint32_t tamanioEtiquetas, uint32_t tamanioInstrucciones,
 		uint32_t tamanioStack) {
-
+	pthread_rwlock_rdlock(&lockEscrituraLectura);
 	Programa * programa = malloc(sizeof(Programa));
 
 	programa->pid = pid;
@@ -39,7 +40,7 @@ Programa * crearPrograma(uint32_t pid, void * script, void * etiquetas,
 		}
 	list_add(programas, programa);
 
-
+	pthread_rwlock_unlock(&lockEscrituraLectura);
 	return programa;
 
 }
@@ -121,11 +122,12 @@ bool destruirPrograma( Programa * programa ){
 
 		if( programa != NULL){
 			log_info( logger, "Destruyendo programa con pid: %d", programa->pid);
-
+			pthread_rwlock_rdlock(&lockEscrituraLectura);
 			borrarSegmento( programa->stack );
 			borrarSegmento( programa->script );
 			borrarSegmento( programa->etiquetas );
 			borrarSegmento( programa->instrucciones );
+			pthread_rwlock_unlock(&lockEscrituraLectura);
 			free( programa );
 
 			return true;

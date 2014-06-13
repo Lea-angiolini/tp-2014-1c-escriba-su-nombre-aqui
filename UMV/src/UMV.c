@@ -10,6 +10,7 @@ t_log * logger;
 
 pthread_t threadConsola;
 pthread_t threadConexiones;
+pthread_rwlock_t lockEscrituraLectura;
 
 int main(int argc, char * argv[]) {
 
@@ -29,13 +30,14 @@ int main(int argc, char * argv[]) {
 
 	pthread_create(&threadConsola, NULL, iniciarConsola, NULL);
 	pthread_create(&threadConexiones, NULL, crearConexiones, NULL);
+	pthread_rwlock_init(&lockEscrituraLectura, NULL);
 
 	pthread_join(threadConexiones, NULL);
 	log_info(logger, "Finalizando la consola ...");
 	pthread_cancel(threadConsola);
 
 	destruir_config();
-
+	pthread_rwlock_destroy(&lockEscrituraLectura);
 	log_info( logger, "Finalizando UMV...");
 	log_destroy(logger);
 

@@ -90,8 +90,10 @@ void operacionesConSegmentos() {
 		uint32_t idSeg;
 		scanf("%d", &idSeg);
 		while (getchar() != '\n');
+		pthread_rwlock_wrlock(&lockEscrituraLectura);
 		Segmento * segmento = buscarSegmentoEnTabla( idSeg);
 		borrarSegmento( segmento);
+		pthread_rwlock_unlock(&lockEscrituraLectura);
 		break;
 
 	default:
@@ -102,6 +104,9 @@ void operacionesConSegmentos() {
 
 void requisitosOperacionSegmento(char operacion) {
 	usleep( retardoUMV * 1000);
+	//Falta el lockeo acaaaaaa
+	//aaaaa
+	//aaaaa. Hay qe resolver una cosita.
 	printSegmentosPorPrograma();
 	printf("Ingrese un PID de Programa del que quiere solicitar la posicion\n");
 	uint32_t programa;

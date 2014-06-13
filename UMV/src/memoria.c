@@ -2,15 +2,19 @@
 #include "config.h"
 
 extern t_log * logger;
+extern pthread_rwlock_t lockEscrituraLectura;
 
 Segmento * crearYllenarSegmento(uint32_t tamanio, void * segmento) { //TODO Habria que agregarle un id de tipo al segmento
+	pthread_rwlock_rdlock(&lockEscrituraLectura);
 	Segmento * segmentoAllenar = crearSegmento(tamanio);
 	memCopi(segmentoAllenar, 0, segmento, tamanio);
+	pthread_rwlock_unlock(&lockEscrituraLectura);
 	return segmentoAllenar;
 }
 
 Segmento * crearSegmento(uint32_t tamanio) {
-
+	//aca no lockeo por escritura ni lectura porque, como tanto la consola como los CPU usan esta funcion, puede haber
+	//un quilombo si se hace un rdlock adentro de un wrlock. Lockeo tanto en la consola como en la CPU, en vez de aca.
 	log_info(logger, "El tamanio del segmento es %d", tamanio);
 	log_info(logger, "Creando segmento, ahora hay %d",
 			list_size(tabla_segmentos));
@@ -32,8 +36,8 @@ Segmento * crearSegmento(uint32_t tamanio) {
 
 		t_list * huequitos = crearListaEspacioDisponible();
 		if(modoActualCreacionSegmentos == WORSTFIT){
-		elNuevo = crearSegmentoWorstFit(huequitos, tamanio);
-		}else{
+			elNuevo = crearSegmentoWorstFit(huequitos, tamanio);
+		} else {
 			elNuevo = crearSegmentoFirstFit(huequitos, tamanio);
 		}
 		list_destroy(huequitos);
@@ -52,23 +56,26 @@ Segmento * crearSegmento(uint32_t tamanio) {
 
 Segmento * crearSegmentoFirstFit(t_list * huequitos, uint32_t tamanio) {
 
+	pthread_rwlock_rdlock(&lockEscrituraLectura);
 	uint32_t i = 0;
 	Segmento * huequito = malloc(sizeof(Segmento));
 	for (i = 0; i < list_size(huequitos); i++) {
 		huequito = (Segmento*) list_get(huequitos, i);
 		if ((huequito->finReal - huequito->inicioReal) >= tamanio) {
 			//IUJU hay espacio :D
+
 			Segmento * elNuevo = new_Segmento(huequito->inicioReal,
 					huequito->inicioReal + tamanio);
+			pthread_rwlock_unlock(&lockEscrituraLectura);
 			return elNuevo;
 		}else {
+			pthread_rwlock_unlock(&lockEscrituraLectura);
 			compactar();
 			crearSegmentoFirstFit( huequitos, tamanio);
 		}
 	}
 
 	free(huequito);
-
 	return NULL ;
 
 }
@@ -76,6 +83,7 @@ Segmento * crearSegmentoFirstFit(t_list * huequitos, uint32_t tamanio) {
 Segmento * crearSegmentoWorstFit(t_list * huequitos, uint32_t tamanio) {
 
 	uint32_t i = 0, tamanioMax = 0, tamanioHuequito = 0;
+	pthread_rwlock_rdlock(&lockEscrituraLectura);
 	Segmento * nuevoSegmento = NULL;
 
 	for (i = 0; i < list_size(huequitos); i++) {
@@ -88,9 +96,11 @@ Segmento * crearSegmentoWorstFit(t_list * huequitos, uint32_t tamanio) {
 	}
 
 	if (tamanioMax >= tamanio) {
+		pthread_rwlock_unlock(&lockEscrituraLectura);
 		return new_Segmento(nuevoSegmento->inicioReal,
 				nuevoSegmento->inicioReal + tamanio);
 	}  else {
+		pthread_rwlock_unlock(&lockEscrituraLectura);
 		compactar();
 		crearSegmentoFirstFit( huequitos, tamanio);
 		}
@@ -117,7 +127,7 @@ void ordenarTablaSegmentos() {
 //TODO usar semaforo
 //TODO validar, son necesarios los +1 ?
 t_list * crearListaEspacioDisponible() {
-
+	pthread_rwlock_rdlock(&lockEscrituraLectura);
 	ordenarTablaSegmentos();
 
 	t_list * lista = list_create();
@@ -179,6 +189,7 @@ t_list * crearListaEspacioDisponible() {
 	//printSegmentos( lista );
 
 	//log_info( logger, "Devuelvo una lista con %d item/s", list_size( lista ) );
+	pthread_rwlock_unlock(&lockEscrituraLectura);
 	return lista;
 
 }
@@ -217,6 +228,7 @@ uint32_t memoriaLibre() {
 }
 
 void compactar() {
+	pthread_rwlock_wrlock(&lockEscrituraLectura);
 	ordenarTablaSegmentos();
 	uint32_t u = 0;
 	Segmento * primerSegmento = (Segmento *) list_get(tabla_segmentos, u);
@@ -238,6 +250,7 @@ void compactar() {
 	}
 	log_info(logger, "Se ha compactado correctamente");
 	printSegmentos(tabla_segmentos);
+	pthread_rwlock_unlock(&lockEscrituraLectura);
 	return;
 }
 
