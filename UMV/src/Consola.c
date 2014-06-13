@@ -6,6 +6,8 @@
 #include "config.h"
 
 extern t_log * logger;
+extern pthread_rwlock_t lockEscrituraLectura;
+
 
 char comandosBuffer[200];
 
