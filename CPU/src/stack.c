@@ -54,23 +54,30 @@ uint32_t obtenerOffsetVarible(char variable)
 //TODO ver segmentation fault
 uint32_t obtenerValor(uint32_t pos)
 {
-	if(estaEnContexto(pos)){
+	log_debug(logger, "Obteniendo posicion %d, el contexto es %d  %d", pos, (PCB_enEjecucion.stackCursor - PCB_enEjecucion.contextSize), PCB_enEjecucion.stackCursor );
+	if(!estaEnContexto(pos)){
 		uint32_t* data = (uint32_t*) leerStack(pos, sizeof(uint32_t));
-		uint32_t valor = *data;
-		free(data);
-		log_warning(logger, "Se leyo fuera del contexto");
-		return valor;
+		if(data != NULL){
+			uint32_t valor = *data;
+			free(data);
+			log_warning(logger, "Se leyo fuera del contexto");
+			return valor;
+		}else{
+			log_error(logger, "Error al leer variable de la UMV");
+			PCB_enEjecucion.lastErrorCode = 3;
+			return 0;
+		}
 	}else{
+		log_debug(logger, "Se obtuvo sin consultar la umv");
 		return (uint32_t)stackCache.data[pos];
 	}
-
 }
 
 
 //TODO verificar segmentation fault
 void modificarVariable(uint32_t pos, uint32_t valor)
 {
-	if(estaEnContexto(pos)){
+	if(!estaEnContexto(pos)){
 		uint32_t * data = malloc(sizeof(uint32_t));
 		*data = valor;
 		escribirStack(pos, sizeof(uint32_t), (void *) data);
@@ -83,7 +90,7 @@ void modificarVariable(uint32_t pos, uint32_t valor)
 
 
 bool estaEnContexto(uint32_t pos){
-	return (pos > PCB_enEjecucion.stackCursor) || pos < (PCB_enEjecucion.stackCursor - PCB_enEjecucion.contextSize);
+	return (pos < PCB_enEjecucion.stackCursor) && pos >= (PCB_enEjecucion.stackCursor - PCB_enEjecucion.contextSize);
 }
 
 
