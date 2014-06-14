@@ -29,7 +29,6 @@ Kernel: $(OBJS)
 	gcc -lpthread -pthread -o ./Debug/Kernel $(OBJS)
 
 colas.o: ./src/colas.c ./src/colas.h
-	#gcc -c ./src/colas.c -o ./Debug/colas.o
 	gcc -I ../commons -c ./src/colas.c -o ./Debug/colas.o
 
 config.o: ./src/config.c ./src/config.h 
