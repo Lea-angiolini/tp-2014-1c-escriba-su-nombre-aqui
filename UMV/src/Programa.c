@@ -14,36 +14,57 @@ Programa * crearPrograma(uint32_t pid, void * script, void * etiquetas,
 
 	programa->pid = pid;
 
+	srand( time(NULL));
+
 	programa->stack = crearSegmento(tamanioStack);
-	programa->stack->inicioVirtual = 0;
-	programa->stack->finVirtual = tamanioStack - 1;
+		crearDireccionesVirtuales( programa->stack, tamanioStack, 0);
 
-	programa->script = crearYllenarSegmento(tamanioScript, script);
-	crearDireccionesVirtuales(programa->script, tamanioScript,
-			programa->stack->finVirtual);
+	/*	programa->stack->inicioVirtual = 0;
+		programa->stack->finVirtual = tamanioStack - 1;*/
 
-	programa->etiquetas = crearYllenarSegmento(tamanioEtiquetas, etiquetas);
-	if( programa->etiquetas->inicioReal ==SEGMENTOVACIO){
-		crearDireccionesVirtuales( programa->etiquetas, tamanioEtiquetas, 0);
+		programa->script = crearYllenarSegmento(tamanioScript, script);
+		crearDireccionesVirtuales(programa->script, tamanioScript,
+				programa->stack->finVirtual);
+
+		programa->etiquetas = crearYllenarSegmento(tamanioEtiquetas, etiquetas);
+		if( programa->script->finVirtual == SEGMENTOVACIO ){
+			crearDireccionesVirtuales( programa->etiquetas, tamanioEtiquetas, programa->stack->finVirtual);
 		}else{
-			crearDireccionesVirtuales(programa->etiquetas, tamanioEtiquetas,
-			programa->script->finVirtual);
-			}
-
-	programa->instrucciones = crearYllenarSegmento(tamanioInstrucciones,
-			instrucciones_serializado);
-	if(programa->etiquetas->inicioVirtual == SEGMENTOVACIO){
-		crearDireccionesVirtuales( programa->instrucciones, tamanioInstrucciones, programa->script->finVirtual);
-	}else{
-		crearDireccionesVirtuales(programa->instrucciones, tamanioInstrucciones,
-			programa->etiquetas->finVirtual);
+			crearDireccionesVirtuales( programa->etiquetas, tamanioEtiquetas, programa->script->finVirtual);
 		}
-	list_add(programas, programa);
+		/*if( programa->etiquetas->inicioReal ==SEGMENTOVACIO){
+			crearDireccionesVirtuales( programa->etiquetas, tamanioEtiquetas, 0);
+			}else{
+				crearDireccionesVirtuales(programa->etiquetas, tamanioEtiquetas,
+				programa->script->finVirtual);
+				}*/
 
-	pthread_rwlock_unlock(&lockEscrituraLectura);
-	return programa;
+		programa->instrucciones = crearYllenarSegmento(tamanioInstrucciones,
+				instrucciones_serializado);
+		if( programa->etiquetas->finVirtual == SEGMENTOVACIO ){
+			crearDireccionesVirtuales( programa->instrucciones, tamanioInstrucciones, programa->script->finVirtual);
+		}else{
+			crearDireccionesVirtuales( programa->instrucciones, tamanioInstrucciones, programa->etiquetas->finVirtual);
+		}
 
-}
+
+		/*if(programa->etiquetas->inicioVirtual == SEGMENTOVACIO){
+			crearDireccionesVirtuales( programa->instrucciones, tamanioInstrucciones, programa->script->finVirtual);
+		}else{
+			crearDireccionesVirtuales(programa->instrucciones, tamanioInstrucciones,
+				programa->etiquetas->finVirtual);
+			}*/
+		list_add(programas, programa);
+		printf( "%d\t\t%d\n", programa->stack->inicioVirtual,programa->stack->finVirtual);
+		printf( "%d\t\t%d\n", programa->script->inicioVirtual,programa->script->finVirtual);
+		printf( "%d\t\t%d\n", programa->etiquetas->inicioVirtual,programa->etiquetas->finVirtual);
+		printf( "%d\t\t%d\n", programa->instrucciones->inicioVirtual,programa->instrucciones->finVirtual);
+
+		pthread_rwlock_unlock(&lockEscrituraLectura);
+
+		return programa;
+
+	}
 
 socket_umvpcb crearEstructuraParaPCB(Programa * programa) {
 
@@ -59,16 +80,30 @@ socket_umvpcb crearEstructuraParaPCB(Programa * programa) {
 
 Segmento * crearDireccionesVirtuales(Segmento * segmento,
 		uint32_t tamanioSegmento, uint32_t finVirtualDelAnterior) {
+	printf("Mi tamaño es %d!\n", tamanioSegmento);
+	if( tamanioSegmento == 0){
+		segmento->inicioVirtual = SEGMENTOVACIO;
+		segmento->finVirtual = SEGMENTOVACIO;
+	}else{
+		uint32_t seed = finVirtualDelAnterior + 1;
+		segmento->inicioVirtual = rand() % 417 + seed;
+		printf("mi inicioVirtual%d \n", segmento->inicioVirtual);
+		segmento->finVirtual = segmento->inicioVirtual + tamanioSegmento - 1;
+		}
 
-	if( segmento->inicioReal == SEGMENTOVACIO){
+	return segmento;
+
+
+	/*if( segmento->inicioReal == SEGMENTOVACIO){
 		segmento->inicioVirtual = SEGMENTOVACIO;
 	}else{
 
 	segmento->inicioVirtual = finVirtualDelAnterior + 1;
 	segmento->finVirtual = segmento->inicioVirtual + (tamanioSegmento - 1);
 	}
-	return segmento;
+	return segmento;*/
 }
+
 
 Programa * buscarPrograma(uint32_t pid) {
 	bool matchearPrograma(Programa *nodoPrograma) {
