@@ -109,6 +109,7 @@ void requisitosOperacionSegmento(char operacion) {
 	//Falta el lockeo acaaaaaa
 	//aaaaa
 	//aaaaa. Hay qe resolver una cosita.
+	pthread_rwlock_wrlock(&lockEscrituraLectura);
 	printSegmentosPorPrograma();
 	printf("Ingrese un PID de Programa del que quiere solicitar la posicion\n");
 	uint32_t programa;
@@ -149,6 +150,7 @@ void requisitosOperacionSegmento(char operacion) {
 		default: break;
 		}
 	}
+	pthread_rwlock_unlock(&lockEscrituraLectura);
 }
 
 bool verificarRequisitos( uint32_t programa, uint32_t base){
