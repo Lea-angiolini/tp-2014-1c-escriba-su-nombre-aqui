@@ -184,6 +184,8 @@ void desconexionCPU(int socketCPU)
 		mensajeYDesconexionPrograma(pcb->programaSocket, "El script no pudo concluir su ejecucion debido a la desconexion de un CPU");
 
 		bajarNivelMultiprogramacion();
+
+		free(cpuInfo);
 	}
 	else
 	{
