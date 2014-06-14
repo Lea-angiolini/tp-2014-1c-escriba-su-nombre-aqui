@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	char *logName = string_from_format("log_%d.txt", process_getpid());
-	logger = log_create("log.txt", "CPU", 1, LOG_LEVEL_TRACE);
+	logger = log_create(logName, "CPU", 1, LOG_LEVEL_TRACE);
 
 	if( !cargar_config(argv[1]) ) {
 		printf("Archivo de configuracion invalido\n");
