@@ -7,7 +7,6 @@
 
 #include "commons/config.h"
 #include "commons/sockets.h"
-#include "commons/tools.h"
 
 int main(int argc, char *argv[]) {
 	if (argc != 2) {
@@ -22,7 +21,8 @@ int main(int argc, char *argv[]) {
 		return EXIT_SUCCESS;
 	}
 
-	t_log *log = log_create("log.txt", "Programa", 1, LOG_LEVEL_TRACE);
+	char *logName = string_from_format("log_%d.txt", process_getpid());
+	t_log *log = log_create(logName, "Programa", 1, LOG_LEVEL_TRACE);
 
 	t_config *config = config_create(config_path);
 	if( !config_has_property(config, "IP") || !config_has_property(config, "Puerto") ) {
@@ -43,6 +43,8 @@ int main(int argc, char *argv[]) {
 	fseek(script, 0, SEEK_END);
 	scriptSize = ftell(script);
 	fseek(script, 0, SEEK_SET);
+
+	log_info(log, "Iniciando Programa (script: %s log: %s)", argv[1], logName);
 
 	int sock = conectar(config_get_string_value(config, "IP"), config_get_int_value(config, "Puerto"), log);
 

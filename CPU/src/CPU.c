@@ -11,21 +11,22 @@
 
 #include "mocks.h"
 
-
 t_log * logger;
+
 uint32_t quantumPorEjecucion;
 uint32_t retardoQuantum;
 uint32_t quantumRestante;
+
 pcb_t PCB_enEjecucion;
 
 
 int main(int argc, char *argv[]) {
-
 	if (argc != 2) {
 		printf("Modo de empleo: ./CPU config.cfg\n");
 		return EXIT_SUCCESS;
 	}
 
+	char *logName = string_from_format("log_%d.txt", process_getpid());
 	logger = log_create("log.txt", "CPU", 1, LOG_LEVEL_TRACE);
 
 	if( !cargar_config(argv[1]) ) {
@@ -33,7 +34,7 @@ int main(int argc, char *argv[]) {
 		return EXIT_SUCCESS;
 	}
 
-	log_info(logger, "Iniciando CPU");
+	log_info(logger, "Iniciando CPU (log: %s)", logName);
 
 	if ( !crearConexionKernel() || !crearConexionUMV() ) {
 		log_error(logger, "Hubo un error en el proceso CPU, finalizando");
