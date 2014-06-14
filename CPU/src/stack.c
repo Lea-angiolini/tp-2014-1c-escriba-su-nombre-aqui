@@ -78,9 +78,7 @@ uint32_t obtenerValor(uint32_t pos)
 void modificarVariable(uint32_t pos, uint32_t valor)
 {
 	if(!estaEnContexto(pos)){
-		uint32_t * data = malloc(sizeof(uint32_t));
-		*data = valor;
-		escribirStack(pos, sizeof(uint32_t), (void *) data);
+		escribirStack(pos, sizeof(uint32_t), (void *) &valor);
 		log_warning(logger, "Se escribio fuera del contexto actual");
 	}else{
 		stackCache.data[pos] = valor;
@@ -116,6 +114,7 @@ bool apilarFuncionConRetorno(uint32_t variableRetorno)
 	sGuardarEnMemoria.pdi		= PCB_enEjecucion.id;
 	sGuardarEnMemoria.length	= sizeof(StackFuncionConRetorno);
 	sGuardarEnMemoria.base		= PCB_enEjecucion.stackSegment;
+	memset(sGuardarEnMemoria.data, 0, sizeof(sGuardarEnMemoria.data));
 	memcpy(sGuardarEnMemoria.data, &llamada, sizeof(StackFuncionConRetorno));
 
 	PCB_enEjecucion.stackCursor += sizeof(StackFuncionConRetorno);
@@ -191,6 +190,7 @@ bool guardarStack()
 	sGuardarEnMemoria.pdi		= PCB_enEjecucion.id;
 	sGuardarEnMemoria.length	= PCB_enEjecucion.contextSize;
 	sGuardarEnMemoria.base		= PCB_enEjecucion.stackSegment;
+	memset(sGuardarEnMemoria.data, 0, sizeof((sGuardarEnMemoria.data))) ;
 	memcpy(sGuardarEnMemoria.data, stackCache.data + sGuardarEnMemoria.offset, sGuardarEnMemoria.length) ;
 
 	socket_RespuestaGuardarEnMemoria * respuesta = (socket_RespuestaGuardarEnMemoria*) enviarYRecibirPaquete( socketUMV, &sGuardarEnMemoria, sizeof(socket_guardarEnMemoria) , 0, 'c', 'a', logger );

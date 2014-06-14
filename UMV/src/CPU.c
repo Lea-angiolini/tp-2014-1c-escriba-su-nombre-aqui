@@ -27,12 +27,15 @@ extern pthread_rwlock_t lockEscrituraLectura;
 
 int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud ) {
 
+	log_trace(logger, "Solicitud de lectura, base = %d, offset = %d, length = %d", solicitud->base, solicitud->offset, solicitud->length);
 	cpu->pidProcesando = solicitud->pdi;
 	Programa * programa;
 	programa = buscarPrograma( solicitud->pdi );
 	pthread_rwlock_rdlock(&lockEscrituraLectura);
 	Segmento * segmento;
 	segmento = buscarSegmentoEnPrograma(programa, solicitud->base);
+
+
 
 	if( segmento == NULL ) {
 		log_error(logger, "No se encuentra el segmento especificado | UMV/src/cpu.c -> procesarSolicitudLecturaMemoria");
@@ -54,8 +57,8 @@ int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud )
 		respuesta->status = false;
 	}else{
 		respuesta->status = true;
-		memLeer( segmento, respuesta->data, solicitud->offset, solicitud->length);
-		log_info( logger, "Se leyo la data: %s", respuesta->data );
+		memLeer(segmento, respuesta->data, solicitud->offset, solicitud->length);
+		log_info(logger, "Se leyo la data: %s", respuesta->data);
 	}
 
 	uint32_t enviado;
@@ -81,7 +84,7 @@ int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud )
 
 int procesarSolicitudEscrituraMemoria( CPU * cpu, socket_guardarEnMemoria * solicitud ) {
 
-
+	log_trace(logger, "Solicitud de escritura, base = %d, offset = %d, length = %d", solicitud->base, solicitud->offset, solicitud->length);
 
 	cpu->pidProcesando = solicitud->pdi;
 	Programa * programa;
