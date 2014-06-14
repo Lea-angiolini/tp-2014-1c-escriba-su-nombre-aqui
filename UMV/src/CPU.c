@@ -75,6 +75,7 @@ int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud )
 		pthread_rwlock_unlock(&lockEscrituraLectura);
 		return -1;
 	}
+	pthread_rwlock_unlock(&lockEscrituraLectura);
 	return 1;
 
 }
