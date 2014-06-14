@@ -80,14 +80,12 @@ socket_umvpcb crearEstructuraParaPCB(Programa * programa) {
 
 Segmento * crearDireccionesVirtuales(Segmento * segmento,
 		uint32_t tamanioSegmento, uint32_t finVirtualDelAnterior) {
-	printf("Mi tamaño es %d!\n", tamanioSegmento);
 	if( tamanioSegmento == 0){
 		segmento->inicioVirtual = SEGMENTOVACIO;
 		segmento->finVirtual = SEGMENTOVACIO;
 	}else{
 		uint32_t seed = finVirtualDelAnterior + 1;
 		segmento->inicioVirtual = rand() % 417 + seed;
-		printf("mi inicioVirtual%d \n", segmento->inicioVirtual);
 		segmento->finVirtual = segmento->inicioVirtual + tamanioSegmento - 1;
 		}
 

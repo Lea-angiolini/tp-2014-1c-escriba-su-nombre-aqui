@@ -21,8 +21,8 @@ t_list * crearListaEspacioDisponible();
 
 Segmento * crearYllenarSegmento( uint32_t tamanio, void * segmento );
 Segmento * crearSegmento		( uint32_t tamanio );
-Segmento * crearSegmentoFirstFit	( t_list * huequitos, uint32_t tamanio );
-Segmento * crearSegmentoWorstFit( t_list * huequitos, uint32_t tamanio );
+Segmento * crearSegmentoFirstFit	(  uint32_t tamanio );
+Segmento * crearSegmentoWorstFit(  uint32_t tamanio );
 Segmento * buscarSegmentoEnTabla( uint32_t idSeg);
 void borrarSegmento( Segmento * segmentoABorrar );
 void moverSegmento(Segmento * segmento, uint32_t posicion) ;

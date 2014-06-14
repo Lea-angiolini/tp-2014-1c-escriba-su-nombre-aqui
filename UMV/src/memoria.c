@@ -16,8 +16,7 @@ Segmento * crearSegmento(uint32_t tamanio) {
 	//aca no lockeo por escritura ni lectura porque, como tanto la consola como los CPU usan esta funcion, puede haber
 	//un quilombo si se hace un rdlock adentro de un wrlock. Lockeo tanto en la consola como en la CPU, en vez de aca.
 	log_info(logger, "El tamanio del segmento es %d", tamanio);
-	log_info(logger, "Creando segmento, ahora hay %d",
-			list_size(tabla_segmentos));
+
 
 	Segmento * elNuevo = NULL;
 
@@ -34,19 +33,23 @@ Segmento * crearSegmento(uint32_t tamanio) {
 
 	} else {
 
-		t_list * huequitos = crearListaEspacioDisponible();
+		//t_list * huequitos = crearListaEspacioDisponible();
 		if(modoActualCreacionSegmentos == WORSTFIT){
-			elNuevo = crearSegmentoWorstFit(huequitos, tamanio);
+			elNuevo = crearSegmentoWorstFit(tamanio);
+			//elNuevo = crearSegmentoWorstFit(huequitos, tamanio);
 		} else {
-			elNuevo = crearSegmentoFirstFit(huequitos, tamanio);
+			elNuevo = crearSegmentoFirstFit(tamanio);
+			//elNuevo = crearSegmentoFirstFit(huequitos, tamanio);
 		}
-		list_destroy(huequitos);
+		//list_destroy(huequitos);
 
 	}
 }
 	if (elNuevo != NULL ) {
 		list_add(tabla_segmentos, elNuevo);
 	}
+	log_info(logger, "Segmento creado, ahora hay %d",
+				list_size(tabla_segmentos));
 	printSegmento(elNuevo);
 	printf("%d\n", elNuevo->id);
 	//log_info( logger, "Termine de crear el segmento, ahora hay %d", list_size( tabla_segmentos ) );
@@ -54,9 +57,11 @@ Segmento * crearSegmento(uint32_t tamanio) {
 
 }
 
-Segmento * crearSegmentoFirstFit(t_list * huequitos, uint32_t tamanio) {
+Segmento * crearSegmentoFirstFit( uint32_t tamanio) {
 
 	pthread_rwlock_rdlock(&lockEscrituraLectura);
+	t_list * huequitos = crearListaEspacioDisponible();
+
 	uint32_t i = 0;
 	Segmento * huequito = malloc(sizeof(Segmento));
 	for (i = 0; i < list_size(huequitos); i++) {
@@ -67,21 +72,25 @@ Segmento * crearSegmentoFirstFit(t_list * huequitos, uint32_t tamanio) {
 			Segmento * elNuevo = new_Segmento(huequito->inicioReal,
 					huequito->inicioReal + tamanio);
 			pthread_rwlock_unlock(&lockEscrituraLectura);
+			list_destroy(huequitos);
 			return elNuevo;
 		}else {
 			pthread_rwlock_unlock(&lockEscrituraLectura);
 			compactar();
-			crearSegmentoFirstFit( huequitos, tamanio);
+			list_destroy(huequitos);
+			crearSegmentoFirstFit( tamanio);
 		}
 	}
 
 	free(huequito);
+	list_destroy(huequitos);
 	return NULL ;
 
 }
 
-Segmento * crearSegmentoWorstFit(t_list * huequitos, uint32_t tamanio) {
+Segmento * crearSegmentoWorstFit( uint32_t tamanio) {
 
+	t_list * huequitos = crearListaEspacioDisponible();
 	uint32_t i = 0, tamanioMax = 0, tamanioHuequito = 0;
 	pthread_rwlock_rdlock(&lockEscrituraLectura);
 	Segmento * nuevoSegmento = NULL;
@@ -94,16 +103,18 @@ Segmento * crearSegmentoWorstFit(t_list * huequitos, uint32_t tamanio) {
 			tamanioMax = tamanioHuequito;
 		}
 	}
-
 	if (tamanioMax >= tamanio) {
 		pthread_rwlock_unlock(&lockEscrituraLectura);
+		list_destroy(huequitos);
 		return new_Segmento(nuevoSegmento->inicioReal,
 				nuevoSegmento->inicioReal + tamanio);
 	}  else {
 		pthread_rwlock_unlock(&lockEscrituraLectura);
 		compactar();
-		crearSegmentoFirstFit( huequitos, tamanio);
+		list_destroy(huequitos);
+		crearSegmentoWorstFit(  tamanio);
 		}
+	list_destroy(huequitos);
 	return NULL ;
 }
 
