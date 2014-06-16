@@ -56,3 +56,23 @@ io_t *crear_registro(char* hioRetardo){
 
 	return nuevo_registro;
 }
+
+void crear_pedido(char *dispositivo, uint32_t pid, uint32_t unidades)
+{
+	log_trace(logpcp, "Obteniendo dispositivo desde el diccionario de dispositivos");
+
+	io_t *disp = dictionary_get(dispositivos, dispositivo);
+	data_cola_t *pedido = malloc(sizeof(data_cola_t));
+
+	pedido->pid = pid;
+	pedido->tiempo = unidades;
+
+	log_trace(logpcp, "Cargando nuevo trabajo en el dispositivo %s", dispositivo);
+
+	//Cargando nuevo trabajo a la cola
+	pthread_mutex_lock(&disp->mutex);
+	queue_push(disp->cola, pedido);
+	pthread_mutex_unlock(&disp->mutex);
+
+	sem_post(&disp->semaforo);
+}

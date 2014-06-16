@@ -19,13 +19,6 @@ bool syscallIO(int socketCPU)
 		return false;
 
 	log_debug(logpcp, "CPU: %d, mando nuevo trabajo de IO del dispositivo: %s", socketCPU, io.identificador);
-	log_trace(logpcp, "Obteniendo dispositivo desde el diccionario de dispositivos");
-
-	io_t *disp = dictionary_get(dispositivos, io.identificador);
-	data_cola_t *pedido = malloc(sizeof(data_cola_t));
-
-	pedido->pid = spcb.pcb.id;
-	pedido->tiempo = io.unidades;
 
 	moverCpuAReady(sacarCpuDeExec(socketCPU));
 
@@ -35,14 +28,7 @@ bool syscallIO(int socketCPU)
 	*pcb = spcb.pcb;
 	moverABlock(pcb);
 
-	log_trace(logpcp, "Cargando nuevo trabajo en el dispositivo %s",io.identificador);
-
-	//Cargando nuevo trabajo a la cola
-	pthread_mutex_lock(&disp->mutex);
-	queue_push(disp->cola, pedido);
-	pthread_mutex_unlock(&disp->mutex);
-
-	sem_post(&disp->semaforo);
+	crear_pedido(io.identificador, pcb->id, io.unidades);
 
 	return true;
 }
