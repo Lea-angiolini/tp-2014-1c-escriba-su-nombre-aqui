@@ -171,10 +171,7 @@ bool recibirYprocesarScript(int socketPrograma)
 	uint32_t scriptSize;
 
 	if( recibirScriptAnsisop(socketPrograma, &script, &scriptSize) != true )
-	{
-		log_error(logplp, "Error al recibir script Ansisop");
 		return false;
-	}
 
 	//ansisop preprocesador
 	t_metadata_program *scriptMetadata = metadata_desde_literal(script);
