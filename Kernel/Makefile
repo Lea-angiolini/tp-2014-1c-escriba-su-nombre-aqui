@@ -5,6 +5,7 @@ OBJS += \
 ./Debug/io.o \
 ./Debug/pcp.o \
 ./Debug/plp.o \
+./Debug/umv.o \
 ./Debug/systemcalls.o \
 ../commons/Debug/bitarray.o \
 ../commons/Debug/config.o \
@@ -23,7 +24,7 @@ OBJS += \
 ../commons/Debug/parser/metadata_program.o \
 ../commons/Debug/parser/parser.o
 
-all: colas.o config.o io.o pcp.o plp.o systemcalls.o Kernel.o Kernel
+all: colas.o config.o io.o pcp.o plp.o systemcalls.o umv.o Kernel.o Kernel
 
 Kernel: $(OBJS)
 	gcc -lpthread -pthread -o ./Debug/Kernel $(OBJS)
@@ -45,6 +46,9 @@ plp.o: ./src/plp.c ./src/plp.h
 
 systemcalls.o: ./src/systemcalls.c ./src/systemcalls.h 
 	gcc -c -I ../commons ./src/systemcalls.c -o ./Debug/systemcalls.o
+
+umv.o: ./src/umv.c ./src/umv.h 
+	gcc -c -I ../commons ./src/umv.c -o ./Debug/umv.o
 
 Kernel.o: ./src/Kernel.c 
 	gcc -I ../commons -c ./src/Kernel.c -o ./Debug/Kernel.o

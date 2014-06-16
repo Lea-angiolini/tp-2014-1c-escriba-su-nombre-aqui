@@ -3,7 +3,6 @@ OBJS += \
  ./Debug/config.o \
 ./Debug/ejecucion.o \
 ./Debug/kernel.o \
-./Debug/mocks.o \
 ./Debug/primitivas.o \
 ./Debug/stack.o \
 ./Debug/umv.o \
@@ -24,7 +23,7 @@ OBJS += \
 ../commons/Debug/parser/metadata_program.o \
 ../commons/Debug/parser/parser.o
 
-all: config.o ejecucion.o kernel.o mocks.o primitivas.o stack.o umv.o CPU.o CPU
+all: config.o ejecucion.o kernel.o primitivas.o stack.o umv.o CPU.o CPU
 CPU: $(OBJS)
 	gcc -lpthread -pthread -o ./Debug/CPU $(OBJS)
 
@@ -36,9 +35,6 @@ ejecucion.o: ./src/ejecucion.c ./src/ejecucion.h
 
 kernel.o: ./src/kernel.c ./src/kernel.h 
 	gcc -I ../commons -c ./src/kernel.c -o ./Debug/kernel.o
-
-mocks.o: ./src/mocks.c ./src/mocks.h 
-	gcc -I ../commons -c ./src/mocks.c -o ./Debug/mocks.o
 
 primitivas.o: ./src/primitivas.c ./src/primitivas.h 
 	gcc -I ../commons -c ./src/primitivas.c -o ./Debug/primitivas.o
