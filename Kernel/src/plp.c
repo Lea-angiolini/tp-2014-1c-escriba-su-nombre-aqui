@@ -1,6 +1,7 @@
 #include "plp.h"
 #include "colas.h"
 #include "config.h"
+#include "umv.h"
 
 #define CALCULAR_PRIORIDAD(e,f,t) (5 * e + 3 * f + t)
 
@@ -12,8 +13,6 @@ pthread_mutex_t multiprogramacionMutex = PTHREAD_MUTEX_INITIALIZER;
 
 extern sem_t semKernel;
 extern sem_t dispatcherReady;
-
-int socketUMV;
 
 
 void *IniciarPlp(void *arg) {
@@ -51,28 +50,6 @@ bool iniciarServidorProgramas()
 	return true;
 }
 
-bool conectarUMV()
-{
-	socketUMV = conectar(config_get_string_value(config, "IP_UMV"), config_get_int_value(config, "PUERTO_UMV"), logplp);
-
-	if (socketUMV == -1) {
-		log_error(logplp, "No se pudo establecer la conexion con la UMV");
-		return false;
-	}
-
-	log_info(logplp, "Conectado con la UMV");
-
-	socket_header handshake;
-
-	handshake.size = sizeof(socket_header);
-	handshake.code = 'k'; //Kernel
-
-	if( send(socketUMV, &handshake, sizeof(socket_header), 0) <= 0 )
-		return false;
-
-	return true;
-}
-
 void MoverNewAReady()
 {
 	log_info(logplp, "Ordenando la cola NEW segun algoritmo de planificacion SJN");
@@ -85,9 +62,7 @@ void MoverNewAReady()
 
 	log_info(logplp, "Moviendo PCB de la cola NEW a READY");
 
-	pthread_mutex_lock(&readyQueueMutex);
-	queue_push(readyQueue, queue_pop(newQueue));
-	pthread_mutex_unlock(&readyQueueMutex);
+	moverAReady(queue_pop(newQueue));
 
 	pthread_mutex_lock(&multiprogramacionMutex);
 	multiprogramacion++;
@@ -112,105 +87,69 @@ void desconexionCliente()
 	puedoMoverNewAReady();
 }
 
-bool recibirYprocesarScript(int socketPrograma) {
-	//Pidiendo script ansisop
+bool recibirScriptAnsisop(int socketPrograma, char **script, uint32_t *scriptSize)
+{
 	socket_header header;
 
 	if( recv(socketPrograma, &header, sizeof(socket_header), MSG_WAITALL) != sizeof(socket_header) )
 		return false;
 
-	int scriptSize = header.size - sizeof(header);
+	*scriptSize = header.size - sizeof(socket_header);
 
-	char *script = malloc(scriptSize + 1);
-	memset(script, 0x00, scriptSize + 1);
+	*script = malloc(*scriptSize + 1);
+	memset(*script, 0x00, *scriptSize + 1);
 
-	log_info(logplp, "Esperando a recibir un script ansisop");
+	log_trace(logplp, "Esperando a recibir un script ansisop");
 
-	if( recv(socketPrograma, script, scriptSize, MSG_WAITALL) != scriptSize )
+	if( recv(socketPrograma, *script, *scriptSize, MSG_WAITALL) != *scriptSize )
 		return false;
 
 	log_info(logplp, "Script ansisop recibido");
 
-	//ansisop preprocesador
-	t_metadata_program *scriptMetadata = metadata_desde_literal(script);
+	return true;
+}
 
-	log_info(logplp, "Pidiendole memoria a la UMV para que pueda correr el script ansisop");
+pcb_t *crearPCB(int socketPrograma, socket_umvpcb *umvpcb, t_metadata_program *scriptMetadata)
+{
+	pcb_t *pcb = malloc(sizeof(pcb_t));
 
-	socket_pedirMemoria pedirMemoria;
-	pedirMemoria.header.size = sizeof(pedirMemoria);
+	pcb->id = nextProcessId; nextProcessId++;
 
-	pedirMemoria.codeSegmentSize = scriptSize + 1;
-	pedirMemoria.stackSegmentSize = config_get_int_value(config, "STACK_SIZE");
-	pedirMemoria.etiquetasSegmentSize = scriptMetadata->etiquetas_size;
-	pedirMemoria.instruccionesSegmentSize = scriptMetadata->instrucciones_size * sizeof(t_intructions);
+	pcb->codeSegment = umvpcb->codeSegment;
+	pcb->stackSegment = umvpcb->stackSegment;
+	pcb->stackCursor = 0;
+	pcb->codeIndex = umvpcb->codeIndex;
+	pcb->etiquetaIndex = umvpcb->etiquetaIndex;
+	pcb->etiquetasSize = scriptMetadata->etiquetas_size;
+	pcb->programCounter = scriptMetadata->instruccion_inicio;
+	pcb->contextSize = 0;
 
-	if( send(socketUMV, &pedirMemoria, sizeof(socket_pedirMemoria), 0) < 0 ){
-		log_error(logplp,"No se puedo pedir memoria a la UMV. Desconectando");
-		sem_post(&semKernel);
+	pcb->programaSocket = socketPrograma;
+	pcb->prioridad = CALCULAR_PRIORIDAD(scriptMetadata->cantidad_de_etiquetas, scriptMetadata->cantidad_de_funciones, scriptMetadata->instrucciones_size);
+	pcb->lastErrorCode = 0;
+
+	return pcb;
+}
+
+bool crearPrograma(int socketPrograma, char *script, uint32_t scriptSize, t_metadata_program *scriptMetadata)
+{
+	if( solicitarCreacionSegmentos(scriptSize, scriptMetadata) != true )
 		return false;
-	}
 
-	socket_respuesta respuesta;
-
-	if( recv(socketUMV, &respuesta, sizeof(socket_respuesta), MSG_WAITALL) != sizeof(socket_respuesta) ){
-		log_error(logplp,"No se recibio respuesta de la UMV. Desconectando");
-		sem_post(&semKernel);
-		return false;
-	}
-
-	if(respuesta.valor == true)
+	if( respuestaCreacionSegmentos() == true )
 	{
 		log_info(logplp, "La UMV informo que pudo alojar la memoria necesaria para el script ansisop");
-		log_info(logplp, "Enviando a la UMV los datos a guardar en los segmentos");
+		log_trace(logplp, "Enviando a la UMV los datos a guardar en los segmentos");
 
-		if( send(socketUMV, &nextProcessId, sizeof(nextProcessId), 0) < 0 ){
-			log_error(logplp,"No se pudo enviar nextProcessId a la UMV. Desconectando");
-			sem_post(&semKernel);
+		if( enviarSegmentos(nextProcessId, script, scriptSize, scriptMetadata) != true )
 			return false;
-		}
-
-		if( send(socketUMV, script, pedirMemoria.codeSegmentSize, 0) < 0 ){
-			log_error(logplp,"No se pudo enviar script a la UMV. Desconectando");
-			sem_post(&semKernel);
-			return false;
-		}
-
-		if( send(socketUMV, scriptMetadata->etiquetas, pedirMemoria.etiquetasSegmentSize, 0) < 0 ){
-			log_error(logplp,"No se pudo enviar etiquetas a la UMV. Desconectando");
-			sem_post(&semKernel);
-			return false;
-		}
-
-		if( send(socketUMV, scriptMetadata->instrucciones_serializado, pedirMemoria.instruccionesSegmentSize, 0) < 0 ){
-			log_error(logplp,"No se puedo enviar instrucciones serializado a la UMV. Desconectando");
-			sem_post(&semKernel);
-			return false;
-		}
 
 		socket_umvpcb umvpcb;
 
-		if( recv(socketUMV, &umvpcb, sizeof(socket_umvpcb), MSG_WAITALL) != sizeof(socket_umvpcb) ){
-			log_error(logplp,"No se recibio pcb de la UMV. Desconectando");
-			sem_post(&semKernel);
+		if( respuestaSegmentos(&umvpcb) != true )
 			return false;
-		}
 
-		pcb_t *pcb = malloc(sizeof(pcb_t));
-
-		pcb->id = nextProcessId; nextProcessId++;
-
-		pcb->codeSegment = umvpcb.codeSegment;
-		pcb->stackSegment = umvpcb.stackSegment;
-		pcb->stackCursor = umvpcb.stackSegment;
-		pcb->codeIndex = umvpcb.codeIndex;
-		pcb->etiquetaIndex = umvpcb.etiquetaIndex;
-		pcb->etiquetasSize = scriptMetadata->etiquetas_size;
-		pcb->programCounter = scriptMetadata->instruccion_inicio;
-		pcb->contextSize = 0;
-
-		pcb->programaSocket = socketPrograma;
-		pcb->prioridad = CALCULAR_PRIORIDAD(scriptMetadata->cantidad_de_etiquetas, scriptMetadata->cantidad_de_funciones, scriptMetadata->instrucciones_size);
-		pcb->lastErrorCode = 0;
+		pcb_t *pcb = crearPCB(socketPrograma, &umvpcb, scriptMetadata);
 
 		queue_push(newQueue, pcb);
 		log_info(logplp, "Segmentos cargados en la UMV y PCB generada en la cola NEW");
@@ -218,16 +157,46 @@ bool recibirYprocesarScript(int socketPrograma) {
 		puedoMoverNewAReady();
 	} else {
 		log_error(logplp, "La UMV informo que no pudo alojar la memoria necesaria para el script ansisop");
-		log_info(logplp, "Informandole a Programa que el script no se puede procesar por el momento");
-
 		mensajeYDesconexionPrograma(socketPrograma, "No hay memoria suficiente en este momento para ejecutar este script. Intentelo mas tarde");
 
 		return false;
 	}
 
-	metadata_destruir(scriptMetadata);
-	free(script);
-
 	return true;
 }
 
+bool recibirYprocesarScript(int socketPrograma)
+{
+	char *script;
+	uint32_t scriptSize;
+
+	if( recibirScriptAnsisop(socketPrograma, &script, &scriptSize) != true )
+	{
+		log_error(logplp, "Error al recibir script Ansisop");
+		return false;
+	}
+
+	//ansisop preprocesador
+	t_metadata_program *scriptMetadata = metadata_desde_literal(script);
+
+	bool result = crearPrograma(socketPrograma, script, scriptSize, scriptMetadata);
+
+	metadata_destruir(scriptMetadata);
+	free(script);
+
+	return result;
+}
+
+void mensajeYDesconexionPrograma(int programaSocket, char *mensaje)
+{
+	socket_msg msg;
+	msg.header.size = sizeof(socket_msg);
+	msg.type = 1; //log_error
+
+	strcpy(msg.msg, mensaje);
+	send(programaSocket, &msg, sizeof(socket_msg), 0);
+
+	log_trace(logplp, "Mensaje de error enviado al programa. Apagando socket: %d", programaSocket);
+
+	shutdown(programaSocket, SHUT_RDWR);
+}

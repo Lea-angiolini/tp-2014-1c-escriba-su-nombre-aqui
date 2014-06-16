@@ -15,14 +15,17 @@
 
 void *IniciarPlp(void *arg);
 bool iniciarServidorProgramas();
-bool conectarUMV();
 
 void MoverNewAReady();
 void puedoMoverNewAReady();
 
 void desconexionCliente();
+
+bool recibirScriptAnsisop(int socketPrograma, char **script, uint32_t *scriptSize);
+pcb_t *crearPCB(int socketPrograma, socket_umvpcb *umvpcb, t_metadata_program *scriptMetadata);
+bool crearPrograma(int socketPrograma, char *script, uint32_t scriptSize, t_metadata_program *scriptMetadata);
 bool recibirYprocesarScript(int socketPrograma);
 
-extern void mensajeYDesconexionPrograma(int programaSocket, char *mensaje);
+void mensajeYDesconexionPrograma(int programaSocket, char *mensaje);
 
 #endif /* PLP_H_ */

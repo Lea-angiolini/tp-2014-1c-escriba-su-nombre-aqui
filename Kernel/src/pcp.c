@@ -274,44 +274,38 @@ bool terminoQuantumCPU(int socketCPU)
 		case 2: //Segmentation fault
 			log_trace(logpcp, "Segmentation fault");
 			moverAExit(pcb);
-			mensajeYDesconexionPrograma(pcb->programaSocket,"Segmentation fault");
+			mensajeYDesconexionPrograma(pcb->programaSocket, "Segmentation fault");
 			bajarNivelMultiprogramacion();
 			break;
 
 		case 3: //Se solicito la posicion de memoria inexistente
 			log_trace(logpcp, "Se solicito la posicion de memoria inexistente");
 			moverAExit(pcb);
-			mensajeYDesconexionPrograma(pcb->programaSocket,"Se solicito la posicion de memoria inexistente");
+			mensajeYDesconexionPrograma(pcb->programaSocket, "Se solicito la posicion de memoria inexistente");
 			bajarNivelMultiprogramacion();
 			break;
 
 		case 4: //UMV error
 			log_trace(logpcp, "UMV error");
 			moverAExit(pcb);
-			mensajeYDesconexionPrograma(pcb->programaSocket,"UMV error");
+			mensajeYDesconexionPrograma(pcb->programaSocket, "UMV error");
 			bajarNivelMultiprogramacion();
 			break;
 
 		case 5: //Label error
 			log_trace(logpcp, "Label error");
 			moverAExit(pcb);
-			mensajeYDesconexionPrograma(pcb->programaSocket,"Label error");
+			mensajeYDesconexionPrograma(pcb->programaSocket, "Label error");
 			bajarNivelMultiprogramacion();
+			break;
+
+		case 6:
+			log_trace(logpcp, "Primitiva error");
+			moverAExit(pcb);
+			mensajeYDesconexionPrograma(pcb->programaSocket, "Primitiva error");
+			bajarNivelMultiprogramacion();
+			break;
 	}
 
 	return true;
-}
-
-void mensajeYDesconexionPrograma(int programaSocket, char *mensaje)
-{
-	socket_msg msg;
-	msg.header.size = sizeof(socket_msg);
-	msg.type = 1; //log_error
-
-	strcpy(msg.msg, mensaje);
-	send(programaSocket, &msg, sizeof(socket_msg), 0);
-
-	log_trace(logpcp, "Mensaje de error enviado al programa. Apagando socket: %d", programaSocket);
-
-	shutdown(programaSocket, SHUT_RDWR);
 }

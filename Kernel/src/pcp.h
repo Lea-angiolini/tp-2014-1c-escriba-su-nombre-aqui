@@ -31,6 +31,6 @@ void desconexionCPU(int socketCPU);
 bool recibirYprocesarPedido(int socketCPU);
 
 bool terminoQuantumCPU(int socketCPU);
-void mensajeYDesconexionPrograma(int programaSocket, char *mensaje);
+extern void mensajeYDesconexionPrograma(int programaSocket, char *mensaje);
 
 #endif /* PCP_H_ */
