@@ -13,7 +13,7 @@
 
 typedef struct {
 	t_queue *cola;
-	uint32_t valor;
+	int32_t valor;
 } semaforo_t;
 
 bool cargar_config(char *configFile);
