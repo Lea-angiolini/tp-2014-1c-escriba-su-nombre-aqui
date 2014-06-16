@@ -60,7 +60,13 @@ t_puntero definirVariable(t_nombre_variable identificador_variable)
 t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable)
 {
 	uint32_t puntero = obtenerOffsetVarible( identificador_variable );
-	log_trace( logger, "Llamada a obtenerPosicionVariable, el identificador es: %c, y esta en %d", identificador_variable, puntero );
+	if(puntero == 0){
+		PCB_enEjecucion.lastErrorCode = 3;
+		quantumRestante = 0;
+		log_error(logger, "Se solicito una posicion de una variable inexistente %c", identificador_variable);
+	}else{
+		log_trace( logger, "Llamada a obtenerPosicionVariable, el identificador es: %c, y esta en %d", identificador_variable, puntero );
+	}
 	return (t_puntero) puntero;
 }
 
@@ -109,12 +115,12 @@ void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar)
 
 void finalizar(void)
 {
-	if(PCB_enEjecucion.stackCursor - PCB_enEjecucion.contextSize == 0){
-		log_trace( logger, "Finalizando el programa" );
+	if(PCB_enEjecucion.stackCursor - (PCB_enEjecucion.contextSize*5) == 0){
+		log_trace(logger, "Finalizando el programa");
 		PCB_enEjecucion.lastErrorCode = 1;
 		quantumRestante = 0;
 	}else{
-		log_trace( logger, "Retornando VOID" );
+		log_trace(logger, "Retornando VOID");
 		retornarVoid();
 	}
 }

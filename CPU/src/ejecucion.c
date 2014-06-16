@@ -16,17 +16,15 @@ extern pcb_t PCB_enEjecucion;
 extern uint32_t quantumRestante;
 extern uint32_t retardoQuantum;
 
-//TODO no esta hecho todavia, es semi pseudocodigo
-bool ejecutar () {
 
+void ejecutar () {
 
-	log_info( logger, "Inicio la ejecucion del programa %d", PCB_enEjecucion.id );
+	log_info(logger, "Inicio la ejecucion del programa %d", PCB_enEjecucion.id);
 
-	log_debug( logger, "Solicito el stack a la UMV");
-	if( !obtenerContextStack() || !obtenerEtiquetas() ) {
+	if( !generarDiccionarioVariables() || !obtenerEtiquetas() ) {
 		PCB_enEjecucion.lastErrorCode = 4;
 		//No hago un return false porque la cpu respondio bien, pero se debe informar al kernel, si hiciera return false ni llegaria al Kernel
-		return true;
+		return;
 	}
 
 	while( quantumRestante > 0 && PCB_enEjecucion.lastErrorCode == 0 ) //Agregar condicion para salida por excepcion o llamada bloqueante
@@ -36,7 +34,7 @@ bool ejecutar () {
 
 		if( instruccion == -1 ){
 			log_error( logger, "No se pudo obtener la linea" );
-			return false;
+			return;
 		}
 
 		log_debug( logger, "Incrementando el program counter" );
@@ -51,19 +49,15 @@ bool ejecutar () {
 	}
 
 	if( quantumRestante == 0 ) {
-		log_debug( logger, "Finalizo el quantum");
+		log_info(logger, "Finalizo el quantum");
 	}
 
-	log_debug( logger, "Guardando el stack en la UMV");
-
-	if( ! guardarStack() || ! enviarFinQuantum( PCB_enEjecucion.id ) ){
+	if(! enviarFinQuantum(PCB_enEjecucion.id)){
 		log_error( logger, "Hubo un problema al sincronizar los datos con la UMV" );
 		PCB_enEjecucion.lastErrorCode = 4;
-		//No hago un return false porque la cpu respondio bien, pero se debe informar al kernel, si hiciera return false ni llegaria al Kernel
 	}
 
-	return true;
-
+	return;
 }
 
 

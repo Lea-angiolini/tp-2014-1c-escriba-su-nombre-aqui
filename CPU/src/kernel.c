@@ -59,21 +59,17 @@ bool recibirYProcesarMensajesKernel()
 	socket_pcb pcbNuevo;
 	while(1)
 	{
-		log_debug(logger, "Esperando nueva PCB del Kernel");
+		log_debug(logger, "Esperando nueva PCB del Kernel...");
 
 		if( recv(socketKernel, &pcbNuevo, sizeof(socket_pcb), MSG_WAITALL) != sizeof(socket_pcb) )
 			return false;
 
-		log_info(logger, "Se ha recibido una nueva PCB");
+		log_trace(logger, "Se ha recibido una nueva PCB, seteo el quantum en %d", quantumPorEjecucion);
 
 		PCB_enEjecucion = pcbNuevo.pcb;
-		quantumRestante = 3;
+		quantumRestante = quantumPorEjecucion;
 
-		if( ! ejecutar() ) {
-			//TODO maneja error de ejecucion
-			log_error( logger, "Finalizando la ejecucion por un error." );
-			return false;
-		}
+		ejecutar();
 
 		if( !enviarPCB() ) {
 			log_error(logger, "No se puedo devolver el PCB al Kernel");

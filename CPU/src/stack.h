@@ -8,6 +8,7 @@
 #include <stdbool.h>
 
 #include "commons/parser/parser.h"
+#include "commons/collections/dictionary.h"
 
 /*
  * Esta estructura tiene una porcion del stack. Puede ser cualquier porcion.
@@ -23,14 +24,6 @@
  *
  */
 
-//TODO crear el tamaño total para verificar segmentation fault
-typedef struct {
-
-	char data[1000];
-	bool modificado;
-
-} __attribute__((packed)) Stack;
-
 
 typedef struct {
 	uint32_t lastContextInit;
@@ -45,7 +38,13 @@ typedef struct {
 } __attribute__((packed)) StackFuncionConRetorno;
 
 
-Stack new_Stack();
+
+typedef struct {
+	char identificador;
+	uint32_t posicion;
+} t_diccionario_vabiable;
+
+
 
 uint32_t apilarVariable( char identificador );
 uint32_t obtenerOffsetVarible( char variable );
@@ -57,8 +56,7 @@ bool apilarFuncionSinRetorno( );
 
 bool estaEnContexto(uint32_t pos);
 
-bool obtenerContextStack();
-bool guardarStack();
+bool generarDiccionarioVariables();
 
 bool retornarVoid();
 bool retornarValor(t_valor_variable retorno);

@@ -13,6 +13,5 @@ void destruir_config();
 
 extern t_config *config;
 extern AnSISOP_funciones * ansisop_funciones;
-extern Stack stackCache;
 
 #endif /* CONFIGS_H_ */

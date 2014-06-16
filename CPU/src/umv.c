@@ -84,6 +84,7 @@ char * solicitarLineaPrograma() {
 	char * respuesta = malloc(instruct->offset);
 	memcpy(respuesta, paqueteRespuesta->data, instruct->offset);
 	free(paqueteRespuesta);
+	free(respuestaCodeIndex);
 	eliminarSaltoLinea(respuesta);
 	return respuesta;
 
@@ -159,7 +160,11 @@ bool escribirMemoria(uint32_t base, uint32_t offset, uint32_t length, void * dat
 	memcpy(sGuardarEnMemoria.data, data, length) ;
 
 	socket_RespuestaGuardarEnMemoria * respuesta = (socket_RespuestaGuardarEnMemoria*) enviarYRecibirPaquete(socketUMV, &sGuardarEnMemoria, totalLengt, 0, 'c', 'a', logger);
-	return (respuesta != NULL && respuesta->status != false);
+	bool exito = (respuesta != NULL && respuesta->status != false);
+	if(respuesta!= NULL){
+		free(respuesta);
+	}
+	return exito;
 
 }
 
@@ -169,14 +174,15 @@ void * leerMemoria(uint32_t base, uint32_t offset, uint32_t length){
 	sLeer.base = base;
 	sLeer.offset = offset;
 	sLeer.length = length;
+	log_debug(logger, "Leyendo UMV base = %d, offset = %d, length = %d", base, offset, length);
 	socket_RespuestaLeerMemoria * respuesta = (socket_RespuestaLeerMemoria *) enviarYRecibirPaquete(socketUMV, (void*)&sLeer, sizeof(socket_leerMemoria), sizeof(socket_RespuestaLeerMemoria) , 'b', 'a', logger) ;
 	if( respuesta == NULL || respuesta->status == false ){
 		return NULL;
 	}
 
-	printf("Leido: %d\n", (uint32_t) respuesta->data);
 	void * data = malloc(length);
 	memcpy(data, respuesta->data, length);
+	free(respuesta);
 	return data;
 }
 
