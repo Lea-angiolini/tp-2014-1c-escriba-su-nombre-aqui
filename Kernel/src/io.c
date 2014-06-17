@@ -61,6 +61,9 @@ void crear_pedido(char *dispositivo, uint32_t pid, uint32_t unidades)
 {
 	log_trace(logpcp, "Obteniendo dispositivo desde el diccionario de dispositivos");
 
+	if( !dictionary_has_key(dispositivos, dispositivo))
+		log_trace(logpcp, "El dispositivo %s no se encuentra en el diccionario. Segmentation fault", dispositivo);
+
 	io_t *disp = dictionary_get(dispositivos, dispositivo);
 	data_cola_t *pedido = malloc(sizeof(data_cola_t));
 

@@ -43,6 +43,9 @@ bool syscallObtenerValor(int socketCPU)
 	log_debug(logpcp, "CPU: %d, pidio el valor de la variable: %s", socketCPU, sObtenerValor.identificador);
 	log_trace(logpcp, "Obteniendo valor desde el diccionario de variables compartidas");
 
+	if( !dictionary_has_key(variablesCompartidas, sObtenerValor.identificador))
+		log_trace(logpcp, "La variable %s no se encuentra en el diccionario. Segmentation fault", sObtenerValor.identificador);
+
 	int32_t *valor = dictionary_get(variablesCompartidas, sObtenerValor.identificador);
 	sObtenerValor.valor = *valor;
 
@@ -64,6 +67,9 @@ bool syscallGrabarValor(int socketCPU)
 	log_debug(logpcp, "CPU: %d, pidio grabar el valor: %d en la variable: %s", socketCPU, sGrabarValor.valor, sGrabarValor.identificador);
 	log_trace(logpcp, "Grabando valor en el diccionario de variables compartidas");
 
+	if( !dictionary_has_key(variablesCompartidas, sGrabarValor.identificador))
+		log_trace(logpcp, "La variable %s no se encuentra en el diccionario. Segmentation fault", sGrabarValor.identificador);
+
 	int32_t *valor = dictionary_get(variablesCompartidas, sGrabarValor.identificador);
 	*valor = sGrabarValor.valor;
 
@@ -79,6 +85,9 @@ bool syscallWait(int socketCPU)
 
 	log_debug(logpcp, "CPU: %d, hizo wait en el semaforo: %s", socketCPU, sWait.identificador);
 	log_trace(logpcp, "Decrementando semaforo en el diccionario de semaforos");
+
+	if( !dictionary_has_key(semaforos, sWait.identificador))
+		log_trace(logpcp, "El semaforo %s no se encuentra en el diccionario. Segmentation fault", sWait.identificador);
 
 	semaforo_t *semaforo = dictionary_get(semaforos, sWait.identificador);
 	semaforo->valor -= 1;
@@ -140,6 +149,9 @@ bool syscallSignal(int socketCPU)
 
 	log_debug(logpcp, "CPU: %d, hizo signal en el semaforo: %s", socketCPU, sSignal.identificador);
 	log_trace(logpcp, "Incrementando semaforo en el diccionario de semaforos");
+
+	if( !dictionary_has_key(semaforos, sSignal.identificador))
+		log_trace(logpcp, "El semaforo %s no se encuentra en el diccionario. Segmentation fault", sSignal.identificador);
 
 	semaforo_t *semaforo = dictionary_get(semaforos, sSignal.identificador);
 	semaforo->valor += 1;
