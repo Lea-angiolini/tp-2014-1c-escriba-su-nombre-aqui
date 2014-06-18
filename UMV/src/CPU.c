@@ -33,7 +33,7 @@ int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud )
 	programa = buscarPrograma( solicitud->pdi );
 	pthread_rwlock_rdlock(&lockEscrituraLectura);
 	Segmento * segmento;
-	segmento = buscarSegmentoEnPrograma(programa, solicitud->base);
+	segmento = buscarSegmentoEnProgramaPorVirtual(programa, solicitud->base);
 
 
 
@@ -92,7 +92,7 @@ int procesarSolicitudEscrituraMemoria( CPU * cpu, socket_guardarEnMemoria * soli
 	programa = buscarPrograma( solicitud->pdi);
 	pthread_rwlock_rdlock(&lockEscrituraLectura);
 	Segmento * segmento;
-	segmento = buscarSegmentoEnPrograma(programa, solicitud->base);
+	segmento = buscarSegmentoEnProgramaPorVirtual(programa, solicitud->base);
 
 	if( segmento == NULL ) {
 		log_error(logger, "No se encuentra el segmento especificado | UMV/src/cpu.c -> procesarSolicitudEscrituraMemoria");

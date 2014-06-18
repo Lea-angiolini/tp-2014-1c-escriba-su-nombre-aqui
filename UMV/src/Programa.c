@@ -17,48 +17,33 @@ Programa * crearPrograma(uint32_t pid, void * script, void * etiquetas,
 	srand( time(NULL));
 
 	programa->stack = crearSegmento(tamanioStack);
-		crearDireccionesVirtuales( programa->stack, tamanioStack, 0);
+	programa->script = crearYllenarSegmento(tamanioScript, script);
+	programa->instrucciones = crearYllenarSegmento(tamanioInstrucciones,instrucciones_serializado);
 
-	/*	programa->stack->inicioVirtual = 0;
-		programa->stack->finVirtual = tamanioStack - 1;*/
-
-		programa->script = crearYllenarSegmento(tamanioScript, script);
-		crearDireccionesVirtuales(programa->script, tamanioScript,
+	crearDireccionesVirtuales( programa->stack, tamanioStack, 0);
+	crearDireccionesVirtuales(programa->script, tamanioScript,
 				programa->stack->finVirtual);
 
+	if( tamanioEtiquetas == 0){
+		programa->etiquetas = NULL;
+		crearDireccionesVirtuales( programa->instrucciones, tamanioInstrucciones, programa->script->finVirtual);
+
+	}else{
 		programa->etiquetas = crearYllenarSegmento(tamanioEtiquetas, etiquetas);
-		if( programa->script->finVirtual == SEGMENTOVACIO ){
-			crearDireccionesVirtuales( programa->etiquetas, tamanioEtiquetas, programa->stack->finVirtual);
-		}else{
-			crearDireccionesVirtuales( programa->etiquetas, tamanioEtiquetas, programa->script->finVirtual);
-		}
-		/*if( programa->etiquetas->inicioReal ==SEGMENTOVACIO){
-			crearDireccionesVirtuales( programa->etiquetas, tamanioEtiquetas, 0);
-			}else{
-				crearDireccionesVirtuales(programa->etiquetas, tamanioEtiquetas,
-				programa->script->finVirtual);
-				}*/
-
-		programa->instrucciones = crearYllenarSegmento(tamanioInstrucciones,
-				instrucciones_serializado);
-		if( programa->etiquetas->finVirtual == SEGMENTOVACIO ){
-			crearDireccionesVirtuales( programa->instrucciones, tamanioInstrucciones, programa->script->finVirtual);
-		}else{
-			crearDireccionesVirtuales( programa->instrucciones, tamanioInstrucciones, programa->etiquetas->finVirtual);
-		}
+		crearDireccionesVirtuales( programa->etiquetas, tamanioEtiquetas, programa->script->finVirtual);
+		crearDireccionesVirtuales( programa->instrucciones, tamanioInstrucciones, programa->etiquetas->finVirtual);
+	}
 
 
-		/*if(programa->etiquetas->inicioVirtual == SEGMENTOVACIO){
-			crearDireccionesVirtuales( programa->instrucciones, tamanioInstrucciones, programa->script->finVirtual);
-		}else{
-			crearDireccionesVirtuales(programa->instrucciones, tamanioInstrucciones,
-				programa->etiquetas->finVirtual);
-			}*/
 		list_add(programas, programa);
-		printf( "%d\t\t%d\n", programa->stack->inicioVirtual,programa->stack->finVirtual);
-		printf( "%d\t\t%d\n", programa->script->inicioVirtual,programa->script->finVirtual);
-		printf( "%d\t\t%d\n", programa->etiquetas->inicioVirtual,programa->etiquetas->finVirtual);
-		printf( "%d\t\t%d\n", programa->instrucciones->inicioVirtual,programa->instrucciones->finVirtual);
+		printf( "stack %d\t\t%d\n", programa->stack->inicioVirtual,programa->stack->finVirtual);
+		printf( "script %d\t\t%d\n", programa->script->inicioVirtual,programa->script->finVirtual);
+		if( programa->etiquetas == NULL){
+			printf("El segmento de etiquetas esta vacio\n");
+			}else{
+				printf( "etiquetas %d\t\t%d\n", programa->etiquetas->inicioVirtual,programa->etiquetas->finVirtual);
+				}
+		printf( "instrucciones %d\t\t%d\n", programa->instrucciones->inicioVirtual,programa->instrucciones->finVirtual);
 
 		pthread_rwlock_unlock(&lockEscrituraLectura);
 
@@ -69,10 +54,17 @@ Programa * crearPrograma(uint32_t pid, void * script, void * etiquetas,
 socket_umvpcb crearEstructuraParaPCB(Programa * programa) {
 
 	socket_umvpcb datosSegmentos;
+	uint32_t etiquetas;
 
 	datosSegmentos.stackSegment = programa->stack->inicioVirtual;
 	datosSegmentos.codeSegment = programa->script->inicioVirtual;
-	datosSegmentos.etiquetaIndex = programa->etiquetas->inicioVirtual;
+	if( programa->etiquetas == NULL){
+		etiquetas = SEGMENTOVACIO;
+	}else{
+		etiquetas = programa->etiquetas->inicioVirtual;
+	}
+
+	datosSegmentos.etiquetaIndex = etiquetas;
 	datosSegmentos.codeIndex = programa->instrucciones->inicioVirtual;
 
 	return datosSegmentos;
@@ -80,26 +72,15 @@ socket_umvpcb crearEstructuraParaPCB(Programa * programa) {
 
 Segmento * crearDireccionesVirtuales(Segmento * segmento,
 		uint32_t tamanioSegmento, uint32_t finVirtualDelAnterior) {
-	if( tamanioSegmento == 0){
-		segmento->inicioVirtual = SEGMENTOVACIO;
-		segmento->finVirtual = SEGMENTOVACIO;
-	}else{
+
 		uint32_t seed = finVirtualDelAnterior + 1;
 		segmento->inicioVirtual = rand() % 417 + seed;
 		segmento->finVirtual = segmento->inicioVirtual + tamanioSegmento - 1;
-		}
 
 	return segmento;
 
 
-	/*if( segmento->inicioReal == SEGMENTOVACIO){
-		segmento->inicioVirtual = SEGMENTOVACIO;
-	}else{
 
-	segmento->inicioVirtual = finVirtualDelAnterior + 1;
-	segmento->finVirtual = segmento->inicioVirtual + (tamanioSegmento - 1);
-	}
-	return segmento;*/
 }
 
 
@@ -123,7 +104,7 @@ Programa * buscarPrograma(uint32_t pid) {
 	//return NULL;
 }
 
-Segmento * buscarSegmentoEnPrograma(Programa * programa, uint32_t base) {
+Segmento * buscarSegmentoEnProgramaPorVirtual(Programa * programa, uint32_t base) {
 	log_info(logger, "La base que estoy buscando es %d 2", base);
 
 	if (base == programa->stack->inicioVirtual){
@@ -133,14 +114,36 @@ Segmento * buscarSegmentoEnPrograma(Programa * programa, uint32_t base) {
 		log_info(logger,"Es el script!");
 
 		return programa->script;}
+	if(programa->etiquetas != NULL){
+
 	if (base == programa->etiquetas->inicioVirtual){
 		log_info(logger,"Es el de etiquetas!");
 
 		return programa->etiquetas;}
+}
 	if (base == programa->instrucciones->inicioVirtual){
 		log_info(logger,"Es el de instrucciones!");
 
 		return programa->instrucciones;}
+	return NULL ;
+
+}
+
+Segmento * buscarSegmentoEnProgramaPorReal(Programa * programa, uint32_t base) {
+	log_info(logger, "La base que estoy buscando es %d 2", base);
+
+	if (base == programa->stack->inicioReal)
+		return programa->stack;
+	if (base == programa->script->inicioReal)
+		return programa->script;
+	if(programa->etiquetas != NULL){
+		if (base == programa->etiquetas->inicioReal)
+			return programa->etiquetas;
+	}
+
+	if (base == programa->instrucciones->inicioReal)
+		return programa->instrucciones;
+
 	return NULL ;
 
 }

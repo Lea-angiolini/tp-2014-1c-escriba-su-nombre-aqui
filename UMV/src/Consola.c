@@ -78,12 +78,18 @@ void operacionesConSegmentos() {
 		requisitosOperacionSegmento(operacion);
 		break;
 	case 'c':
-		printf("Ingrese el tamanio del segmento a crear");
+		printf("Ingrese el tamanio del segmento a crear\n");
 		uint32_t tamanio;
 		scanf("%d", &tamanio);
 		while (getchar() != '\n')
 			;
-		crearSegmento(tamanio);
+		if(tamanio > memoriaLibre()){
+			printf("El tamaño solicitado excede el espacio libre en memoria");
+		}else{
+			crearSegmento(tamanio);
+
+		}
+
 		break;
 
 	case 'd':
@@ -155,13 +161,15 @@ void requisitosOperacionSegmento(char operacion) {
 
 bool verificarRequisitos( uint32_t programa, uint32_t base){
 	Programa * prog = buscarPrograma( programa);
-
-	if( prog == NULL )
+	if( prog == NULL ){
+		printf("Soy un pelotudo por programa");
 		return false;
-
-	Segmento * seg = buscarSegmentoEnPrograma( prog, base);
-	if( seg == NULL )
+	}
+	Segmento * seg = buscarSegmentoEnProgramaPorReal( prog, base);
+	if( seg == NULL ){
+		printf("Soy un pelotudo");
 		return false;
+	}
 	return true;
 
 }
@@ -320,34 +328,33 @@ void buscarProgramaEImprimirSegmentos() {
 }
 
 void printSegmentos(t_list * segmentos) {
+	ordenarTablaSegmentos();
 	int i = 0;
 	uint32_t cont = 0;
 	for (i = 0; i < list_size(segmentos); i++) {
 		Segmento * segmento = (Segmento *) list_get(segmentos, i);
-		if (segmento->inicioReal > cont) {
-			printEspacioLibre(cont, segmento->inicioReal);
-			cont = segmento->finReal;
+		if (segmento->inicioReal != cont) {
+			printEspacioLibre(cont, segmento->inicioReal - 1);
+			cont = segmento->finReal + 1;
 		}
 		printSegmentosHeaders();
 		printSegmento(segmento);
+		cont = segmento->finReal + 1;
 	}
 	if (cont < (memoria_size - 1))
 		printEspacioLibre(cont, (memoria_size - 1));
 }
 
 void printSegmento(Segmento * segmento) {
-	if( segmento->inicioReal == SEGMENTOVACIO){
-		printf("Este segmento esta vacio");
-	}else{
-	printf(">>>\t\t%d\t\t%d\t\t%d\n", segmento->inicioReal, segmento->finReal,
-			segmento->finReal - segmento->inicioReal + 1);
-	}
+	printf("%d\t\t%d\t\t%d\t\t%d\n", segmento->id, segmento->inicioReal, segmento->finReal,
+	tamanioSegmento(segmento));
+
 }
 
 void printEspacioLibre(uint32_t inicioEspacio, uint32_t finEspacio) {
-	printf("\nEspacio Libre");
+	printf("Libre");
 	printSegmentosHeaders();
-	printf(">>>\t\t%d\t\t%d\t\t%d\n", inicioEspacio, finEspacio,
+	printf("\t\t%d\t\t%d\t\t%d\n", inicioEspacio, finEspacio,
 			finEspacio - inicioEspacio + 1);
 }
 

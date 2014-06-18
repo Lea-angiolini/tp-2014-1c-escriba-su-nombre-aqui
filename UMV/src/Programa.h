@@ -28,7 +28,8 @@ socket_umvpcb crearEstructuraParaPCB( Programa * programa);
 
 Programa * buscarPrograma( uint32_t pdi);
 
-Segmento * buscarSegmentoEnPrograma( Programa * programa, uint32_t offset);
+Segmento * buscarSegmentoEnProgramaPorReal(Programa * programa, uint32_t base);
+Segmento * buscarSegmentoEnProgramaPorVirtual(Programa * programa, uint32_t base);
 
 bool destruirPrograma( Programa * programa);
 void destruirTodosLosProgramas();

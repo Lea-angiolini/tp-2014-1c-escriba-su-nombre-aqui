@@ -1,7 +1,6 @@
 #include "Segmento.h"
 #include "config.h"
 
-uint32_t contadorId = 0;
 
 Segmento * new_Segmento( uint32_t inicio, uint32_t fin ) {
 
@@ -11,9 +10,6 @@ Segmento * new_Segmento( uint32_t inicio, uint32_t fin ) {
 
 	segmento->finVirtual	= 0;
 	segmento->inicioVirtual = 0;
-
-	segmento->id			= contadorId;
-	contadorId++;
 
 	return segmento;
 
