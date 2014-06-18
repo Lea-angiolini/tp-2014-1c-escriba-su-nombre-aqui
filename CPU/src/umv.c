@@ -8,6 +8,7 @@
 #include "commons/string.h"
 
 #include <unistd.h>
+#include <sys/socket.h>
 
 extern t_log * logger;
 extern pcb_t PCB_enEjecucion;
@@ -36,98 +37,74 @@ bool crearConexionUMV() {
 }
 
 
+
 /*
  * Dado el program counter de un pcb, se le solicita a la UMV la linea de codigo a ejecutar
  *
  *
  */
-
 char * solicitarLineaPrograma() {
 
+	log_debug(logger, "Solicitando linea de programa a la UMV para el programCounter = %d, base = %d, offset = %d, length = %d", PCB_enEjecucion.programCounter, PCB_enEjecucion.codeIndex, sizeof(t_intructions) * PCB_enEjecucion.programCounter, sizeof(t_intructions));
 
-	socket_leerMemoria sLeerCodeIndex;
-	sLeerCodeIndex.pdi = PCB_enEjecucion.id;
-	sLeerCodeIndex.base = PCB_enEjecucion.codeIndex;
-	sLeerCodeIndex.offset = sizeof(t_intructions) * PCB_enEjecucion.programCounter;
-	sLeerCodeIndex.length = sizeof(t_intructions);
-
-	log_debug(logger, "Solicitando linea de programa a la UMV para el programCounter = %d, base = %d, offset = %d, length = %d", PCB_enEjecucion.programCounter, sLeerCodeIndex.base, sLeerCodeIndex.offset, sLeerCodeIndex.length);
-
-	socket_RespuestaLeerMemoria * respuestaCodeIndex = (socket_RespuestaLeerMemoria *) enviarYRecibirPaquete(socketUMV, (void*)&sLeerCodeIndex, sizeof(socket_leerMemoria), sizeof(socket_RespuestaLeerMemoria) , 'b', 'a', logger) ;
-	if ( respuestaCodeIndex == NULL || respuestaCodeIndex->status == false ) {
+	t_intructions * instruct = (t_intructions *) leerMemoria(PCB_enEjecucion.codeIndex, sizeof(t_intructions) * PCB_enEjecucion.programCounter, sizeof(t_intructions));
+	if(instruct == NULL) {
 		log_error( logger, "La UMV respondio con un error o Segmentation fault" );
 		return (char *)-1;
 	}
 
-	t_intructions * instruct = (t_intructions *) respuestaCodeIndex->data ;
 	log_debug( logger, "Se leyo el codeIndex, la proxima instruccion esta en %d - %d", instruct->offset, instruct->start );
 
 	if(instruct->offset == 0){
 		log_error( logger, "Llego un code index con length 0 | ( %s ) %s - %s",  __func__, __FILE__, __LINE__  );
 		return (char *) -1;
-	}else if( instruct->offset <= 3 ){
-		log_warning( logger, "Llego un code index con length de 3 o menos" );
 	}
 
-	socket_leerMemoria sLeerLineaCodigo;
-	sLeerLineaCodigo.pdi = PCB_enEjecucion.id;
-	sLeerLineaCodigo.base = PCB_enEjecucion.codeSegment;
-	sLeerLineaCodigo.offset = instruct->start;
-	sLeerLineaCodigo.length = instruct->offset;
-
-	socket_RespuestaLeerMemoria * paqueteRespuesta = (socket_RespuestaLeerMemoria *) enviarYRecibirPaquete( socketUMV, (void*)&sLeerLineaCodigo, sizeof( socket_leerMemoria ), sizeof( socket_RespuestaLeerMemoria ) , 'b', 'a', logger  ) ;
-
-	if ( paqueteRespuesta == NULL || paqueteRespuesta->data == NULL || paqueteRespuesta->status == false ) {
+	char * respuesta = (char *) leerMemoria(PCB_enEjecucion.codeSegment, instruct->start, instruct->offset);
+	if (respuesta == NULL) {
 		return (char *)-1;
 	}
 
-	char * respuesta = malloc(instruct->offset);
-	memcpy(respuesta, paqueteRespuesta->data, instruct->offset);
-	free(paqueteRespuesta);
-	free(respuestaCodeIndex);
-	eliminarSaltoLinea(respuesta);
-	return respuesta;
+
+	free(instruct);
+	return eliminarSaltoLinea(respuesta);
 
 }
 
-void eliminarSaltoLinea(char * linea){
+char * eliminarSaltoLinea(char * linea){
 	int i = 0;
 	for(i = 0; i < strlen(linea); i++){
 		if (linea[i] == '\n'){
 			linea[i] = '\0';
 		}
 	}
+	return linea;
 }
 
 bool obtenerEtiquetas(){
 
-	if( PCB_enEjecucion.etiquetasSize == 0 ){
-		etiquetasCache = realloc( etiquetasCache, 1 );
-		log_warning( logger, "No leyeron etiquetas, el programa tiene?" );
+	if(PCB_enEjecucion.etiquetasSize == 0){
+		etiquetasCache = realloc(etiquetasCache, 1);
+		log_warning(logger, "No leyeron etiquetas, el programa tiene?");
 		return true;
 	}
 
-	socket_leerMemoria sLeerCodeIndex;
-	sLeerCodeIndex.pdi = PCB_enEjecucion.id;
-	sLeerCodeIndex.base = PCB_enEjecucion.etiquetaIndex;
-	sLeerCodeIndex.offset = 0;
-	sLeerCodeIndex.length = PCB_enEjecucion.etiquetasSize;
-	socket_RespuestaLeerMemoria * respuesta = (socket_RespuestaLeerMemoria *) enviarYRecibirPaquete( socketUMV, (void*)&sLeerCodeIndex, sizeof( socket_leerMemoria ), sizeof( socket_RespuestaLeerMemoria ) , 'b', 'a', logger  ) ;
-
-	if( respuesta == NULL || respuesta->status == false ) {
-		log_error( logger, "Llego un code index con length 0 | ( %s ) %s - %s  ",  __func__, __FILE__, __LINE__ );
+	void * respuesta = leerMemoria(PCB_enEjecucion.etiquetaIndex, 0, PCB_enEjecucion.etiquetasSize);
+	if(respuesta == NULL) {
+		log_error( logger, "Error al leer las etiquiquetas | ( %s ) %s - %s  ",  __func__, __FILE__, __LINE__ );
 		return false;
 	}
 
-	etiquetasCache = realloc( etiquetasCache, PCB_enEjecucion.etiquetasSize );
-	memcpy( etiquetasCache, respuesta->data, PCB_enEjecucion.etiquetasSize );
-	free( respuesta );
+	etiquetasCache = realloc(etiquetasCache, PCB_enEjecucion.etiquetasSize);
+	memcpy(etiquetasCache, respuesta, PCB_enEjecucion.etiquetasSize);
+	free(respuesta);
 	return true;
 
 }
 
+
+//Rescrito respecto a lo de la catedra por un bug
 uint32_t obtenerLineaDeLabel( t_nombre_etiqueta t_nombre_etiqueta ) {
-	//t_nombre_etiqueta[ strlen(t_nombre_etiqueta) -1 ] = '\0';
 	int i=0;
 	int offset = 0;
 	char* nombre;
@@ -137,9 +114,8 @@ uint32_t obtenerLineaDeLabel( t_nombre_etiqueta t_nombre_etiqueta ) {
 			return *(nombre + 1 + strlen(nombre));
 		offset += strlen(nombre) + 1 + sizeof(t_puntero_instruccion);
 	}
-	return -1;
+	return -1;//Mmmm, porque es negativo? TODO, verificar
 }
-
 
 
 

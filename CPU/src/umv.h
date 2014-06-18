@@ -10,7 +10,7 @@ bool crearConexionUMV();
 
 char * solicitarLineaPrograma();
 uint32_t obtenerLineaDeLabel( t_nombre_etiqueta t_nombre_etiqueta );
-void eliminarSaltoLinea(char * linea);
+char * eliminarSaltoLinea(char * linea);
 
 bool escribirStack(uint32_t offset, uint32_t length, void * data);
 bool escribirMemoria(uint32_t base, uint32_t offset, uint32_t length, void * data);
