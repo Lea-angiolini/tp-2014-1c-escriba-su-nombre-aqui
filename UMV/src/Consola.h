@@ -21,7 +21,7 @@ void modificarAlgoCreacionSegmentos();
 void modificarRetardoUMV();
 void generarDump();
 void requisitosOperacionSegmento( char operacion);
-void solicitarPosicion(uint32_t programa, uint32_t base, uint32_t offset, uint32_t tamanio);
+void solicitarPosicion( uint32_t base, uint32_t offset, uint32_t tamanio);
 void escribirPosicion();
 void imprimirMemoria();
 void printSegmentos(t_list * segmentos);
