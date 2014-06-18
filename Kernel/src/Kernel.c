@@ -8,9 +8,13 @@
 #include "config.h"
 
 extern t_log *logplp, *logpcp;
+
+pthread_t plpThread, pcpThread;
+extern pthread_t dispatcherThread;
 sem_t semKernel;
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
 	if (argc != 2) {
 		printf("Modo de empleo: ./Kernel config.cfg\n");
 		return EXIT_SUCCESS;
@@ -23,10 +27,7 @@ int main(int argc, char *argv[]) {
 
 	crear_colas();
 
-
 	sem_init(&semKernel, 0, 0);
-
-	pthread_t plpThread, pcpThread;
 
 	if( pthread_create(&plpThread, NULL, &IniciarPlp, NULL) != 0 )
 	{
@@ -44,6 +45,11 @@ int main(int argc, char *argv[]) {
 
 	pthread_cancel(plpThread);
 	pthread_cancel(pcpThread);
+	pthread_cancel(dispatcherThread);
+
+	pthread_join(plpThread, NULL);
+	pthread_join(pcpThread, NULL);
+	pthread_join(dispatcherThread, NULL);
 
 	sem_destroy(&semKernel);
 

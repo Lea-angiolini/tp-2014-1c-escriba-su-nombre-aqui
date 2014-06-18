@@ -86,6 +86,7 @@ void destruir_dispositivos()
 	{
 		queue_destroy_and_destroy_elements(disp->cola, free);
 		pthread_cancel(disp->thread);
+		pthread_join(disp->thread, NULL);
 		free(disp);
 	}
 	dictionary_destroy_and_destroy_elements(dispositivos, destruir_dispositivo);

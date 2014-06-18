@@ -8,8 +8,9 @@ t_log *logpcp;
 
 extern uint32_t multiprogramacion;
 extern pthread_mutex_t multiprogramacionMutex;
-extern sem_t semKernel;
 
+pthread_t dispatcherThread;
+extern sem_t semKernel;
 sem_t dispatcherReady, dispatcherCpu;
 
 void *IniciarPcp(void *arg)
@@ -17,7 +18,6 @@ void *IniciarPcp(void *arg)
 	logpcp = log_create("log_pcp.txt", "KernelPCP", 1, LOG_LEVEL_TRACE);
 	log_debug(logpcp, "Thread iniciado");
 
-	pthread_t dispatcherThread;
 	pthread_create(&dispatcherThread, NULL, &Dispatcher, NULL);
 
 	iniciarServidorCpu();
