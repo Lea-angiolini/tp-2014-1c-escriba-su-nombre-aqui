@@ -1,7 +1,7 @@
 #ifndef CPU_H_
 #define CPU_H_
 
-#define SINPROCESOACTIVO -46
+#define SINPROCESOACTIVO 0
 
 #include "commons/sockets.h"
 

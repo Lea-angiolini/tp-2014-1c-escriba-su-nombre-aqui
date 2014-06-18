@@ -161,15 +161,12 @@ void requisitosOperacionSegmento(char operacion) {
 
 bool verificarRequisitos( uint32_t programa, uint32_t base){
 	Programa * prog = buscarPrograma( programa);
-	if( prog == NULL ){
-		printf("Soy un pelotudo por programa");
+	if( prog == NULL )
 		return false;
-	}
+
 	Segmento * seg = buscarSegmentoEnProgramaPorReal( prog, base);
-	if( seg == NULL ){
-		printf("Soy un pelotudo");
+	if( seg == NULL )
 		return false;
-	}
 	return true;
 
 }

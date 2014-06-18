@@ -14,7 +14,7 @@
 
 #define WORSTFIT 1
 #define FIRSTFIT 0
-#define SEGMENTOVACIO -45
+#define SEGMENTOVACIO 0
 
 bool segmentoEsAnterior( void * seg1, void * seg2 );
 t_list * crearListaEspacioDisponible();
