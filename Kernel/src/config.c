@@ -61,6 +61,11 @@ void cargar_semaforos()
 
 		dictionary_put(semaforos, semaforosArray[i], semaforo);
 	}
+
+	string_iterate_lines(semaforosArray, free);
+	string_iterate_lines(valorSemaforosArray, free);
+	free(semaforosArray);
+	free(valorSemaforosArray);
 }
 
 void cargar_variablesCompartidas()
@@ -78,6 +83,9 @@ void cargar_variablesCompartidas()
 
 		dictionary_put(variablesCompartidas, variablesCompartidasArray[i], valor);
 	}
+
+	string_iterate_lines(variablesCompartidasArray, free);
+	free(variablesCompartidasArray);
 }
 
 void cargar_dispositivos() {
@@ -92,6 +100,11 @@ void cargar_dispositivos() {
 		io_t *registro_hio = crear_registro(hioRetardo[i]);
 		dictionary_put(dispositivos, hioId[i], registro_hio);
 	}
+
+	string_iterate_lines(hioId, free);
+	string_iterate_lines(hioRetardo, free);
+	free(hioId);
+	free(hioRetardo);
 }
 
 void destruir_semaforos()
