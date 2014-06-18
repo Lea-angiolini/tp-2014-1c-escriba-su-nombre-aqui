@@ -24,4 +24,6 @@ void *hilo_io(void *ptr);
 io_t *crear_registro(char* hioRetardo);
 void crear_pedido(char *dispositivo, uint32_t pid, uint32_t unidades);
 
+void destruir_dispositivos();
+
 #endif /* IO_H_ */

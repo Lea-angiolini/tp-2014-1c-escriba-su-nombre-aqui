@@ -24,6 +24,7 @@ void cargar_semaforos();
 void cargar_variablesCompartidas();
 void cargar_dispositivos();
 
+void destruir_semaforos();
 void destruir_config();
 
 extern t_config *config;

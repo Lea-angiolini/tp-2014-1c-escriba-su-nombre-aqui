@@ -79,3 +79,14 @@ void crear_pedido(char *dispositivo, uint32_t pid, uint32_t unidades)
 
 	sem_post(&disp->semaforo);
 }
+
+void destruir_dispositivos()
+{
+	void destruir_dispositivo(io_t *disp)
+	{
+		queue_destroy_and_destroy_elements(disp->cola, free);
+		pthread_cancel(disp->thread);
+		free(disp);
+	}
+	dictionary_destroy_and_destroy_elements(dispositivos, destruir_dispositivo);
+}

@@ -94,12 +94,21 @@ void cargar_dispositivos() {
 	}
 }
 
+void destruir_semaforos()
+{
+	void destruir_semaforo(semaforo_t *semaforo)
+	{
+		queue_destroy(semaforo->cola);
+		free(semaforo);
+	}
+	dictionary_destroy_and_destroy_elements(semaforos, destruir_semaforo);
+}
+
 void destruir_config()
 {
-	dictionary_destroy_and_destroy_elements(semaforos, free);
+	destruir_semaforos();
 	dictionary_destroy_and_destroy_elements(variablesCompartidas, free);
-
-	dictionary_destroy_and_destroy_elements(dispositivos, free);
+	destruir_dispositivos();
 
 	config_destroy(config);
 }
