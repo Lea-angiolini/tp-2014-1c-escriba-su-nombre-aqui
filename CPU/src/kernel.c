@@ -14,6 +14,7 @@ extern uint32_t retardoQuantum;
 extern uint32_t quantumRestante;
 int socketKernel;
 
+bool debeFinalizar = false;
 
 bool crearConexionKernel() {
 
@@ -57,7 +58,7 @@ bool recibirYProcesarMensajesKernel()
 {
 
 	socket_pcb pcbNuevo;
-	while(1)
+	while(!debeFinalizar)
 	{
 		log_debug(logger, "Esperando nueva PCB del Kernel...");
 
@@ -96,6 +97,10 @@ bool enviarPCB()
 	return true;
 }
 
+void finalizarCpu(){
+	log_info(logger, "Se envio la señal de finalizar, se ejecuta el último quantum");
+	debeFinalizar = true;
+}
 
 /****************** SYSCALLS ************************/
 
