@@ -177,9 +177,9 @@ void borrarSegmento(Segmento * segmentoABorrar) {
 }
 
 
-Segmento * buscarSegmentoEnTabla( uint32_t idSeg){
+Segmento * buscarSegmentoEnTabla( uint32_t base){
 		bool matchearSegmento( Segmento * segmento){
-			return segmento->id == idSeg;
+			return segmento->inicioReal == base;
 		}
 		return list_find( tabla_segmentos, matchearSegmento);
 }
@@ -248,13 +248,13 @@ uint32_t tamanioSegmento(Segmento * segmento) {
 	return (segmento->finReal - segmento->inicioReal + 1);
 }
 
-uint32_t solicitarPosicionDeMemoria(uint32_t programa, uint32_t base,
+uint32_t solicitarPosicionDeMemoria( uint32_t base,
 		uint32_t offset, uint32_t tamanio) {
 
-	Programa * prog = buscarPrograma(programa);
-	Segmento * segmento = buscarSegmentoEnProgramaPorReal(prog, base);
-	if( prog == NULL || segmento == NULL){
-		log_error( logger, "Programa o segmento solicitado no valido");
+
+	Segmento * segmento = buscarSegmentoEnTabla( base);
+	if( segmento == NULL){
+		log_error( logger, "Segmento solicitado no valido");
 		return -1;
 	}
 
@@ -276,9 +276,9 @@ void imprimirBytes( uint32_t base, uint32_t offset, uint32_t tamanio){
 	uint32_t i, hastaLoQueDe= 0;
 	unsigned char * mem = memoriaCorrida;
 
-	printf("Direccion | \t\t\tHex Dump\t\t\t|     ASCII\n");
+	printf("Direccion  | \t\t\tHex Dump\t\t\t|     ASCII\n");
 	printf("---------------------------------------------------------------------------------\n");
-	printf("    %d  | ", alBuffer);
+	printf("    %05d  | ", alBuffer);
 
 	for (i = 0; i < tamanio; i++) {
 
@@ -300,7 +300,7 @@ void imprimirBytes( uint32_t base, uint32_t offset, uint32_t tamanio){
 			mem += hastaLoQueDe;
 			alBuffer += hastaLoQueDe;
 			hastaLoQueDe = 0;
-			printf("    %d  | ", alBuffer);
+			printf("    %05d  | ", alBuffer);
 		}
 
 
@@ -321,19 +321,14 @@ void mostrarCaracteres( uint32_t cantidad, unsigned char * mem){
 	}
 }
 
-uint32_t escribirPosicionDeMemoria(uint32_t programa, uint32_t base,
+uint32_t escribirPosicionDeMemoria( uint32_t base,
 		uint32_t offset, uint32_t tamanio, uint32_t buffer[]) {
 
-	Programa * prog = buscarPrograma(programa);
-	Segmento * segmento = buscarSegmentoEnProgramaPorReal(prog, base);
 
-	if( segmento->inicioReal == SEGMENTOVACIO){
-		log_error( logger, "El segmento solicitado es de tamaño 0, y no se puede obtener nada de el mismo");
-		return -1;
-	}
+	Segmento * segmento = buscarSegmentoEnTabla( base);
 
-	if( prog == NULL || segmento == NULL){
-			log_error( logger, "Programa o segmento solicitado no valido");
+	if( segmento == NULL){
+			log_error( logger, "Segmento solicitado no valido");
 			return -1;
 		}
 

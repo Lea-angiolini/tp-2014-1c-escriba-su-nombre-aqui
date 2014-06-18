@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
 
 
 	log_destroy(logger);
-
+	free(logName);
 	destruir_config();
 
 	return EXIT_SUCCESS;

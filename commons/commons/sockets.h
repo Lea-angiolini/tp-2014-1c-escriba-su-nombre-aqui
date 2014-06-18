@@ -143,7 +143,7 @@ typedef struct {
 	socket_header header;
 	uint32_t pdi;
 	uint32_t status;
-	char data[100];
+	char data[1000];
 }  __attribute__((packed)) socket_RespuestaLeerMemoria;
 
 

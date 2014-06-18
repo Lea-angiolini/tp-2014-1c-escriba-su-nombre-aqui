@@ -7,7 +7,7 @@
 
 extern t_log * logger;
 extern pthread_rwlock_t lockEscrituraLectura;
-
+extern t_list * tabla_segmentos;
 
 char comandosBuffer[200];
 
@@ -111,17 +111,13 @@ void operacionesConSegmentos() {
 }
 
 void requisitosOperacionSegmento(char operacion) {
+
 	usleep( retardoUMV * 1000);
-	//Falta el lockeo acaaaaaa
-	//aaaaa
-	//aaaaa. Hay qe resolver una cosita.
+
 	pthread_rwlock_wrlock(&lockEscrituraLectura);
-	printSegmentosPorPrograma();
-	printf("Ingrese un PID de Programa del que quiere solicitar la posicion\n");
-	uint32_t programa;
-	scanf("%d", &programa);
-	while (getchar() != '\n')
-		;
+
+
+	printSegmentos( tabla_segmentos);
 
 	printf("Ingrese la base del segmento a solicitar\n");
 	uint32_t base;
@@ -140,49 +136,33 @@ void requisitosOperacionSegmento(char operacion) {
 	scanf("%d", &tamanio);
 	while (getchar() != '\n')
 		;
-	bool requisitosCorrectos = verificarRequisitos( programa, base);
-	if(!requisitosCorrectos){
-		printf("Los datos ingresados no son validos\n");
-		log_error( logger, "Los datos ingresados para solicitar/escribir posiciones en memoria no son validos");
 
-	}else{
 		switch (operacion) {
-		case 'a':solicitarPosicion(programa, base, offset, tamanio);
+		case 'a':solicitarPosicion(base, offset, tamanio);
 				break;
 
-		case 'b': escribirPosicion(programa, base, offset, tamanio);
+		case 'b': escribirPosicion(base, offset, tamanio);
 				break;
 
 		default: break;
 		}
-	}
+
 	pthread_rwlock_unlock(&lockEscrituraLectura);
 }
 
-bool verificarRequisitos( uint32_t programa, uint32_t base){
-	Programa * prog = buscarPrograma( programa);
-	if( prog == NULL )
-		return false;
 
-	Segmento * seg = buscarSegmentoEnProgramaPorReal( prog, base);
-	if( seg == NULL )
-		return false;
-	return true;
-
-}
-
-void solicitarPosicion(uint32_t programa, uint32_t base, uint32_t offset,
+void solicitarPosicion( uint32_t base, uint32_t offset,
 		uint32_t tamanio) {
 
-	uint32_t solicitud = solicitarPosicionDeMemoria(programa, base, offset,
+	uint32_t solicitud = solicitarPosicionDeMemoria( base, offset,
 			tamanio);
 
 	if (solicitud == -1)
-		printf("No se ha podido realizar la lectura de memoria");
+		printf("No se ha podido realizar la lectura de memoria\n");
 
 }
 
-void escribirPosicion(uint32_t programa, uint32_t base, uint32_t offset,
+void escribirPosicion( uint32_t base, uint32_t offset,
 		uint32_t tamanio) {
 
 	printf(
@@ -196,11 +176,11 @@ void escribirPosicion(uint32_t programa, uint32_t base, uint32_t offset,
 			;
 	}
 
-	uint32_t escritura = escribirPosicionDeMemoria(programa, base, offset,
+	uint32_t escritura = escribirPosicionDeMemoria( base, offset,
 			tamanio, buffer);
 
 	if (escritura == -1)
-		printf("No se ha podido realizar la escritura de memoria");
+		printf("No se ha podido realizar la escritura de memoria\n");
 }
 
 void modificarRetardoUMV() {
@@ -286,7 +266,8 @@ void imprimirMemoria(){
 
 void printSegmentosHeaders() {
 	printf("\n");
-	printf("\t\tInicio Real\tFin Real\tTamaño\n\n");
+	printf("\t\t|  Inicio Real  |   Fin  Real   |     Tamaño\n");
+	printf("----------------|---------------|---------------|-------------|\n");
 }
 
 void imprimirSegmentosDe(Programa *programa) {
@@ -326,6 +307,8 @@ void buscarProgramaEImprimirSegmentos() {
 
 void printSegmentos(t_list * segmentos) {
 	ordenarTablaSegmentos();
+	printSegmentosHeaders();
+
 	int i = 0;
 	uint32_t cont = 0;
 	for (i = 0; i < list_size(segmentos); i++) {
@@ -333,25 +316,28 @@ void printSegmentos(t_list * segmentos) {
 		if (segmento->inicioReal != cont) {
 			printEspacioLibre(cont, segmento->inicioReal - 1);
 			cont = segmento->finReal + 1;
+			printf("----------------|---------------|-----------------------------|\n");
 		}
-		printSegmentosHeaders();
+
 		printSegmento(segmento);
 		cont = segmento->finReal + 1;
+		printf("----------------|---------------|-----------------------------|\n");
+
 	}
-	if (cont < (memoria_size - 1))
+	if (cont < (memoria_size - 1)){
 		printEspacioLibre(cont, (memoria_size - 1));
+		printf("--------------------------------------------------------------|\n");
+	}
 }
 
 void printSegmento(Segmento * segmento) {
-	printf("%d\t\t%d\t\t%d\t\t%d\n", segmento->id, segmento->inicioReal, segmento->finReal,
+	printf("\t%04d\t|\t%04d\t|\t%04d\t|\t%05d |\n", segmento->id, segmento->inicioReal, segmento->finReal,
 	tamanioSegmento(segmento));
 
 }
 
 void printEspacioLibre(uint32_t inicioEspacio, uint32_t finEspacio) {
-	printf("Libre");
-	printSegmentosHeaders();
-	printf("\t\t%d\t\t%d\t\t%d\n", inicioEspacio, finEspacio,
+	printf("\tLibre\t|\t%04d\t|\t%04d\t|\t%05d\n", inicioEspacio, finEspacio,
 			finEspacio - inicioEspacio + 1);
 }
 

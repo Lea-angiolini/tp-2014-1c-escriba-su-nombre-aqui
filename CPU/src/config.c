@@ -1,5 +1,8 @@
 #include "config.h"
 #include "primitivas.h"
+#include "kernel.h"
+
+#include <signal.h>
 
 t_config *config;
 
@@ -15,9 +18,15 @@ bool cargar_config(char *configFile)
 		return false;
 	}
 
+	if (signal(SIGINT, finalizarCpu) == SIG_ERR) {
+		fputs("An error occurred while setting a signal handler.\n", stderr);
+		return EXIT_FAILURE;
+	}
+
 	ansisop_Kernelfunciones = crearAnSISOP_kernel();
 	ansisop_funciones = crearAnSISOP_funciones();
 	etiquetasCache = malloc(1);
+
 	return true;
 }
 
@@ -36,6 +45,8 @@ bool validar_configuracion() {
 
 void destruir_config() {
 
+	free(etiquetasCache);
+	free(ansisop_Kernelfunciones);
 	free(ansisop_funciones);
 	config_destroy(config);
 
