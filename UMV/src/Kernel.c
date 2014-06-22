@@ -9,17 +9,16 @@ extern uint32_t retardoUMV;
 
 uint32_t recibirYProcesarMensajesKernel( Kernel * kernel ) {
 
-	usleep( retardoUMV * 1000);
 	socket_pedirMemoria * buffer = malloc(sizeof(socket_pedirMemoria));
 	uint32_t todoSaleBien = 1;
 
-	while ( todoSaleBien) {
+	while (todoSaleBien) {
 		todoSaleBien = recv(kernel->socket, buffer, sizeof(socket_pedirMemoria), MSG_WAITALL);
-
-		if( sizeof(socket_pedirMemoria) ==  todoSaleBien){
+		log_info(logger, "Recibido un mensaje del Kernel, esperando retardo para procesar...");
+		usleep(retardoUMV * 1000);
+		if(sizeof(socket_pedirMemoria) ==  todoSaleBien){
 			log_info(logger, "Procesando mensaje del Kernel");
 			procesarMenssajeKernel(kernel, buffer);
-
 		}else{
 			free(buffer);
 			return 0;
