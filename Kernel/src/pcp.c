@@ -275,7 +275,7 @@ bool terminoQuantumCPU(int socketCPU)
 		case 1: //El programa finalizo correctamente
 			log_trace(logpcp, "El programa finalizo correctamente");
 			moverAExit(pcb);
-			removerProgramaConectadoPorSocket(pcb->programaSocket);
+			free(removerProgramaConectadoPorSocket(pcb->programaSocket));
 			shutdown(pcb->programaSocket, SHUT_RDWR);
 			bajarNivelMultiprogramacion();
 			break;
@@ -283,7 +283,7 @@ bool terminoQuantumCPU(int socketCPU)
 		case 2: //Segmentation fault
 			log_trace(logpcp, "Segmentation fault");
 			moverAExit(pcb);
-			removerProgramaConectadoPorSocket(pcb->programaSocket);
+			free(removerProgramaConectadoPorSocket(pcb->programaSocket));
 			mensajeYDesconexionPrograma(pcb->programaSocket, "Segmentation fault");
 			bajarNivelMultiprogramacion();
 			break;
@@ -291,7 +291,7 @@ bool terminoQuantumCPU(int socketCPU)
 		case 3: //Se solicito la posicion de memoria inexistente
 			log_trace(logpcp, "Se solicito la posicion de memoria inexistente");
 			moverAExit(pcb);
-			removerProgramaConectadoPorSocket(pcb->programaSocket);
+			free(removerProgramaConectadoPorSocket(pcb->programaSocket));
 			mensajeYDesconexionPrograma(pcb->programaSocket, "Se solicito la posicion de memoria inexistente");
 			bajarNivelMultiprogramacion();
 			break;
@@ -299,7 +299,7 @@ bool terminoQuantumCPU(int socketCPU)
 		case 4: //UMV error
 			log_trace(logpcp, "UMV error");
 			moverAExit(pcb);
-			removerProgramaConectadoPorSocket(pcb->programaSocket);
+			free(removerProgramaConectadoPorSocket(pcb->programaSocket));
 			mensajeYDesconexionPrograma(pcb->programaSocket, "UMV error");
 			bajarNivelMultiprogramacion();
 			break;
@@ -307,7 +307,7 @@ bool terminoQuantumCPU(int socketCPU)
 		case 5: //Label error
 			log_trace(logpcp, "Label error");
 			moverAExit(pcb);
-			removerProgramaConectadoPorSocket(pcb->programaSocket);
+			free(removerProgramaConectadoPorSocket(pcb->programaSocket));
 			mensajeYDesconexionPrograma(pcb->programaSocket, "Label error");
 			bajarNivelMultiprogramacion();
 			break;
@@ -315,7 +315,7 @@ bool terminoQuantumCPU(int socketCPU)
 		case 6:
 			log_trace(logpcp, "Primitiva error");
 			moverAExit(pcb);
-			removerProgramaConectadoPorSocket(pcb->programaSocket);
+			free(removerProgramaConectadoPorSocket(pcb->programaSocket));
 			mensajeYDesconexionPrograma(pcb->programaSocket, "Primitiva error");
 			bajarNivelMultiprogramacion();
 			break;
