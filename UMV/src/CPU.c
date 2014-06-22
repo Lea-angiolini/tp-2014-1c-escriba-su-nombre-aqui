@@ -36,46 +36,51 @@ int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud )
 	segmento = buscarSegmentoEnProgramaPorVirtual(programa, solicitud->base);
 
 
-
-	if( segmento == NULL ) {
+	if(segmento == NULL) {
 		log_error(logger, "No se encuentra el segmento especificado | UMV/src/cpu.c -> procesarSolicitudLecturaMemoria");
 		pthread_rwlock_unlock(&lockEscrituraLectura);
 		return -1;
 	}
 
-	uint32_t tamanioParaOperar;
-	tamanioParaOperar = tamanioSegmento(segmento) - solicitud->offset;
+	uint32_t tamanioParaOperar = tamanioSegmento(segmento) - solicitud->offset;
 
-	socket_RespuestaLeerMemoria * respuesta = malloc(sizeof (socket_RespuestaLeerMemoria));
-	memset( respuesta, 0, sizeof (socket_RespuestaLeerMemoria) );
-	respuesta->header.size = sizeof(socket_RespuestaLeerMemoria);
+	if(solicitud->length > 10000){
+		solicitud->length = 0;
+		tamanioParaOperar = 0;
+		log_error(logger, "Llego una solicitud de memoria demasiado larga");
+	}
 
-	if(	solicitud->length > tamanioParaOperar ) {
-		log_info(logger, "La solicitud pide %d y el offset %d", solicitud->length, solicitud->offset);
+	uint32_t tamanioRespuesta = sizeof (socket_RespuestaLeerMemoria) - 10000 + solicitud->length;
 
+	socket_RespuestaLeerMemoria * respuesta = malloc(tamanioRespuesta);
+	memset(respuesta, 0, tamanioRespuesta);
+	respuesta->header.size = tamanioRespuesta;
+
+	if(solicitud->length > tamanioParaOperar) {
 		log_error(logger, "Segmentation fault, length: %d, tamanioParaOperar: %d, base: %d, offset: %d | UMV/src/cpu.c -> procesarSolicitudLecturaMemoria", solicitud->length, tamanioParaOperar, solicitud->base, solicitud->offset );
 		respuesta->status = false;
 	}else{
 		respuesta->status = true;
 		memLeer(segmento, respuesta->data, solicitud->offset, solicitud->length);
-		log_info(logger, "Se leyo la data: %s", respuesta->data);
+		log_debug(logger, "Se leyo la data: %s", respuesta->data);
 	}
 
-	uint32_t enviado;
-	enviado = send(cpu->socket, respuesta, sizeof(socket_RespuestaLeerMemoria), 0);
+	uint32_t enviado = send(cpu->socket, respuesta, tamanioRespuesta, 0);
 
-	if( enviado == -1 ) {
-		log_error(logger, "La respuesta a lectura de memoria no se ha realizado con exito | UMV/src/cpu.c -> procesarSolicitudLecturaMemoria");
-		pthread_rwlock_unlock(&lockEscrituraLectura);
-		return -1;
-	}
-
-	log_info(logger, "La respuesta a lectura de memoria se ha realizado con exito");
-	if(respuesta == false){
-		pthread_rwlock_unlock(&lockEscrituraLectura);
-		return -1;
-	}
 	pthread_rwlock_unlock(&lockEscrituraLectura);
+	free(respuesta);
+	if(enviado == -1) {
+		log_error(logger, "Hubo un error al enviar la respuesta a lectura de memoria | UMV/src/cpu.c -> procesarSolicitudLecturaMemoria");
+		return -1;
+	}
+
+	log_trace(logger, "Se pudo reponder a la cpu sin problemas, se enviaron %d bytes", enviado);
+
+	//Si dejo esta linea cuando hay "segmentation fault" cierrar el socket de la cpu, además subi el free(respuesta)
+	/*if(respuesta == false){
+		return -1;
+	}*/
+
 	return 1;
 
 }
@@ -94,44 +99,43 @@ int procesarSolicitudEscrituraMemoria( CPU * cpu, socket_guardarEnMemoria * soli
 	Segmento * segmento;
 	segmento = buscarSegmentoEnProgramaPorVirtual(programa, solicitud->base);
 
-	if( segmento == NULL ) {
+	if(segmento == NULL) {
 		log_error(logger, "No se encuentra el segmento especificado | UMV/src/cpu.c -> procesarSolicitudEscrituraMemoria");
 		pthread_rwlock_unlock(&lockEscrituraLectura);
 		return -1;
 	}
 
-	uint32_t tamanioParaOperar;
-	tamanioParaOperar = tamanioSegmento(segmento) - solicitud->offset;
-
+	uint32_t tamanioParaOperar = tamanioSegmento(segmento) - solicitud->offset;
 	socket_RespuestaGuardarEnMemoria * respuesta = malloc(sizeof (socket_RespuestaGuardarEnMemoria));
 	respuesta->header.size = sizeof(socket_RespuestaGuardarEnMemoria);
 
-	if(	solicitud->length > tamanioParaOperar ) {
+
+	if(solicitud->length > tamanioParaOperar) {
 		log_error(logger, "Segmentation fault, length: %d, tamanioParaOperar: %d, base: %d, offset: %d | UMV/src/cpu.c -> procesarSolicitudEscrituraMemoria", solicitud->length, tamanioParaOperar, solicitud->base, solicitud->offset );
 		respuesta->status = false;
 	}else{
 		respuesta->status = true;
-		memCopi( segmento, solicitud->offset, solicitud->data, solicitud->length );
-		log_info( logger, "Se guardo la data: %s", solicitud->data );
+		memCopi(segmento, solicitud->offset, solicitud->data, solicitud->length);
+		log_info(logger, "Se guardo la data: %s", solicitud->data);
 	}
 
-	uint32_t enviado;
-	enviado = send( cpu->socket, respuesta, sizeof( socket_RespuestaGuardarEnMemoria ), 0 );
+	uint32_t enviado = send( cpu->socket, respuesta, sizeof( socket_RespuestaGuardarEnMemoria ), 0 );
 
-	if( enviado == -1 ) {
+	pthread_rwlock_unlock(&lockEscrituraLectura);
+	free(respuesta);
+
+	if(enviado == -1) {
 		log_error(logger, "La respuesta a escribir en memoria no se ha realizado con exito | UMV/src/cpu.c -> procesarSolicitudEscrituraMemoria");
-		pthread_rwlock_unlock(&lockEscrituraLectura);
 		return -1;
 	}
 
 	log_info(logger, "La respuesta a escribir en memoria se ha realizado con exito");
-	if(respuesta->status == false){
+
+	/*if(respuesta->status == false){
 		free(respuesta);
-		pthread_rwlock_unlock(&lockEscrituraLectura);
 		return -1;
-	}
-	free(respuesta);
-	pthread_rwlock_unlock(&lockEscrituraLectura);
+	}*/
+
 	return 1;
 }
 
@@ -139,17 +143,17 @@ int procesarSolicitudEscrituraMemoria( CPU * cpu, socket_guardarEnMemoria * soli
 
 
 uint32_t recibirYProcesarMensajesCpu( CPU * cpu ) {
-	usleep( retardoUMV * 1000);
+
 	int todoSaleBien = 1;
 
 	while( todoSaleBien > 0 ){
 
-		log_info( logger, "Esperando un mensaje de la CPU..." );
+		log_trace( logger, "Esperando un mensaje de la CPU..." );
 		void * paquete = recibirPaquete( cpu->socket , 0, 'a', logger );
 
 		if( paquete == NULL ){
 			log_error( logger, "Se ha desconectado la CPU%d por causas desconocidas", cpu->cpuId);
-			log_info( logger, "Destruyendo programa activo de la CPU%d", cpu->cpuId);
+			log_trace( logger, "Destruyendo programa activo de la CPU%d", cpu->cpuId);
 
 			if( cpu->pidProcesando != SINPROCESOACTIVO){
 			uint32_t programaDestruido;
@@ -166,15 +170,14 @@ uint32_t recibirYProcesarMensajesCpu( CPU * cpu ) {
 
 		socket_header * header = ( socket_header * ) paquete;
 
+		log_debug(logger, "Esperando retardo para responder...");
+		usleep(retardoUMV * 1000);
+
 		switch ( header->code ){
 
-			case 'b':
-				todoSaleBien = procesarSolicitudLecturaMemoria( cpu, (socket_leerMemoria *) paquete );
-								break;
+			case 'b': todoSaleBien = procesarSolicitudLecturaMemoria( cpu, (socket_leerMemoria *) paquete ); break;
+			case 'c': todoSaleBien = procesarSolicitudEscrituraMemoria( cpu, (socket_guardarEnMemoria *) paquete ); break;
 
-			case 'c':
-				todoSaleBien = procesarSolicitudEscrituraMemoria( cpu, (socket_guardarEnMemoria *) paquete );
-								break;
 			case 'd':
 				log_info( logger, "La CPU ID: %d informo que el programa activo con PID: %d ha finalizado", cpu->cpuId, cpu->pidProcesando);
 				Programa * programa = buscarPrograma( cpu->pidProcesando);
@@ -203,8 +206,8 @@ void borrarCPU( CPU * cpu ){
 		return cpuAmatchear->cpuId == cpu->cpuId;
 	}
 	list_remove_by_condition( cpus, matchearCPU);
-	close( cpu->socket );
-	free( cpu );
+	close(cpu->socket);
+	free(cpu);
 }
 
 
@@ -213,7 +216,6 @@ void borrarCPU( CPU * cpu ){
 void fnNuevoCpu(int socket){
 
 	log_info( logger, "Se conecto un nuevo CPU" );
-
 
 	contadorCpuId++;
 	CPU * cpu = malloc(sizeof(CPU));
