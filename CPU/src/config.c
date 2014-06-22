@@ -2,13 +2,11 @@
 #include "primitivas.h"
 #include "kernel.h"
 
-#include <signal.h>
-
 t_config *config;
 
-AnSISOP_funciones * ansisop_funciones;
-AnSISOP_kernel * ansisop_Kernelfunciones;
-extern char * etiquetasCache;
+AnSISOP_funciones *ansisop_funciones;
+AnSISOP_kernel *ansisop_Kernelfunciones;
+extern char *etiquetasCache;
 
 bool cargar_config(char *configFile)
 {
@@ -18,11 +16,6 @@ bool cargar_config(char *configFile)
 		return false;
 	}
 
-	if (signal(SIGINT, finalizarCpu) == SIG_ERR) {
-		fputs("An error occurred while setting a signal handler.\n", stderr);
-		return EXIT_FAILURE;
-	}
-
 	ansisop_Kernelfunciones = crearAnSISOP_kernel();
 	ansisop_funciones = crearAnSISOP_funciones();
 	etiquetasCache = malloc(1);
@@ -30,7 +23,8 @@ bool cargar_config(char *configFile)
 	return true;
 }
 
-bool validar_configuracion() {
+bool validar_configuracion()
+{
 
 	if (!config_has_property(config, "IPKERNEL")
 			|| !config_has_property(config, "PUERTOKERNEL")
@@ -43,11 +37,10 @@ bool validar_configuracion() {
 	return true;
 }
 
-void destruir_config() {
-
+void destruir_config()
+{
 	free(etiquetasCache);
 	free(ansisop_Kernelfunciones);
 	free(ansisop_funciones);
 	config_destroy(config);
-
 }

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <signal.h>
 
 #include "commons/log.h"
 #include "commons/config.h"
@@ -20,9 +21,15 @@ uint32_t quantumRestante;
 pcb_t PCB_enEjecucion;
 
 
-int main(int argc, char *argv[]) {
-	if (argc != 2) {
+int main(int argc, char *argv[])
+{
+	if(argc != 2) {
 		printf("Modo de empleo: ./CPU config.cfg\n");
+		return EXIT_SUCCESS;
+	}
+
+	if( signal(SIGUSR1, finalizarCpu) == SIG_ERR ) {
+		printf("Se ha producido un error intentando manejar la señal SIGUSR1\n");
 		return EXIT_SUCCESS;
 	}
 
@@ -36,14 +43,14 @@ int main(int argc, char *argv[]) {
 
 	log_info(logger, "Iniciando CPU (log: %s)", logName);
 
-	if ( !crearConexionKernel() || !crearConexionUMV() ) {
+	if( !crearConexionKernel() || !crearConexionUMV() ) {
 		log_error(logger, "Hubo un error en el proceso CPU, finalizando");
 		return EXIT_SUCCESS;
 	}
 
 
 	//ejecutarPrueba();
-	if( recibirYProcesarMensajesKernel() ){
+	if( recibirYProcesarMensajesKernel() ) {
 		log_info(logger, "El programa finalizo con correctamente");
 	}else{
 		log_error( logger, "Hubo un problema y se finaliza la CPU" );
