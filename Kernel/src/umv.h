@@ -16,5 +16,6 @@ bool solicitarCreacionSegmentos(uint32_t scriptSize, t_metadata_program *scriptM
 bool respuestaCreacionSegmentos();
 bool enviarSegmentos(uint32_t pid, char *script, uint32_t scriptSize, t_metadata_program *scriptMetadata);
 bool respuestaSegmentos(socket_umvpcb *umvpcb);
+bool borrarSegmentos(uint32_t pid);
 
 #endif /* UMV_H_ */

@@ -30,7 +30,7 @@ typedef struct {
 
 //KernelPLP->UMV
 typedef struct {
-	socket_header header;
+	socket_header header; //header.code = 'p'
 	uint32_t codeSegmentSize;//Segmento codigo literal ansisop
 	uint32_t stackSegmentSize;
 	uint32_t etiquetasSegmentSize; //Segmento de indice de etiquetas
@@ -46,6 +46,12 @@ typedef struct {
 	uint32_t etiquetaIndex;
 }  __attribute__((packed)) socket_umvpcb ;
 
+
+//KernelPLP->UMV
+typedef struct {
+	socket_header header; //header.code = 'b'
+	uint32_t pid;
+}  __attribute__((packed)) socket_borrarMemoria ;
 
 
 /*******************************************************************/

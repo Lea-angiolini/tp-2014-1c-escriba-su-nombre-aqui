@@ -95,41 +95,41 @@ void MoverReadyAExec()
 		pthread_mutex_unlock(&readyQueueMutex);
 	} while(pcb == NULL);
 
-	if(buscarProgramaConectado(pcb->id) != NULL){
-
-		do
-		{
-			sem_wait(&dispatcherCpu);
-			pthread_mutex_lock(&cpuReadyQueueMutex);
-			if( queue_is_empty(cpuReadyQueue) )
-				log_error(logpcp, "Se llamo al dispatcher sin tener una CPU disponible");
-			else
-				cpuInfo = queue_pop(cpuReadyQueue);
-			pthread_mutex_unlock(&cpuReadyQueueMutex);
-		} while(cpuInfo == NULL);
-
-
-			log_info(logpcp, "Moviendo PCB de la cola READY a EXEC");
-			moverAExec(pcb);
-
-			cpuInfo->pid = pcb->id;
-
-			//Mandando informacion necesaria para que la CPU pueda empezar a trabajar
-			socket_pcb spcb;
-
-			spcb.header.code = 'p';
-			spcb.header.size = sizeof(socket_pcb);
-			spcb.pcb = *pcb;
-
-			moverCpuAExec(cpuInfo);
-
-			if( send(cpuInfo->socketCPU, &spcb, sizeof(socket_pcb), 0) <= 0 )
-				desconexionCPU(cpuInfo->socketCPU);
-	}
-	else{
-		log_info(logpcp, "Programa desconectado, moviendo PCB de la cola READY a EXIT");
+	//CHECK
+	if( buscarProgramaConectado(pcb->id) == NULL )
+	{
 		moverAExit(pcb);
+		return;
 	}
+
+	do
+	{
+		sem_wait(&dispatcherCpu);
+		pthread_mutex_lock(&cpuReadyQueueMutex);
+		if( queue_is_empty(cpuReadyQueue) )
+			log_error(logpcp, "Se llamo al dispatcher sin tener una CPU disponible");
+		else
+			cpuInfo = queue_pop(cpuReadyQueue);
+		pthread_mutex_unlock(&cpuReadyQueueMutex);
+	} while(cpuInfo == NULL);
+
+
+	log_info(logpcp, "Moviendo PCB de la cola READY a EXEC");
+	moverAExec(pcb);
+
+	cpuInfo->pid = pcb->id;
+
+	//Mandando informacion necesaria para que la CPU pueda empezar a trabajar
+	socket_pcb spcb;
+
+	spcb.header.code = 'p';
+	spcb.header.size = sizeof(socket_pcb);
+	spcb.pcb = *pcb;
+
+	moverCpuAExec(cpuInfo);
+
+	if( send(cpuInfo->socketCPU, &spcb, sizeof(socket_pcb), 0) <= 0 )
+		desconexionCPU(cpuInfo->socketCPU);
 }
 
 bool conexionCPU(int socketCPU)

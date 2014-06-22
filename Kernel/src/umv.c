@@ -39,6 +39,7 @@ bool solicitarCreacionSegmentos(uint32_t scriptSize, t_metadata_program *scriptM
 
 	socket_pedirMemoria pedirMemoria;
 	pedirMemoria.header.size = sizeof(pedirMemoria);
+	pedirMemoria.header.code = 'p';
 
 	pedirMemoria.codeSegmentSize = scriptSize + 1;
 	pedirMemoria.stackSegmentSize = config_get_int_value(config, "STACK_SIZE");
@@ -100,6 +101,25 @@ bool respuestaSegmentos(socket_umvpcb *umvpcb)
 {
 	if( recv(socketUMV, umvpcb, sizeof(socket_umvpcb), MSG_WAITALL) != sizeof(socket_umvpcb) ){
 		log_error(logplp, "No se recibio las direcciones de los segmentos de la UMV. Desconectando");
+		sem_post(&semKernel);
+		return false;
+	}
+
+	return true;
+}
+
+bool borrarSegmentos(uint32_t pid)
+{
+	log_trace(logplp, "Solicitando destruccion de segmentos a la UMV");
+
+	socket_borrarMemoria borrarMemoria;
+	borrarMemoria.header.size = sizeof(socket_borrarMemoria);
+	borrarMemoria.header.code = 'b';
+	borrarMemoria.pid = pid;
+
+	if( send(socketUMV, &borrarMemoria, sizeof(socket_borrarMemoria), 0) <= 0 )
+	{
+		log_error(logplp, "No se pudo enviar la solicitud de destruccion de segmentos a la UMV. Desconectando");
 		sem_post(&semKernel);
 		return false;
 	}

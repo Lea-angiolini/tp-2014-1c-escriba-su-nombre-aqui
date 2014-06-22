@@ -115,17 +115,13 @@ bool syscallWait(int socketCPU)
 		queue_push(semaforo->cola, pid);
 
 		//Moviendo cpu de cpuExec a cpuReady
-
 		moverCpuAReady(sacarCpuDeExec(socketCPU));
-
 		sem_post(&dispatcherCpu);
 
 		//Actualizando pcb y moviendolo a block
-
 		pcb_t *pcb = sacarDeExec(spcb.pcb.id);
 		*pcb = spcb.pcb;
 		moverABlock(pcb);
-
 	}
 	else
 	{
@@ -168,7 +164,6 @@ bool syscallSignal(int socketCPU)
 		sem_post(&dispatcherReady);
 
 		free(pid);
-
 	}
 
 	return true;
@@ -183,16 +178,18 @@ bool syscallImprimirTexto(int socketCPU)
 
 	log_debug(logpcp, "CPU: %d, envia un mensaje al Programa: %d", socketCPU, texto.programaSocket);
 
-	if(buscarProgramaConectado(texto.pid) != NULL){
-		socket_msg msg;
-		msg.header.size = sizeof(socket_msg);
-		msg.type = 0; //log_info
+	//CHECK
+	if( buscarProgramaConectado(texto.pid) == NULL )
+		return true;
 
-		strcpy(msg.msg, texto.texto);
-		send(texto.programaSocket, &msg, sizeof(socket_msg), 0);
+	socket_msg msg;
+	msg.header.size = sizeof(socket_msg);
+	msg.type = 0; //log_info
 
-		log_trace(logpcp, "Mensaje enviado al Programa: %d", texto.programaSocket);
+	strcpy(msg.msg, texto.texto);
+	send(texto.programaSocket, &msg, sizeof(socket_msg), 0);
 
-	}
+	log_trace(logpcp, "Mensaje enviado al Programa: %d", texto.programaSocket);
+
 	return true;
 }
