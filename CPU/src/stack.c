@@ -28,7 +28,6 @@ uint32_t apilarVariable(char identificador)
 
 	if(!escribirStack(PCB_enEjecucion.stackCursor, 1, &identificador)){
 		log_error(logger, "Error al apilar la variable");
-		PCB_enEjecucion.lastErrorCode = 5;
 		return 0;
 	}
 
@@ -144,8 +143,7 @@ bool generarDiccionarioVariables()
 
 	void * data = leerStack(PCB_enEjecucion.stackCursor - PCB_enEjecucion.contextSize*5, PCB_enEjecucion.contextSize * 5);
 	if(data == NULL) {
-		log_error(logger, "Hubo un error al leer el stack");
-		PCB_enEjecucion.lastErrorCode = 5;
+		log_error(logger, "Hubo un error al leer el stack e intentar regenerar el diccionario de variables");
 		return false;
 	}else{
 		int i = 0;
@@ -190,12 +188,7 @@ bool retornarVoid()
 	log_trace(logger, "Se recupero el contexto: stackCursor = %d, contextSize = %d, ProgramCounter = %d", PCB_enEjecucion.stackCursor, PCB_enEjecucion.contextSize, PCB_enEjecucion.programCounter);
 	free(respuesta);
 
-	if(!generarDiccionarioVariables()){
-		log_error(logger,"Error al regenerar el diccionario de variables");
-		return false;
-	}
-
-	return true;
+	return generarDiccionarioVariables();
 }
 
 bool retornarValor(t_valor_variable retorno)
@@ -225,7 +218,7 @@ bool retornarValor(t_valor_variable retorno)
 	log_debug(logger, "Guardando el valor en la variable de retorno, vale: %d, la guardo en la pos: %d", retorno, respuestaStack->variableRetorno);
 	modificarVariable(respuestaStack->variableRetorno, retorno);
 
-	log_trace( logger, "Recuperado el contextStack anterior" );
+	log_trace(logger, "Recuperado el contextStack anterior");
 	free(respuestaStack);
 
 	return true;

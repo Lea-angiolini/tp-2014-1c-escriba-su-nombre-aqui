@@ -120,7 +120,7 @@ typedef struct {
 	uint32_t base;
 	uint32_t offset;
 	uint32_t length;
-	char data[100];
+	char data[10000];	//Se usa como referencia pero jamas se envia completo ni se reserva en memoria
 }  __attribute__((packed)) socket_guardarEnMemoria;
 
 
@@ -144,27 +144,8 @@ typedef struct {
 	socket_header header;
 	uint32_t pdi;
 	uint32_t status;
-	char data[1000];
+	char data[10000];	//Se usa como referencia pero jamas se envia completo ni se reserva en memoria
 }  __attribute__((packed)) socket_RespuestaLeerMemoria;
-
-
-
-
-
-typedef struct {
-	uint32_t pdi;
-	socket_header header;
-	uint32_t numero_linea_Codigo;
-}  __attribute__((packed)) socket_obtenerLineaCodigo;
-
-
-typedef struct {
-	socket_header header;
-	uint32_t pdi;
-	uint32_t numero_linea_Codigo;
-	char lineaCodigo[1024];
-}  __attribute__((packed)) socket_responderLineaCodigo;
-
 
 
 

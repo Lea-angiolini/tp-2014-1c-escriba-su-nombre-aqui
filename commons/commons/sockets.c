@@ -263,12 +263,14 @@ void * recibirPaquete( int socket, t_size sizeReceive, char receiveCode, t_log *
 		return NULL;
 	}
 
-	void * paqueteRespuesta = malloc( headerRespuesta.size );
-	memset(paqueteRespuesta, 0, headerRespuesta.size);
+	void * paqueteRespuesta = malloc(headerRespuesta.size);
+
+	//memset(paqueteRespuesta, 0, headerRespuesta.size);
 	//recv( socket, ( paqueteRespuesta + sizeof( socket_header ) ), headerRespuesta.size, 0);
 	//memcpy( paqueteRespuesta, &headerRespuesta, sizeof( socket_header ) );
-	recv( socket, paqueteRespuesta, headerRespuesta.size, MSG_WAITALL);
 
+	recv(socket, paqueteRespuesta, headerRespuesta.size, MSG_WAITALL);
+	log_debug( logger, "Recibido un paquete de tamaño %d.", headerRespuesta.size );
 	return paqueteRespuesta;
 
 }

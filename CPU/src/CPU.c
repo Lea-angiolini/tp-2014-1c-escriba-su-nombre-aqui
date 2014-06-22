@@ -4,6 +4,7 @@
 #include "commons/log.h"
 #include "commons/config.h"
 #include "commons/pcb.h"
+#include "commons/process.h"
 
 #include "config.h"
 #include "umv.h"

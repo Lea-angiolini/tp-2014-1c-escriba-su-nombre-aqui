@@ -12,6 +12,7 @@
 
 extern t_log * logger;
 extern pcb_t PCB_enEjecucion;
+extern uint32_t quantumRestante;
 int socketUMV;
 char * etiquetasCache;
 
@@ -125,8 +126,7 @@ bool escribirStack(uint32_t offset, uint32_t length, void * data){
 
 bool escribirMemoria(uint32_t base, uint32_t offset, uint32_t length, void * data){
 
-	//TODO
-	uint32_t totalLengt 		= sizeof(socket_guardarEnMemoria);
+	uint32_t totalLengt 		= sizeof(socket_guardarEnMemoria) - 10000 + length;
 	socket_guardarEnMemoria sGuardarEnMemoria;
 
 	sGuardarEnMemoria.offset	= offset;
@@ -140,6 +140,12 @@ bool escribirMemoria(uint32_t base, uint32_t offset, uint32_t length, void * dat
 	if(respuesta!= NULL){
 		free(respuesta);
 	}
+
+	if(!exito){
+		PCB_enEjecucion.lastErrorCode = 2;
+		quantumRestante = 0;
+	}
+
 	return exito;
 
 }
@@ -152,7 +158,9 @@ void * leerMemoria(uint32_t base, uint32_t offset, uint32_t length){
 	sLeer.length = length;
 	log_debug(logger, "Leyendo UMV base = %d, offset = %d, length = %d", base, offset, length);
 	socket_RespuestaLeerMemoria * respuesta = (socket_RespuestaLeerMemoria *) enviarYRecibirPaquete(socketUMV, (void*)&sLeer, sizeof(socket_leerMemoria), sizeof(socket_RespuestaLeerMemoria) , 'b', 'a', logger) ;
-	if( respuesta == NULL || respuesta->status == false ){
+	if(respuesta == NULL || respuesta->status == false){
+		PCB_enEjecucion.lastErrorCode = 2;
+		quantumRestante = 0;
 		return NULL;
 	}
 
