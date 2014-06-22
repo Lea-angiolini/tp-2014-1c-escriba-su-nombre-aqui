@@ -26,10 +26,11 @@ void crear_colas()
 	execQueue = queue_create();
 	exitQueue = queue_create();
 	blockQueue = queue_create();
-	programasConectados = list_create();
 
 	cpuReadyQueue = queue_create();
 	cpuExecQueue = queue_create();
+
+	programasConectados = list_create();
 }
 
 void destruir_colas()
@@ -39,10 +40,11 @@ void destruir_colas()
 	queue_destroy_and_destroy_elements(execQueue, free);
 	queue_destroy_and_destroy_elements(exitQueue, free);
 	queue_destroy_and_destroy_elements(blockQueue, free);
-	list_destroy_and_destroy_elements(programasConectados, free);
 
 	queue_destroy_and_destroy_elements(cpuReadyQueue, free);
 	queue_destroy_and_destroy_elements(cpuExecQueue, free);
+
+	list_destroy_and_destroy_elements(programasConectados, free);
 }
 
 pcb_t *list_remove_pcb_by_pid(t_list *self, uint32_t pid)
@@ -145,4 +147,29 @@ cpu_info_t *sacarCpuDeReady(int socketCPU)
 	cpu_info_t *cpuInfo = list_remove_cpuInfo_by_socketCpu(cpuReadyQueue->elements, socketCPU);
 	pthread_mutex_unlock(&cpuReadyQueueMutex);
 	return cpuInfo;
+}
+
+
+conectados_t *removerProgramaConectadoPorSocket(int socketPrograma){
+
+	bool matchearPID(conectados_t *conectado) {
+		return conectado->programaSocket == socketPrograma;
+	}
+
+	pthread_mutex_lock(&programasConectadosMutex);
+	conectados_t *conectado = list_remove_by_condition(programasConectados,matchearPID);
+	pthread_mutex_unlock(&programasConectadosMutex);
+	return conectado;
+}
+
+conectados_t *buscarProgramaConectado(uint32_t id){
+
+	bool matchearPID(conectados_t *conectado) {
+		return conectado->pid == id;
+	}
+
+	pthread_mutex_lock(&programasConectadosMutex);
+	conectados_t *conectado = list_find(programasConectados,matchearPID);
+	pthread_mutex_unlock(&programasConectadosMutex);
+	return conectado;
 }

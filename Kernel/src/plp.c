@@ -83,10 +83,13 @@ void puedoMoverNewAReady()
 
 void desconexionCliente(int socketPrograma)
 {
-		bool matchearPID(conectados_t *conectado) {
-			return conectado->programaSocket == socketPrograma;
-		}
-	conectados_t *conectado = list_remove_by_condition(programasConectados,matchearPID);
+	conectados_t *conectado = removerProgramaConectadoPorSocket(socketPrograma);
+
+	if(conectado != NULL){
+		bajarNivelMultiprogramacion();
+		free(conectado);
+	}
+
 	log_info(logplp, "Se ha desconectado un Programa");
 	puedoMoverNewAReady();
 }
@@ -158,9 +161,10 @@ bool crearPrograma(int socketPrograma, char *script, uint32_t scriptSize, t_meta
 		conectados_t *conectado = malloc(sizeof(conectados_t));
 		conectado->pid = pcb->id;
 		conectado->programaSocket = pcb->programaSocket;
-		list_add(programasConectados, conectado);
 
-		printf("se ha agregado a lista %d, %d\n\n\n\n\n\n\n\n\n\n\n",conectado->programaSocket,conectado->pid);
+		pthread_mutex_lock(&programasConectadosMutex);
+		list_add(programasConectados, conectado);
+		pthread_mutex_unlock(&programasConectadosMutex);
 
 		queue_push(newQueue, pcb);
 		log_info(logplp, "Segmentos cargados en la UMV y PCB generada en la cola NEW");

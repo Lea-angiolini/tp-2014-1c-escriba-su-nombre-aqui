@@ -29,7 +29,7 @@ extern pthread_mutex_t programasConectadosMutex;
 typedef struct {
 	uint32_t pid;
 	int programaSocket;
-	} conectados_t;
+} conectados_t;
 
 void crear_colas();
 void destruir_colas();
@@ -46,5 +46,7 @@ pcb_t *sacarDeExec(uint32_t pid);
 pcb_t *sacarDeBlock(uint32_t pid);
 cpu_info_t *sacarCpuDeExec(int socketCPU);
 cpu_info_t *sacarCpuDeReady(int socketCPU);
+conectados_t *removerProgramaConectadoPorSocket(int socketPrograma);
+conectados_t *buscarProgramaConectado(uint32_t id);
 
 #endif /* COLAS_H_ */

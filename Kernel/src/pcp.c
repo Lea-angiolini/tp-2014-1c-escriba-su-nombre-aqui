@@ -95,47 +95,40 @@ void MoverReadyAExec()
 		pthread_mutex_unlock(&readyQueueMutex);
 	} while(pcb == NULL);
 
-	do
-	{
-		sem_wait(&dispatcherCpu);
-		pthread_mutex_lock(&cpuReadyQueueMutex);
-		if( queue_is_empty(cpuReadyQueue) )
-			log_error(logpcp, "Se llamo al dispatcher sin tener una CPU disponible");
-		else
-			cpuInfo = queue_pop(cpuReadyQueue);
-		pthread_mutex_unlock(&cpuReadyQueueMutex);
-	} while(cpuInfo == NULL);
+	if(buscarProgramaConectado(pcb->id) != NULL){
+
+		do
+		{
+			sem_wait(&dispatcherCpu);
+			pthread_mutex_lock(&cpuReadyQueueMutex);
+			if( queue_is_empty(cpuReadyQueue) )
+				log_error(logpcp, "Se llamo al dispatcher sin tener una CPU disponible");
+			else
+				cpuInfo = queue_pop(cpuReadyQueue);
+			pthread_mutex_unlock(&cpuReadyQueueMutex);
+		} while(cpuInfo == NULL);
 
 
-	bool matchearPID(conectados_t *conectado) {
-				return conectado->pid == pcb->id;
-			}
+			log_info(logpcp, "Moviendo PCB de la cola READY a EXEC");
+			moverAExec(pcb);
 
-	if(list_find(programasConectados,matchearPID) != NULL){
-		log_info(logpcp, "Moviendo PCB de la cola READY a EXEC");
-		moverAExec(pcb);
+			cpuInfo->pid = pcb->id;
 
-		cpuInfo->pid = pcb->id;
+			//Mandando informacion necesaria para que la CPU pueda empezar a trabajar
+			socket_pcb spcb;
 
-		//Mandando informacion necesaria para que la CPU pueda empezar a trabajar
-		socket_pcb spcb;
+			spcb.header.code = 'p';
+			spcb.header.size = sizeof(socket_pcb);
+			spcb.pcb = *pcb;
 
-		spcb.header.code = 'p';
-		spcb.header.size = sizeof(socket_pcb);
-		spcb.pcb = *pcb;
+			moverCpuAExec(cpuInfo);
 
-		moverCpuAExec(cpuInfo);
-
-		if( send(cpuInfo->socketCPU, &spcb, sizeof(socket_pcb), 0) <= 0 )
-			desconexionCPU(cpuInfo->socketCPU);
+			if( send(cpuInfo->socketCPU, &spcb, sizeof(socket_pcb), 0) <= 0 )
+				desconexionCPU(cpuInfo->socketCPU);
 	}
 	else{
 		log_info(logpcp, "Programa desconectado, moviendo PCB de la cola READY a EXIT");
 		moverAExit(pcb);
-		bajarNivelMultiprogramacion();
-		moverCpuAReady(cpuInfo);
-		sem_post(&dispatcherCpu);
-
 	}
 }
 
@@ -282,6 +275,7 @@ bool terminoQuantumCPU(int socketCPU)
 		case 1: //El programa finalizo correctamente
 			log_trace(logpcp, "El programa finalizo correctamente");
 			moverAExit(pcb);
+			removerProgramaConectadoPorSocket(pcb->programaSocket);
 			shutdown(pcb->programaSocket, SHUT_RDWR);
 			bajarNivelMultiprogramacion();
 			break;
@@ -289,6 +283,7 @@ bool terminoQuantumCPU(int socketCPU)
 		case 2: //Segmentation fault
 			log_trace(logpcp, "Segmentation fault");
 			moverAExit(pcb);
+			removerProgramaConectadoPorSocket(pcb->programaSocket);
 			mensajeYDesconexionPrograma(pcb->programaSocket, "Segmentation fault");
 			bajarNivelMultiprogramacion();
 			break;
@@ -296,6 +291,7 @@ bool terminoQuantumCPU(int socketCPU)
 		case 3: //Se solicito la posicion de memoria inexistente
 			log_trace(logpcp, "Se solicito la posicion de memoria inexistente");
 			moverAExit(pcb);
+			removerProgramaConectadoPorSocket(pcb->programaSocket);
 			mensajeYDesconexionPrograma(pcb->programaSocket, "Se solicito la posicion de memoria inexistente");
 			bajarNivelMultiprogramacion();
 			break;
@@ -303,6 +299,7 @@ bool terminoQuantumCPU(int socketCPU)
 		case 4: //UMV error
 			log_trace(logpcp, "UMV error");
 			moverAExit(pcb);
+			removerProgramaConectadoPorSocket(pcb->programaSocket);
 			mensajeYDesconexionPrograma(pcb->programaSocket, "UMV error");
 			bajarNivelMultiprogramacion();
 			break;
@@ -310,6 +307,7 @@ bool terminoQuantumCPU(int socketCPU)
 		case 5: //Label error
 			log_trace(logpcp, "Label error");
 			moverAExit(pcb);
+			removerProgramaConectadoPorSocket(pcb->programaSocket);
 			mensajeYDesconexionPrograma(pcb->programaSocket, "Label error");
 			bajarNivelMultiprogramacion();
 			break;
@@ -317,6 +315,7 @@ bool terminoQuantumCPU(int socketCPU)
 		case 6:
 			log_trace(logpcp, "Primitiva error");
 			moverAExit(pcb);
+			removerProgramaConectadoPorSocket(pcb->programaSocket);
 			mensajeYDesconexionPrograma(pcb->programaSocket, "Primitiva error");
 			bajarNivelMultiprogramacion();
 			break;
