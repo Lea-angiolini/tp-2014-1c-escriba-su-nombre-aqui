@@ -162,6 +162,18 @@ conectados_t *removerProgramaConectadoPorSocket(int socketPrograma){
 	return conectado;
 }
 
+conectados_t *removerProgramaConectadoId(uint32_t id){
+
+	bool matchearPID(conectados_t *conectado) {
+		return conectado->programaSocket == id;
+	}
+
+	pthread_mutex_lock(&programasConectadosMutex);
+	conectados_t *conectado = list_remove_by_condition(programasConectados,matchearPID);
+	pthread_mutex_unlock(&programasConectadosMutex);
+	return conectado;
+}
+
 conectados_t *buscarProgramaConectado(uint32_t id){
 
 	bool matchearPID(conectados_t *conectado) {
