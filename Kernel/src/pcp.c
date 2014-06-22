@@ -263,6 +263,7 @@ bool terminoQuantumCPU(int socketCPU)
 
 	*pcb = spcb.pcb;
 
+	conectados_t *conectado;
 	log_debug(logpcp, "Codigo de error %d", pcb->lastErrorCode);
 	switch(pcb->lastErrorCode)
 	{
@@ -275,49 +276,79 @@ bool terminoQuantumCPU(int socketCPU)
 		case 1: //El programa finalizo correctamente
 			log_trace(logpcp, "El programa finalizo correctamente");
 			moverAExit(pcb);
-			free(removerProgramaConectadoPorSocket(pcb->programaSocket));
+			conectado = removerProgramaConectadoPorSocket(pcb->programaSocket);
+
+			if(conectado != NULL){
+				bajarNivelMultiprogramacion();
+				free(conectado);
+			}
+
 			shutdown(pcb->programaSocket, SHUT_RDWR);
-			bajarNivelMultiprogramacion();
 			break;
 
 		case 2: //Segmentation fault
 			log_trace(logpcp, "Segmentation fault");
 			moverAExit(pcb);
-			free(removerProgramaConectadoPorSocket(pcb->programaSocket));
+			conectado = removerProgramaConectadoPorSocket(pcb->programaSocket);
+
+			if(conectado != NULL){
+				bajarNivelMultiprogramacion();
+				free(conectado);
+			}
+
 			mensajeYDesconexionPrograma(pcb->programaSocket, "Segmentation fault");
-			bajarNivelMultiprogramacion();
 			break;
 
 		case 3: //Se solicito la posicion de memoria inexistente
 			log_trace(logpcp, "Se solicito la posicion de memoria inexistente");
 			moverAExit(pcb);
-			free(removerProgramaConectadoPorSocket(pcb->programaSocket));
+			conectado = removerProgramaConectadoPorSocket(pcb->programaSocket);
+
+			if(conectado != NULL){
+				bajarNivelMultiprogramacion();
+				free(conectado);
+			}
+
 			mensajeYDesconexionPrograma(pcb->programaSocket, "Se solicito la posicion de memoria inexistente");
-			bajarNivelMultiprogramacion();
 			break;
 
 		case 4: //UMV error
 			log_trace(logpcp, "UMV error");
 			moverAExit(pcb);
-			free(removerProgramaConectadoPorSocket(pcb->programaSocket));
+			conectado = removerProgramaConectadoPorSocket(pcb->programaSocket);
+
+			if(conectado != NULL){
+				bajarNivelMultiprogramacion();
+				free(conectado);
+			}
+
 			mensajeYDesconexionPrograma(pcb->programaSocket, "UMV error");
-			bajarNivelMultiprogramacion();
 			break;
 
 		case 5: //Label error
 			log_trace(logpcp, "Label error");
 			moverAExit(pcb);
-			free(removerProgramaConectadoPorSocket(pcb->programaSocket));
+			conectado = removerProgramaConectadoPorSocket(pcb->programaSocket);
+
+			if(conectado != NULL){
+				bajarNivelMultiprogramacion();
+				free(conectado);
+			}
+
 			mensajeYDesconexionPrograma(pcb->programaSocket, "Label error");
-			bajarNivelMultiprogramacion();
 			break;
 
 		case 6:
 			log_trace(logpcp, "Primitiva error");
 			moverAExit(pcb);
-			free(removerProgramaConectadoPorSocket(pcb->programaSocket));
+			conectado = removerProgramaConectadoPorSocket(pcb->programaSocket);
+
+			if(conectado != NULL){
+				bajarNivelMultiprogramacion();
+				free(conectado);
+			}
+
 			mensajeYDesconexionPrograma(pcb->programaSocket, "Primitiva error");
-			bajarNivelMultiprogramacion();
 			break;
 	}
 
