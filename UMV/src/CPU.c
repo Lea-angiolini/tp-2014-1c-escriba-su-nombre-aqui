@@ -27,6 +27,7 @@ extern pthread_rwlock_t lockEscrituraLectura;
 
 int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud ) {
 
+	char *buffer = malloc(solicitud->length+sizeof(socket_RespuestaLeerMemoria));
 	log_trace(logger, "Solicitud de lectura, base = %d, offset = %d, length = %d", solicitud->base, solicitud->offset, solicitud->length);
 	cpu->pidProcesando = solicitud->pdi;
 	Programa * programa;
@@ -50,25 +51,26 @@ int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud )
 		log_error(logger, "Llego una solicitud de memoria demasiado larga");
 	}
 
-	uint32_t tamanioRespuesta = sizeof (socket_RespuestaLeerMemoria) - 10000 + solicitud->length;
+	uint32_t tamanioRespuesta = sizeof (socket_RespuestaLeerMemoria) + solicitud->length;
 
-	socket_RespuestaLeerMemoria * respuesta = malloc(tamanioRespuesta);
-	memset(respuesta, 0, tamanioRespuesta);
-	respuesta->header.size = tamanioRespuesta;
+	socket_RespuestaLeerMemoria respuesta;
+	respuesta.header.size = tamanioRespuesta;
 
 	if(solicitud->length > tamanioParaOperar) {
 		log_error(logger, "Segmentation fault, length: %d, tamanioParaOperar: %d, base: %d, offset: %d | UMV/src/cpu.c -> procesarSolicitudLecturaMemoria", solicitud->length, tamanioParaOperar, solicitud->base, solicitud->offset );
-		respuesta->status = false;
+		respuesta.status = false;
 	}else{
-		respuesta->status = true;
-		memLeer(segmento, respuesta->data, solicitud->offset, solicitud->length);
-		log_debug(logger, "Se leyo la data: %s", respuesta->data);
+		respuesta.status = true;
+		memLeer(segmento, buffer+sizeof(socket_RespuestaLeerMemoria), solicitud->offset, solicitud->length);
+		log_debug(logger, "Se leyo la data: %s", buffer+sizeof(socket_RespuestaLeerMemoria));
 	}
 
-	uint32_t enviado = send(cpu->socket, respuesta, tamanioRespuesta, 0);
+	memcpy(buffer, &respuesta, sizeof(socket_RespuestaLeerMemoria));
+
+	uint32_t enviado = send(cpu->socket, buffer, tamanioRespuesta, 0);
 
 	pthread_rwlock_unlock(&lockEscrituraLectura);
-	free(respuesta);
+	free(buffer);
 	if(enviado == -1) {
 		log_error(logger, "Hubo un error al enviar la respuesta a lectura de memoria | UMV/src/cpu.c -> procesarSolicitudLecturaMemoria");
 		return -1;
@@ -88,7 +90,10 @@ int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud )
 
 
 
-int procesarSolicitudEscrituraMemoria( CPU * cpu, socket_guardarEnMemoria * solicitud ) {
+int procesarSolicitudEscrituraMemoria( CPU * cpu, void *_solicitud ) {
+	socket_guardarEnMemoria * solicitud = (socket_guardarEnMemoria *)_solicitud;
+	char *buffer = malloc(solicitud->length);
+	memcpy(buffer, _solicitud+sizeof(socket_guardarEnMemoria), solicitud->length);
 
 	log_trace(logger, "Solicitud de escritura, base = %d, offset = %d, length = %d", solicitud->base, solicitud->offset, solicitud->length);
 
@@ -115,8 +120,8 @@ int procesarSolicitudEscrituraMemoria( CPU * cpu, socket_guardarEnMemoria * soli
 		respuesta->status = false;
 	}else{
 		respuesta->status = true;
-		memCopi(segmento, solicitud->offset, solicitud->data, solicitud->length);
-		log_info(logger, "Se guardo la data: %s", solicitud->data);
+		memCopi(segmento, solicitud->offset, buffer, solicitud->length);
+		log_info(logger, "Se guardo la data: %s", buffer);
 	}
 
 	uint32_t enviado = send( cpu->socket, respuesta, sizeof( socket_RespuestaGuardarEnMemoria ), 0 );
@@ -135,6 +140,8 @@ int procesarSolicitudEscrituraMemoria( CPU * cpu, socket_guardarEnMemoria * soli
 		free(respuesta);
 		return -1;
 	}*/
+
+	free(buffer);
 
 	return 1;
 }
@@ -176,7 +183,7 @@ uint32_t recibirYProcesarMensajesCpu( CPU * cpu ) {
 		switch ( header->code ){
 
 			case 'b': todoSaleBien = procesarSolicitudLecturaMemoria( cpu, (socket_leerMemoria *) paquete ); break;
-			case 'c': todoSaleBien = procesarSolicitudEscrituraMemoria( cpu, (socket_guardarEnMemoria *) paquete ); break;
+			case 'c': todoSaleBien = procesarSolicitudEscrituraMemoria( cpu, paquete ); break;
 
 			case 'd':
 				log_info( logger, "La CPU ID: %d informo que el programa activo con PID: %d ha finalizado", cpu->cpuId, cpu->pidProcesando);

@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include "log.h"
 #include "parser/parser.h"
+#include "parser/sintax.h"
 #include "pcb.h"
 
 /////////////////////////////////////////////////////////////////
@@ -73,33 +74,33 @@ typedef struct {
 //CPU<->KernelPCP
 typedef struct {
 	socket_header header; //header.code = 'o'
-	char identificador[100];
+	char identificador[LINE_SIZE];
 	int32_t valor; //Se llena solo para la respuesta
 }  __attribute__((packed)) socket_scObtenerValor;
 
 //CPU->KernelPCP (necesita respuesta del kernel?)
 typedef struct {
 	socket_header header; //header.code = 'g'
-	char identificador[100];
+	char identificador[LINE_SIZE];
 	int32_t valor;
 }  __attribute__((packed)) socket_scGrabarValor;
 
 //CPU->KernelPCP
 typedef struct {
 	socket_header header; //header.code = 'w'
-	char identificador[100];
+	char identificador[LINE_SIZE];
 }  __attribute__((packed)) socket_scWait;
 
 //CPU->KernelPCP
 typedef struct {
 	socket_header header; //header.code = 's'
-	char identificador[100];
+	char identificador[LINE_SIZE];
 }  __attribute__((packed)) socket_scSignal;
 
 //CPU->KernelPCP
 typedef struct {
 	socket_header header; //header.code = 'i'
-	char identificador[100];
+	char identificador[LINE_SIZE];
 	uint32_t unidades;
 }  __attribute__((packed)) socket_scIO;
 
@@ -126,7 +127,6 @@ typedef struct {
 	uint32_t base;
 	uint32_t offset;
 	uint32_t length;
-	char data[10000];	//Se usa como referencia pero jamas se envia completo ni se reserva en memoria
 }  __attribute__((packed)) socket_guardarEnMemoria;
 
 
@@ -150,7 +150,6 @@ typedef struct {
 	socket_header header;
 	uint32_t pdi;
 	uint32_t status;
-	char data[10000];	//Se usa como referencia pero jamas se envia completo ni se reserva en memoria
 }  __attribute__((packed)) socket_RespuestaLeerMemoria;
 
 
