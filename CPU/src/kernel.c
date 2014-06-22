@@ -142,6 +142,7 @@ bool enviarAKernelImprimir( t_valor_variable valor )
 	mensaje.header.code = 'k';
 	mensaje.header.size = sizeof( socket_imprimirTexto );
 	mensaje.programaSocket = PCB_enEjecucion.programaSocket;
+	mensaje.pid = PCB_enEjecucion.id;
 	sprintf(mensaje.texto, "%d", valor);
 
 	if( send(socketKernel, &mensaje, sizeof(socket_imprimirTexto), 0) < 0 )
@@ -156,6 +157,7 @@ bool enviarAKernelImprimirTexto( char * texto )
 	mensaje.header.code = 'k';
 	mensaje.header.size = sizeof( socket_imprimirTexto );
 	mensaje.programaSocket = PCB_enEjecucion.programaSocket;
+	mensaje.pid = PCB_enEjecucion.id;
 	strcpy( mensaje.texto, texto );
 
 	if( send(socketKernel, &mensaje, sizeof(socket_imprimirTexto), 0) < 0 )

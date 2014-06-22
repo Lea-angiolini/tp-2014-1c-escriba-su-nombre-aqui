@@ -13,9 +13,11 @@ pthread_mutex_t execQueueMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t exitQueueMutex = PTHREAD_MUTEX_INITIALIZER;
 
 t_queue *cpuReadyQueue, *cpuExecQueue;
-
 pthread_mutex_t cpuReadyQueueMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t cpuExecQueueMutex = PTHREAD_MUTEX_INITIALIZER;
+
+t_list *programasConectados;
+pthread_mutex_t programasConectadosMutex = PTHREAD_MUTEX_INITIALIZER;
 
 void crear_colas()
 {
@@ -24,6 +26,7 @@ void crear_colas()
 	execQueue = queue_create();
 	exitQueue = queue_create();
 	blockQueue = queue_create();
+	programasConectados = list_create();
 
 	cpuReadyQueue = queue_create();
 	cpuExecQueue = queue_create();
@@ -36,6 +39,7 @@ void destruir_colas()
 	queue_destroy_and_destroy_elements(execQueue, free);
 	queue_destroy_and_destroy_elements(exitQueue, free);
 	queue_destroy_and_destroy_elements(blockQueue, free);
+	list_destroy_and_destroy_elements(programasConectados, free);
 
 	queue_destroy_and_destroy_elements(cpuReadyQueue, free);
 	queue_destroy_and_destroy_elements(cpuExecQueue, free);

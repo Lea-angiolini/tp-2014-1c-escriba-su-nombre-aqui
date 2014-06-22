@@ -182,14 +182,24 @@ bool syscallImprimirTexto(int socketCPU)
 			return false;
 
 	log_debug(logpcp, "CPU: %d, envia un mensaje al Programa: %d", socketCPU, texto.programaSocket);
-	socket_msg msg;
-	msg.header.size = sizeof(socket_msg);
-	msg.type = 0; //log_info
 
-	strcpy(msg.msg, texto.texto);
-	send(texto.programaSocket, &msg, sizeof(socket_msg), 0);
+	bool matchearPID(conectados_t *conectado) {
+			return conectado->pid == texto.pid;
+		}
 
-	log_trace(logpcp, "Mensaje enviado al Programa: %d", texto.programaSocket);
+	if(list_find(programasConectados,matchearPID) != NULL){
+		socket_msg msg;
+		msg.header.size = sizeof(socket_msg);
+		msg.type = 0; //log_info
 
+		strcpy(msg.msg, texto.texto);
+		send(texto.programaSocket, &msg, sizeof(socket_msg), 0);
+
+		log_trace(logpcp, "Mensaje enviado al Programa: %d", texto.programaSocket);
+
+	}
+	else{
+		log_info(logpcp, "El programa de id: %d esta desconectado. No se puede imprimir", texto.pid);
+	}
 	return true;
-}
+	}

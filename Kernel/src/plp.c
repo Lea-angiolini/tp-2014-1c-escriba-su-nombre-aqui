@@ -33,7 +33,7 @@ bool iniciarServidorProgramas()
 {
 	bool nuevoMensaje(int socketPrograma) {
 		if (recibirYprocesarScript(socketPrograma) == false) {
-			desconexionCliente();
+			desconexionCliente(socketPrograma);
 			return false;
 		}
 
@@ -81,8 +81,12 @@ void puedoMoverNewAReady()
 	}
 }
 
-void desconexionCliente()
+void desconexionCliente(int socketPrograma)
 {
+		bool matchearPID(conectados_t *conectado) {
+			return conectado->programaSocket == socketPrograma;
+		}
+	conectados_t *conectado = list_remove_by_condition(programasConectados,matchearPID);
 	log_info(logplp, "Se ha desconectado un Programa");
 	puedoMoverNewAReady();
 }
@@ -150,6 +154,13 @@ bool crearPrograma(int socketPrograma, char *script, uint32_t scriptSize, t_meta
 			return false;
 
 		pcb_t *pcb = crearPCB(socketPrograma, &umvpcb, scriptMetadata);
+
+		conectados_t *conectado = malloc(sizeof(conectados_t));
+		conectado->pid = pcb->id;
+		conectado->programaSocket = pcb->programaSocket;
+		list_add(programasConectados, conectado);
+
+		printf("se ha agregado a lista %d, %d\n\n\n\n\n\n\n\n\n\n\n",conectado->programaSocket,conectado->pid);
 
 		queue_push(newQueue, pcb);
 		log_info(logplp, "Segmentos cargados en la UMV y PCB generada en la cola NEW");

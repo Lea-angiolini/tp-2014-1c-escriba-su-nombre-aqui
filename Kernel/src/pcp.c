@@ -106,22 +106,37 @@ void MoverReadyAExec()
 		pthread_mutex_unlock(&cpuReadyQueueMutex);
 	} while(cpuInfo == NULL);
 
-	log_info(logpcp, "Moviendo PCB de la cola READY a EXEC");
-	moverAExec(pcb);
 
-	cpuInfo->pid = pcb->id;
+	bool matchearPID(conectados_t *conectado) {
+				return conectado->pid == pcb->id;
+			}
 
-	//Mandando informacion necesaria para que la CPU pueda empezar a trabajar
-	socket_pcb spcb;
+	if(list_find(programasConectados,matchearPID) != NULL){
+		log_info(logpcp, "Moviendo PCB de la cola READY a EXEC");
+		moverAExec(pcb);
 
-	spcb.header.code = 'p';
-	spcb.header.size = sizeof(socket_pcb);
-	spcb.pcb = *pcb;
+		cpuInfo->pid = pcb->id;
 
-	moverCpuAExec(cpuInfo);
+		//Mandando informacion necesaria para que la CPU pueda empezar a trabajar
+		socket_pcb spcb;
 
-	if( send(cpuInfo->socketCPU, &spcb, sizeof(socket_pcb), 0) <= 0 )
-		desconexionCPU(cpuInfo->socketCPU);
+		spcb.header.code = 'p';
+		spcb.header.size = sizeof(socket_pcb);
+		spcb.pcb = *pcb;
+
+		moverCpuAExec(cpuInfo);
+
+		if( send(cpuInfo->socketCPU, &spcb, sizeof(socket_pcb), 0) <= 0 )
+			desconexionCPU(cpuInfo->socketCPU);
+	}
+	else{
+		log_info(logpcp, "Programa desconectado, moviendo PCB de la cola READY a EXIT");
+		moverAExit(pcb);
+		bajarNivelMultiprogramacion();
+		moverCpuAReady(cpuInfo);
+		sem_post(&dispatcherCpu);
+
+	}
 }
 
 bool conexionCPU(int socketCPU)

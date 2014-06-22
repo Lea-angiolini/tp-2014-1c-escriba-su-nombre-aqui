@@ -23,6 +23,14 @@ extern t_queue *cpuExecQueue;
 extern pthread_mutex_t cpuReadyQueueMutex;
 extern pthread_mutex_t cpuExecQueueMutex;
 
+extern t_list *programasConectados;
+extern pthread_mutex_t programasConectadosMutex;
+
+typedef struct {
+	uint32_t pid;
+	int programaSocket;
+	} conectados_t;
+
 void crear_colas();
 void destruir_colas();
 

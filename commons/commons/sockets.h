@@ -104,6 +104,7 @@ typedef struct {
 	socket_header header; //header.code = 'k'
 	char texto[255];
 	int programaSocket;
+	uint32_t pid;
 }  __attribute__((packed)) socket_imprimirTexto;
 
 
