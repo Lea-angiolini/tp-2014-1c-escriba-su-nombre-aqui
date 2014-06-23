@@ -177,7 +177,7 @@ uint32_t recibirYProcesarMensajesCpu( CPU * cpu ) {
 
 		socket_header * header = ( socket_header * ) paquete;
 
-		log_debug(logger, "Esperando retardo para responder...");
+		//log_debug(logger, "Esperando retardo para responder...");
 		usleep(retardoUMV * 1000);
 
 		switch ( header->code ){

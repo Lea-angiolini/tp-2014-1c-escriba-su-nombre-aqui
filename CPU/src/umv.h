@@ -19,9 +19,6 @@ void * leerMemoria(uint32_t base, uint32_t offset, uint32_t length);
 void * leerStack(uint32_t offset, uint32_t length);
 
 
-bool enviarCambioContexto( uint32_t pid );
-bool enviarFinPrograma( uint32_t pid );
-bool enviarFinQuantum( uint32_t pid );
 bool obtenerEtiquetas();
 
 

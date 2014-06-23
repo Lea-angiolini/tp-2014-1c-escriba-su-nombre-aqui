@@ -118,9 +118,8 @@ typedef struct {
 
 /*******************************************************************/
 
+
 //CPU->UMV
-
-
 typedef struct {
 	socket_header header;
 	uint32_t pdi;

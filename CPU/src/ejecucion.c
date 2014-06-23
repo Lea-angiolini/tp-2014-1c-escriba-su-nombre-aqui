@@ -21,18 +21,17 @@ void ejecutar () {
 
 	log_info(logger, "Inicio la ejecucion del programa %d", PCB_enEjecucion.id);
 
-	if( !generarDiccionarioVariables() || !obtenerEtiquetas() ) {
+	if(!generarDiccionarioVariables() || !obtenerEtiquetas()) {
 		PCB_enEjecucion.lastErrorCode = 4;
-		//No hago un return false porque la cpu respondio bien, pero se debe informar al kernel, si hiciera return false ni llegaria al Kernel
 		return;
 	}
 
-	while( quantumRestante > 0 && PCB_enEjecucion.lastErrorCode == 0 ) //Agregar condicion para salida por excepcion o llamada bloqueante
+	while( quantumRestante > 0 && PCB_enEjecucion.lastErrorCode == 0 )
 	{
 
 		char * instruccion = solicitarLineaPrograma();
 
-		if( instruccion == -1 ){
+		if(instruccion == -1){
 			log_error( logger, "No se pudo obtener la linea" );
 			return;
 		}
@@ -48,16 +47,12 @@ void ejecutar () {
 
 	}
 
-	if( quantumRestante == 0 ) {
-		log_info(logger, "Finalizo el quantum");
-	}
-
-	if(! enviarFinQuantum(PCB_enEjecucion.id)){
-		log_error( logger, "Hubo un problema al sincronizar los datos con la UMV" );
-		PCB_enEjecucion.lastErrorCode = 4;
+	if(quantumRestante == 0 && PCB_enEjecucion.lastErrorCode == 0) {
+		log_info(logger, "Finalizo el quantum correctamente");
 	}
 
 	return;
+
 }
 
 

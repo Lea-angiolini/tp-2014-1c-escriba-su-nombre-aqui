@@ -11,7 +11,7 @@ extern pcb_t PCB_enEjecucion;
 extern t_log * logger;
 extern uint32_t quantumRestante;
 
-//TODO crear ansisopKernel funciones
+
 AnSISOP_funciones * crearAnSISOP_funciones()
 {
 	log_debug(logger, "Setando primitivas");

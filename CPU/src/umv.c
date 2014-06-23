@@ -185,47 +185,4 @@ void * leerStack(uint32_t offset, uint32_t length){
 
 
 
-/*
- * Informa a la UMV que este CPU ahora esta procesando el programa con PID pid
- * Siempre despues de este mensaje, cuando se termine el quantum se debe enviar el enviarFinQuantum
- *
- */
-bool enviarCambioContexto( uint32_t pid ) {
-
-	//TODO
-	log_debug( logger, "Enviando a umv cambio de contexto" );
-	return 1;
-}
-
-/*
- * Envia que el programa finalizo para que destruya el segmento de memoria correspondiente
- *
- */
-bool enviarFinPrograma( uint32_t pid ){
-	log_debug(logger, "Enviando a umv fin de programa");
-	socket_header mensaje;
-	mensaje.code = 'd';
-	mensaje.size = sizeof(socket_header);
-	if(send(socketUMV, &mensaje, mensaje.size, 0) <= 0){
-		log_error(logger, "No se pudo enviar a la umv el fin del programa");
-		return false;
-	}
-	return true;
-}
-
-/*
- * Envia el mensaje que se termino el tiempo de ejecucion.
- * Si no se envia este mensaje y por alguna razon
- * El CPU se desconecta. La UMV eliminara el segmento de memoria.
- *
- */
-bool enviarFinQuantum( uint32_t pid ){
-	//TODO
-	log_debug( logger, "Enviando umv fin de quantum" );
-
-	return 1;
-}
-
-
-
 
