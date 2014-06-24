@@ -166,7 +166,10 @@ bool destruirPrograma( Programa * programa ){
 			pthread_rwlock_rdlock(&lockEscrituraLectura);
 			borrarSegmento( programa->stack );
 			borrarSegmento( programa->script );
+
+			if(programa->etiquetas != NULL)
 			borrarSegmento( programa->etiquetas );
+
 			borrarSegmento( programa->instrucciones );
 			pthread_rwlock_unlock(&lockEscrituraLectura);
 			free( programa );
