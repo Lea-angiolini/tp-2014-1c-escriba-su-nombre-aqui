@@ -1,7 +1,8 @@
 #include "memoria.h"
 #include "config.h"
 
-extern t_log * logger;
+//extern t_log * logger;
+extern FILE *mensajesUMV;
 extern pthread_rwlock_t lockEscrituraLectura;
 
 uint32_t contadorId = 0;
@@ -18,8 +19,8 @@ Segmento * crearYllenarSegmento(uint32_t tamanio, void * segmento) { //TODO Habr
 Segmento * crearSegmento(uint32_t tamanio) {
 	//aca no lockeo por escritura ni lectura porque, como tanto la consola como los CPU usan esta funcion, puede haber
 	//un quilombo si se hace un rdlock adentro de un wrlock. Lockeo tanto en la consola como en la CPU, en vez de aca.
-	log_info(logger, "El tamanio del segmento es %d", tamanio);
-
+	//log_info(logger, "El tamanio del segmento es %d", tamanio);
+	fprintf( mensajesUMV, "El tamanio del segmento es %d\n", tamanio);
 
 	Segmento * elNuevo = NULL;
 
@@ -39,8 +40,8 @@ Segmento * crearSegmento(uint32_t tamanio) {
 
 		list_add(tabla_segmentos, elNuevo);
 	}
-	log_info(logger, "Segmento creado, ahora hay %d",
-				list_size(tabla_segmentos));
+	//log_info(logger, "Segmento creado, ahora hay %d", list_size(tabla_segmentos));
+	fprintf( mensajesUMV, "Segmento creado, ahora hay %d\n", list_size(tabla_segmentos));
 
 	return elNuevo;
 
@@ -222,7 +223,8 @@ void compactar() {
 		}
 
 	}
-	log_info(logger, "Se ha compactado correctamente");
+	//log_info(logger, "Se ha compactado correctamente");
+	fprintf( mensajesUMV, "Se ha compactado correctamente \n");
 	printSegmentos(tabla_segmentos);
 	pthread_rwlock_unlock(&lockEscrituraLectura);
 	return;
@@ -254,7 +256,8 @@ uint32_t solicitarPosicionDeMemoria( uint32_t base,
 
 	Segmento * segmento = buscarSegmentoEnTabla( base);
 	if( segmento == NULL){
-		log_error( logger, "Segmento solicitado no valido");
+		//log_error( logger, "Segmento solicitado no valido");
+		fprintf( mensajesUMV, "Segmento solicitado no valido\n");
 		return -1;
 	}
 
@@ -328,7 +331,8 @@ uint32_t escribirPosicionDeMemoria( uint32_t base,
 	Segmento * segmento = buscarSegmentoEnTabla( base);
 
 	if( segmento == NULL){
-			log_error( logger, "Segmento solicitado no valido");
+			//log_error( logger, "Segmento solicitado no valido");
+			fprintf( mensajesUMV, "Segmento solicitado no valido\n");
 			return -1;
 		}
 

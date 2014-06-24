@@ -5,7 +5,7 @@
 #include "memoria.h"
 #include "config.h"
 
-extern t_log * logger;
+//extern t_log * logger;
 extern pthread_rwlock_t lockEscrituraLectura;
 extern t_list * tabla_segmentos;
 
@@ -48,7 +48,8 @@ void * iniciarConsola(void * params) {
 			generarDump();
 			break;
 		default:
-			log_error(logger, "El comando ingresado no es valido");
+			//log_error(logger, "El comando ingresado no es valido");
+			printf("El comando ingresado es invalido\n");
 			break;
 		}
 	}
@@ -243,8 +244,9 @@ void generarDump() {
 	case 'd': imprimirMemoria();
 				break;
 	default:
-		log_error(logger, "El comando ingresado es invalido");
-
+		//log_error(logger, "El comando ingresado es invalido");
+		//Esto lo imprimo en consola directamente
+		printf("el comando ingresado es invalido\n");
 	}
 }
 
@@ -258,8 +260,9 @@ void imprimirMemoria(){
 	while( getchar() != '\n');
 
 	if( memoria_size < (tamanio + offset)){
-		log_error( logger, "Se ha producido Segmentation Fault a causa de indicar una cantidad de bytes que sobrepasa el tamaño de la memoria");
-		}else{
+		//log_error( logger, "Se ha producido Segmentation Fault a causa de indicar una cantidad de bytes que sobrepasa el tamaño de la memoria");
+		printf("Se ha producido Segmentation Fault a causa de indicar una cantidad de bytes que sobrepasa el tamaño de la memoria\n");
+	}else{
 		imprimirBytes( 0, offset, tamanio);
 		}
 }
