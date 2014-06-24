@@ -45,12 +45,6 @@ int procesarSolicitudLecturaMemoria( CPU * cpu, socket_leerMemoria * solicitud )
 
 	uint32_t tamanioParaOperar = tamanioSegmento(segmento) - solicitud->offset;
 
-	if(solicitud->length > 10000){
-		solicitud->length = 0;
-		tamanioParaOperar = 0;
-		log_error(logger, "Llego una solicitud de memoria demasiado larga");
-	}
-
 	uint32_t tamanioRespuesta = sizeof (socket_RespuestaLeerMemoria) + solicitud->length;
 
 	socket_RespuestaLeerMemoria respuesta;
@@ -146,6 +140,16 @@ int procesarSolicitudEscrituraMemoria( CPU * cpu, void *_solicitud ) {
 	return 1;
 }
 
+void removerPIDactivoACPU( uint32_t pidActivo){
+
+	bool matchearCPUconPid( CPU * cpu) {
+		return cpu->pidProcesando == pidActivo;
+	}
+
+	CPU * cPu = list_find(cpus, matchearCPUconPid);
+	if( cPu != NULL)
+	cPu->pidProcesando = SINPROCESOACTIVO;
+}
 
 
 
@@ -160,37 +164,17 @@ uint32_t recibirYProcesarMensajesCpu( CPU * cpu ) {
 
 		if( paquete == NULL ){
 			log_error( logger, "Se ha desconectado la CPU%d por causas desconocidas", cpu->cpuId);
-			log_trace( logger, "Destruyendo programa activo de la CPU%d", cpu->cpuId);
-
-			if( cpu->pidProcesando != SINPROCESOACTIVO){
-			uint32_t programaDestruido;
-			Programa * programa = buscarPrograma( cpu->pidProcesando);
-			programaDestruido = destruirPrograma( programa);
-
-			if( programaDestruido == true){
-				log_info( logger, "El programa activo de la CPU%d se ha destruido correctamente", cpu->cpuId);
-			}else
-				log_error( logger, "El programa activo de la CPU%d no se ha destruido correctamente", cpu->cpuId);
-			}
 			return -1;
 		}
 
 		socket_header * header = ( socket_header * ) paquete;
 
-		//log_debug(logger, "Esperando retardo para responder...");
 		usleep(retardoUMV * 1000);
 
 		switch ( header->code ){
 
 			case 'b': todoSaleBien = procesarSolicitudLecturaMemoria( cpu, (socket_leerMemoria *) paquete ); break;
 			case 'c': todoSaleBien = procesarSolicitudEscrituraMemoria( cpu, paquete ); break;
-
-			case 'd':
-				log_info( logger, "La CPU ID: %d informo que el programa activo con PID: %d ha finalizado", cpu->cpuId, cpu->pidProcesando);
-				Programa * programa = buscarPrograma( cpu->pidProcesando);
-				destruirPrograma( programa);
-				cpu->pidProcesando = -1;
-				break;
 
 			default:
 

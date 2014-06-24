@@ -17,5 +17,6 @@ void fnNuevoCpu	(int socketPtr);
 uint32_t 	recibirYProcesarMensajesCpu	( CPU * cpu );
 void borrarCPU( CPU * cpu );
 void destruirTodasLasCPUS();
+void removerPIDactivoACPU( uint32_t pidActivo);
 
 #endif /* CPU_H_ */

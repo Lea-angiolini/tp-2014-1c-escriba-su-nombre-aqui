@@ -9,26 +9,51 @@ extern uint32_t retardoUMV;
 
 uint32_t recibirYProcesarMensajesKernel( Kernel * kernel ) {
 
-	socket_pedirMemoria * buffer = malloc(sizeof(socket_pedirMemoria));
+	socket_header header;
 	uint32_t todoSaleBien = 1;
 
 	while (todoSaleBien) {
-		todoSaleBien = recv(kernel->socket, buffer, sizeof(socket_pedirMemoria), MSG_WAITALL);
-		log_info(logger, "Recibido un mensaje del Kernel, esperando retardo para procesar...");
+		todoSaleBien = recv(kernel->socket, &header, sizeof(socket_header), MSG_WAITALL | MSG_PEEK);
+		log_info(logger, "Recibido un mensaje del Kernel");
 		usleep(retardoUMV * 1000);
-		if(sizeof(socket_pedirMemoria) ==  todoSaleBien){
+
+		if( todoSaleBien == sizeof(socket_header) ){
 			log_info(logger, "Procesando mensaje del Kernel");
-			procesarMenssajeKernel(kernel, buffer);
+
+			switch (header.code)
+			{
+			case 'p' :
+					{
+						socket_pedirMemoria * pedidoMemoria = malloc( sizeof( socket_pedirMemoria));
+						if( recv( kernel->socket, pedidoMemoria, sizeof(socket_pedirMemoria), MSG_WAITALL) != sizeof( socket_pedirMemoria)){
+							free( pedidoMemoria);
+							return 0;
+						}
+						reservarSegmentosParaPrograma( kernel, pedidoMemoria);
+						free( pedidoMemoria);
+						break;
+					}
+			case 'b':
+					{
+						socket_borrarMemoria * borradoMemoria = malloc( sizeof( socket_borrarMemoria));
+						if( recv( kernel->socket, borradoMemoria, sizeof(socket_borrarMemoria), MSG_WAITALL) != sizeof( socket_borrarMemoria)){
+						free( borradoMemoria);
+						return 0;
+						}
+						borrarPrograma( borradoMemoria);
+						free( borradoMemoria);
+						break;
+					}
+			}
 		}else{
-			free(buffer);
-			return 0;
+			todoSaleBien = 0;
 		}
 	}
-	free(buffer);
-	return 1;
+
+	return 0;
 }
 
-uint32_t procesarMenssajeKernel( Kernel * kernel, socket_pedirMemoria * segmentosAreservar ) {
+uint32_t reservarSegmentosParaPrograma( Kernel * kernel, socket_pedirMemoria * segmentosAreservar ) {
 
 	bool respuesta = true;
 	uint32_t memoriaDisponible;
@@ -108,6 +133,18 @@ uint32_t procesarMenssajeKernel( Kernel * kernel, socket_pedirMemoria * segmento
 
 }
 
+uint32_t borrarPrograma( socket_borrarMemoria * programaAborrar){
+
+	log_info( logger, "Procesando solicitud del Kernel de borrado de programa");
+	Programa * programa = buscarPrograma( programaAborrar->pid);
+	if( programa == NULL){
+		log_error( logger, "El programa solicitado por el Kernel para su borrado no existe en memoria");
+	}
+
+	removerPIDactivoACPU( programa->pid);
+	return destruirPrograma( programa );
+}
+
 uint32_t tamanioSegmentos(socket_pedirMemoria * segmentosAreservar) {
 	return (segmentosAreservar->codeSegmentSize
 			+ segmentosAreservar->etiquetasSegmentSize
@@ -123,7 +160,7 @@ void  fnKernelConectado(int socket) {
 	kernel->socket = socket;
 
 	if (recibirYProcesarMensajesKernel(kernel) == 0)
-		log_error(logger, "El Kernel se ha desconectado");
+		log_info(logger, "El Kernel se ha desconectado");
 
 	pthread_cancel( threadConexiones );
 
