@@ -70,6 +70,7 @@ void moverAExit(pcb_t *pcb)
 	pthread_mutex_lock(&exitQueueMutex);
 	queue_push(exitQueue, pcb);
 	pthread_mutex_unlock(&exitQueueMutex);
+	borrarSegmentos(pcb->id);
 }
 
 void moverABlock(pcb_t *pcb)
