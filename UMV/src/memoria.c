@@ -200,31 +200,31 @@ uint32_t memoriaLibre() {
 
 void compactar() {
 	pthread_rwlock_wrlock(&lockEscrituraLectura);
-	ordenarTablaSegmentos();
-	uint32_t u = 0;
-	Segmento * primerSegmento = (Segmento *) list_get(tabla_segmentos, u);
+	if( list_size(tabla_segmentos) != 0){
 
-	while( primerSegmento->inicioReal == SEGMENTOVACIO){
-		u++;
-		primerSegmento = (Segmento *) list_get(tabla_segmentos, u);
+		ordenarTablaSegmentos();
+		uint32_t u = 0;
+		Segmento * primerSegmento = (Segmento *) list_get(tabla_segmentos, u);
+
+
+		if (primerSegmento->inicioReal != 0) {
+			moverSegmento(primerSegmento, 0);
 		}
+		uint32_t i = 0;
+		for (i = 0; i < list_size(tabla_segmentos) - 1; i++) {
+			Segmento * segmentoMovido = (Segmento *) list_get(tabla_segmentos, i);
+			Segmento * segmentoAmover = (Segmento *) list_get(tabla_segmentos,
+					i + 1);
+			if( segmentoMovido->finReal != (segmentoAmover->inicioReal -1) ){
+				moverSegmento(segmentoAmover, segmentoMovido->finReal + 1);
+			}
 
-	if (primerSegmento->inicioReal != 0) {
-		moverSegmento(primerSegmento, 0);
-	}
-	uint32_t i = 0;
-	for (i = 0; i < list_size(tabla_segmentos) - 1; i++) {
-		Segmento * segmentoMovido = (Segmento *) list_get(tabla_segmentos, i);
-		Segmento * segmentoAmover = (Segmento *) list_get(tabla_segmentos,
-				i + 1);
-		if( segmentoMovido->finReal != (segmentoAmover->inicioReal -1) ){
-			moverSegmento(segmentoAmover, segmentoMovido->finReal + 1);
 		}
-
+		log_info(logger, "Se ha compactado correctamente");
+		printSegmentos(tabla_segmentos);
 	}
-	log_info(logger, "Se ha compactado correctamente");
-	printSegmentos(tabla_segmentos);
 	pthread_rwlock_unlock(&lockEscrituraLectura);
+
 	return;
 }
 
