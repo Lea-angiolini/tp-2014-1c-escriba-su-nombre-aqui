@@ -1,7 +1,7 @@
 #include "memoria.h"
 #include "config.h"
 
-//extern t_log * logger;
+extern t_log * logger;
 extern FILE *mensajesUMV;
 extern pthread_rwlock_t lockEscrituraLectura;
 
@@ -40,7 +40,7 @@ Segmento * crearSegmento(uint32_t tamanio) {
 
 		list_add(tabla_segmentos, elNuevo);
 	}
-	//log_info(logger, "Segmento creado, ahora hay %d", list_size(tabla_segmentos));
+	log_info( logger, "Segmento creado, ahora hay %d", list_size(tabla_segmentos));
 	fprintf( mensajesUMV, "Segmento creado, ahora hay %d\n", list_size(tabla_segmentos));
 
 	return elNuevo;
@@ -223,7 +223,7 @@ void compactar() {
 		}
 
 	}
-	//log_info(logger, "Se ha compactado correctamente");
+	log_info( logger, "Se ha compactado correctamente");
 	fprintf( mensajesUMV, "Se ha compactado correctamente \n");
 	printSegmentos(tabla_segmentos);
 	pthread_rwlock_unlock(&lockEscrituraLectura);
@@ -256,7 +256,7 @@ uint32_t solicitarPosicionDeMemoria( uint32_t base,
 
 	Segmento * segmento = buscarSegmentoEnTabla( base);
 	if( segmento == NULL){
-		//log_error( logger, "Segmento solicitado no valido");
+		log_error( logger, "Segmento solicitado no valido");
 		fprintf( mensajesUMV, "Segmento solicitado no valido\n");
 		return -1;
 	}
@@ -331,7 +331,7 @@ uint32_t escribirPosicionDeMemoria( uint32_t base,
 	Segmento * segmento = buscarSegmentoEnTabla( base);
 
 	if( segmento == NULL){
-			//log_error( logger, "Segmento solicitado no valido");
+			log_error( logger, "Segmento solicitado no valido");
 			fprintf( mensajesUMV, "Segmento solicitado no valido\n");
 			return -1;
 		}
