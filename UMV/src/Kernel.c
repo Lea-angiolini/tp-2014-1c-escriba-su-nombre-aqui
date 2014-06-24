@@ -3,7 +3,6 @@
 
 
 extern t_log * logger;
-extern FILE *mensajesUMV;
 extern pthread_t threadConexiones;
 extern uint32_t retardoUMV;
 
@@ -16,12 +15,10 @@ uint32_t recibirYProcesarMensajesKernel( Kernel * kernel ) {
 	while (todoSaleBien) {
 		todoSaleBien = recv(kernel->socket, &header, sizeof(socket_header), MSG_WAITALL | MSG_PEEK);
 		log_info( logger, "Recibido un mensaje del Kernel");
-		fprintf( mensajesUMV, "Recibido un mensaje del Kernel\n");
 		usleep(retardoUMV * 1000);
 
 		if( todoSaleBien == sizeof(socket_header) ){
 			log_info( logger, "Procesando mensaje del Kernel");
-			fprintf( mensajesUMV, "Procesando mensaje del Kernel\n");
 			switch (header.code)
 			{
 			case 'p' :
@@ -64,7 +61,6 @@ uint32_t reservarSegmentosParaPrograma( Kernel * kernel, socket_pedirMemoria * s
 
 	if (tamanioTotalSegmentos > memoriaDisponible){
 		log_error( logger, "Memory Overload/ No se ha podido reservar segmentos enviados por el Kernel");
-		fprintf( mensajesUMV, "Memory Overload/ No se ha podido reservar segmentos enviados por el Kernel\n");
 		respuesta = false;
 	}
 
@@ -74,7 +70,6 @@ uint32_t reservarSegmentosParaPrograma( Kernel * kernel, socket_pedirMemoria * s
 
 	if (send(kernel->socket, &respuestaSegmentos, sizeof(respuestaSegmentos), 0) == -1) {
 		log_error( logger, "No se ha podido enviar respuesta de reservación de segmentos al Kernel");
-		fprintf( mensajesUMV, "No se ha podido enviar respuesta de reservación de segmentos al Kernel\n");
 		return -1;
 	}
 
@@ -109,7 +104,6 @@ uint32_t reservarSegmentosParaPrograma( Kernel * kernel, socket_pedirMemoria * s
 				|| datosInstrucciones != tamanioInstrucciones ) {
 
 			log_error( logger, "No se recibieron los datos de los segmentos correctamente");
-			fprintf( mensajesUMV, "No se recibieron los datos de los segmentos correctamente\n");
 			free(script);
 			free(etiquetas);
 			free(instrucciones);
@@ -129,11 +123,9 @@ uint32_t reservarSegmentosParaPrograma( Kernel * kernel, socket_pedirMemoria * s
 
 		if ( send(kernel->socket, &datosSegmentos, sizeof(datosSegmentos), 0) < 0 ) {
 			log_error( logger, "No se ha podido enviar los datos de los segmentos creados correctamente al Kernel" );
-			fprintf( mensajesUMV, "No se ha podido enviar los datos de los segmentos creados correctamente al Kernel\n");
 			return -1;
 		} else {
 			log_info( logger,"Se ha enviado los datos de los segmentos creados correctamente al Kernel" );
-			fprintf( mensajesUMV, "Se ha enviado los datos de los segmentos creados correctamente al Kernel\n");
 			return 1;
 		}
 
@@ -142,11 +134,9 @@ uint32_t reservarSegmentosParaPrograma( Kernel * kernel, socket_pedirMemoria * s
 uint32_t borrarPrograma( socket_borrarMemoria * programaAborrar){
 
 	log_info( logger, "Procesando solicitud del Kernel de borrado de programa");
-	fprintf( mensajesUMV, "Procesando solicitud del Kernel de borrado de programa\n");
 	Programa * programa = buscarPrograma( programaAborrar->pid);
 	if( programa == NULL){
 		log_error( logger, "El programa solicitado por el Kernel para su borrado no existe en memoria");
-		fprintf( mensajesUMV, "El programa solicitado por el Kernel para su borrado no existe en memoria\n");
 	}
 
 	removerPIDactivoACPU( programa->pid);
@@ -163,14 +153,12 @@ uint32_t tamanioSegmentos(socket_pedirMemoria * segmentosAreservar) {
 void  fnKernelConectado(int socket) {
 
 	log_info( logger, "Se conecto el Kernel");
-	fprintf( mensajesUMV, "Se conecto el Kernel\n");
 
 	Kernel * kernel = malloc(sizeof(Kernel));
 	kernel->socket = socket;
 
 	if (recibirYProcesarMensajesKernel(kernel) == 0)
 		log_info( logger, "El Kernel se ha desconectado");
-		fprintf( mensajesUMV, "El Kernel se ha desconectado\n");
 
 	pthread_cancel( threadConexiones );
 

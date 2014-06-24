@@ -3,7 +3,6 @@
 #include "config.h"
 
 extern t_log * logger;
-extern FILE *mensajesUMV;
 extern pthread_rwlock_t lockEscrituraLectura;
 
 Programa * crearPrograma(uint32_t pid, void * script, void * etiquetas,
@@ -107,26 +106,21 @@ Programa * buscarPrograma(uint32_t pid) {
 
 Segmento * buscarSegmentoEnProgramaPorVirtual(Programa * programa, uint32_t base) {
 	log_info( logger, "La base que estoy buscando es %d 2", base);
-	fprintf( mensajesUMV, "La base que estoy buscando es %d 2\n", base);
 
 	if (base == programa->stack->inicioVirtual){
 		log_info( logger,"Es el stack!");
-		fprintf( mensajesUMV, "Es el stack!\n");
 		return programa->stack;}
 	if (base == programa->script->inicioVirtual){
 		log_info( logger,"Es el script!");
-		fprintf( mensajesUMV, "Es el script\n");
 		return programa->script;}
 	if(programa->etiquetas != NULL){
 
 	if (base == programa->etiquetas->inicioVirtual){
 		log_info( logger,"Es el de etiquetas!");
-		fprintf( mensajesUMV, "Es el de etiquetas!\n");
 		return programa->etiquetas;}
 }
 	if (base == programa->instrucciones->inicioVirtual){
 		log_info( logger,"Es el de instrucciones!");
-		fprintf( mensajesUMV, "Es el de instrucciones!\n");
 		return programa->instrucciones;}
 	return NULL ;
 
@@ -134,7 +128,6 @@ Segmento * buscarSegmentoEnProgramaPorVirtual(Programa * programa, uint32_t base
 
 Segmento * buscarSegmentoEnProgramaPorReal(Programa * programa, uint32_t base) {
 	log_info( logger, "La base que estoy buscando es %d 2", base);
-	fprintf( mensajesUMV, "La base que estoy buscando es %d 2\n", base);
 
 	if (base == programa->stack->inicioReal)
 		return programa->stack;
@@ -162,7 +155,6 @@ bool destruirPrograma( Programa * programa ){
 
 		if( programa != NULL){
 			log_info( logger, "Destruyendo programa con pid: %d", programa->pid);
-			fprintf( mensajesUMV, "Destruyendo programa con pid: %d\n", programa->pid);
 			pthread_rwlock_rdlock(&lockEscrituraLectura);
 			borrarSegmento( programa->stack );
 			borrarSegmento( programa->script );
@@ -177,7 +169,6 @@ bool destruirPrograma( Programa * programa ){
 			return true;
 		}else{
 			log_error( logger, "El programa con pid: %d no se ha podido destruir", programa->pid);
-			fprintf( mensajesUMV, "El programa con pid: %d no se ha podido destruir\n", programa->pid);
 			return false;
 		}
 }

@@ -1,7 +1,6 @@
 #include "config.h"
 
 extern t_log *logger;
-extern FILE *mensajesUMV;
 
 t_list *cpus; //Lista en la que se van a guardar toda la info de cada cpu que se conecte
 t_list *programas;
@@ -37,12 +36,10 @@ bool cargar_config(char *config)
 	}else {
 		modoActualCreacionSegmentos = FIRSTFIT;
 	}
-	fprintf( mensajesUMV, "Reservando %d Bytes de memoria\n", memoria_size);
 	log_info( logger, "Reservando %d Bytes de memoria", memoria_size );
 
 	memoria = malloc( memoria_size );
 	if (memoria == 0) {
-		fprintf( mensajesUMV, "No se pudo alocar la memoria, finalizando...\n");
 		log_error(logger, "No se pudo alocar la memoria, finalizando...");
 		return false;
 	}
