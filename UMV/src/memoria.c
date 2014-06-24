@@ -224,12 +224,9 @@ void compactar() {
 		log_info(logger, "Se ha compactado correctamente");
 		printSegmentos(tabla_segmentos);
 	}
-<<<<<<< HEAD
 	log_info( logger, "Se ha compactado correctamente");
 	fprintf( mensajesUMV, "Se ha compactado correctamente \n");
 	printSegmentos(tabla_segmentos);
-=======
->>>>>>> 1e5c2f5fb7e19740282a280a8ddaeafeefff1985
 	pthread_rwlock_unlock(&lockEscrituraLectura);
 
 	return;
