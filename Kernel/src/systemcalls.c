@@ -26,6 +26,13 @@ bool syscallIO(int socketCPU)
 
 	pcb_t *pcb = sacarDeExec(spcb.pcb.id);
 	*pcb = spcb.pcb;
+
+	//CHECK
+	if(buscarProgramaConectado(pcb->id) == NULL){
+		moverAExit(pcb);
+		return true;
+	}
+
 	moverABlock(pcb);
 
 	crear_pedido(io.identificador, pcb->id, io.unidades);

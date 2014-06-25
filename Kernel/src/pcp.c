@@ -225,7 +225,7 @@ bool recibirYprocesarPedido(int socketCPU)
 	case 'k': //SC: Imprimir Texto
 		return syscallImprimirTexto(socketCPU);
 	default:
-		log_error(logpcp, "Pedido invalido del kernel");
+		log_error(logpcp, "Pedido invalido del cpu");
 		return false;
 
 	}
