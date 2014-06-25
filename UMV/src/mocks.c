@@ -15,7 +15,7 @@ void ejecutar(){
 
 
 	log_info( logger, "Creando un programa para que la cpu pueda acceder. ");
-	crearPrograma( 1, malloc(1), malloc(1), malloc(1), 1, 1, 1, 1024 );
+	//crearPrograma( 1, malloc(1), malloc(1), malloc(1), 1, 1, 1, 1024 );
 
 
 	/*
