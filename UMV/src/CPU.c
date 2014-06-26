@@ -52,7 +52,7 @@ bool leerMemoria(int socketCPU)
 	Segmento* segmento = buscarSegmentoEnProgramaPorVirtual(programa, leerMemoria.base);
 
 	if(segmento == NULL) {
-		log_error(logger, "No se encuentra el segmento especificado | UMV/src/cpu.c -> procesarSolicitudLecturaMemoria");
+		log_error(logger, "No se encuentra el segmento especificado");
 		return false;
 	}
 
@@ -71,7 +71,7 @@ bool leerMemoria(int socketCPU)
 
 	if( send(socketCPU, &respuesta, sizeof(socket_RespuestaLeerMemoria), 0) < 0 || send(socketCPU, buffer, leerMemoria.length, 0) < 0 )
 	{
-		log_error(logger, "Hubo un error al enviar la respuesta a lectura de memoria | UMV/src/cpu.c -> procesarSolicitudLecturaMemoria");
+		log_error(logger, "Hubo un error al enviar la respuesta a lectura de memoria");
 		free(buffer);
 		return false;
 	}
@@ -103,7 +103,7 @@ bool escribirMemoria(int socketCPU)
 	Segmento * segmento = buscarSegmentoEnProgramaPorVirtual(programa, guardarMemoria.base);
 
 	if(segmento == NULL) {
-		log_error( logger, "No se encuentra el segmento especificado | UMV/src/cpu.c -> procesarSolicitudEscrituraMemoria");
+		log_error(logger, "No se encuentra el segmento especificado");
 		free(buffer);
 		return false;
 	}
@@ -120,7 +120,7 @@ bool escribirMemoria(int socketCPU)
 	}
 
 	if( send(socketCPU, &respuesta, sizeof(socket_RespuestaGuardarEnMemoria), 0 ) < 0) {
-		log_error( logger, "La respuesta a escribir en memoria no se ha realizado con exito | UMV/src/cpu.c -> procesarSolicitudEscrituraMemoria");
+		log_error(logger, "La respuesta a escribir en memoria no se ha realizado con exito");
 		free(buffer);
 		return false;
 	}
