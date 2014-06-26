@@ -3,7 +3,6 @@
 
 extern t_log *logger;
 extern uint32_t retardoUMV;
-extern pthread_rwlock_t lockEscrituraLectura;
 
 
 void fnNuevoCpu(int socketCPU)
@@ -50,12 +49,10 @@ bool leerMemoria(int socketCPU)
 	log_debug(logger, "Solicitud de lectura: base = %d, offset = %d, length = %d", leerMemoria.base, leerMemoria.offset, leerMemoria.length);
 
 	Programa* programa = buscarPrograma(leerMemoria.pdi);
-	pthread_rwlock_rdlock(&lockEscrituraLectura);
 	Segmento* segmento = buscarSegmentoEnProgramaPorVirtual(programa, leerMemoria.base);
 
 	if(segmento == NULL) {
 		log_error(logger, "No se encuentra el segmento especificado | UMV/src/cpu.c -> procesarSolicitudLecturaMemoria");
-		pthread_rwlock_unlock(&lockEscrituraLectura);
 		return false;
 	}
 
@@ -67,18 +64,10 @@ bool leerMemoria(int socketCPU)
 	respuesta.header.size = sizeof(socket_RespuestaLeerMemoria) + leerMemoria.length;
 	respuesta.status = true;
 
-	uint32_t tamanioParaOperar = tamanioSegmento(segmento) - leerMemoria.offset;
-
-	if(leerMemoria.length > tamanioParaOperar) {
+	if( memLeer(segmento, buffer, leerMemoria.offset, leerMemoria.length) != true ) {
 		respuesta.status = false;
-		log_error(logger, "Segmentation fault: length: %d, tamanioParaOperar: %d, base: %d, offset: %d | UMV/src/cpu.c -> procesarSolicitudLecturaMemoria", leerMemoria.length, tamanioParaOperar, leerMemoria.base, leerMemoria.offset);
 		//return false; notese que de esta forma no desconectamos a esa CPU
-	} else {
-		memLeer(segmento, buffer, leerMemoria.offset, leerMemoria.length);
-		log_debug(logger, "Se leyo la data: %s", buffer);
 	}
-
-	pthread_rwlock_unlock(&lockEscrituraLectura);
 
 	if( send(socketCPU, &respuesta, sizeof(socket_RespuestaLeerMemoria), 0) < 0 || send(socketCPU, buffer, leerMemoria.length, 0) < 0 )
 	{
@@ -111,12 +100,10 @@ bool escribirMemoria(int socketCPU)
 
 
 	Programa * programa = buscarPrograma(guardarMemoria.pdi);
-	pthread_rwlock_rdlock(&lockEscrituraLectura);
 	Segmento * segmento = buscarSegmentoEnProgramaPorVirtual(programa, guardarMemoria.base);
 
 	if(segmento == NULL) {
 		log_error( logger, "No se encuentra el segmento especificado | UMV/src/cpu.c -> procesarSolicitudEscrituraMemoria");
-		pthread_rwlock_unlock(&lockEscrituraLectura);
 		free(buffer);
 		return false;
 	}
@@ -127,18 +114,10 @@ bool escribirMemoria(int socketCPU)
 	respuesta.header.size = sizeof(socket_RespuestaGuardarEnMemoria);
 	respuesta.status = true;
 
-	uint32_t tamanioParaOperar = tamanioSegmento(segmento) - guardarMemoria.offset;
-
-	if(guardarMemoria.length > tamanioParaOperar) {
+	if( memCopy(segmento, guardarMemoria.offset, buffer, guardarMemoria.length) != true ) {
 		respuesta.status = false;
-		log_error(logger, "Segmentation fault: length: %d, tamanioParaOperar: %d, base: %d, offset: %d | UMV/src/cpu.c -> procesarSolicitudEscrituraMemoria", guardarMemoria.length, tamanioParaOperar, guardarMemoria.base, guardarMemoria.offset);
 		//return false; notese que de esta forma no desconectamos a esa CPU
-	}else{
-		memCopi(segmento, guardarMemoria.offset, buffer, guardarMemoria.length);
-		log_info(logger, "Se guardo la data: %s", buffer);
 	}
-
-	pthread_rwlock_unlock(&lockEscrituraLectura);
 
 	if( send(socketCPU, &respuesta, sizeof(socket_RespuestaGuardarEnMemoria), 0 ) < 0) {
 		log_error( logger, "La respuesta a escribir en memoria no se ha realizado con exito | UMV/src/cpu.c -> procesarSolicitudEscrituraMemoria");

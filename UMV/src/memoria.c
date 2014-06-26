@@ -10,10 +10,8 @@ uint32_t contadorId = 0;
 
 
 Segmento * crearYllenarSegmento(uint32_t tamanio, void * segmento) { //TODO Habria que agregarle un id de tipo al segmento
-	pthread_rwlock_rdlock(&lockEscrituraLectura);
 	Segmento * segmentoAllenar = crearSegmento(tamanio);
-	memCopi(segmentoAllenar, 0, segmento, tamanio);
-	pthread_rwlock_unlock(&lockEscrituraLectura);
+	memCopy(segmentoAllenar, 0, segmento, tamanio);
 	return segmentoAllenar;
 }
 
