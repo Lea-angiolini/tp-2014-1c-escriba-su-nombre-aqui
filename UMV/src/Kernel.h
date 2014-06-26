@@ -14,15 +14,11 @@
 #include "commons/sockets.h"
 
 
-typedef struct {
-	int socket;
-} Kernel;
+void  fnKernelConectado(int socketKernel);
+bool recibirYProcesarPedidoKernel(int socketKernel);
 
-
-void  fnKernelConectado(int socket);
-uint32_t reservarSegmentosParaPrograma(Kernel * kernel,	socket_pedirMemoria * segmentosAreservar);
-uint32_t borrarPrograma( socket_borrarMemoria * programaAborrar);
-uint32_t recibirYProcesarMensajesKernel(Kernel * kernel);
-uint32_t tamanioSegmentos(socket_pedirMemoria * segmentosAreservar);
+bool crearSegmentos(int socketKernel);
+bool borrarSegmentos(int socketKernel);
+bool recibirSegmentos(int socketKernel, socket_pedirMemoria *pedidoMemoria);
 
 #endif /* KERNEL_H_ */

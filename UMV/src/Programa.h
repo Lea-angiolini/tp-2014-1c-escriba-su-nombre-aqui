@@ -15,11 +15,10 @@ typedef struct {
 	Segmento * script;
 	Segmento * etiquetas;
 	Segmento * instrucciones;
-
 } Programa;
 
 
-Programa *  crearPrograma(uint32_t pid, void * script, void * etiquetas, void * instrucciones_serializado, uint32_t tamanioScript, uint32_t tamanioEtiquetas, uint32_t tamanioInstrucciones, uint32_t tamanioStack );
+Programa *crearPrograma(uint32_t pid, void *script, void *etiquetas, void *instrucciones_serializado, socket_pedirMemoria *pedidoMemoria);
 
 Segmento * crearDireccionesVirtuales(Segmento * segmento,
 		uint32_t tamanioSegmento, uint32_t finVirtualDelAnterior);

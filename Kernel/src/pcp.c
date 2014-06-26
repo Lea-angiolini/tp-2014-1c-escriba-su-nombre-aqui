@@ -224,6 +224,10 @@ bool recibirYprocesarPedido(int socketCPU)
 		return terminoQuantumCPU(socketCPU);
 	case 'k': //SC: Imprimir Texto
 		return syscallImprimirTexto(socketCPU);
+	default:
+		log_error(logpcp, "Pedido invalido del cpu");
+		return false;
+
 	}
 	return true;
 }

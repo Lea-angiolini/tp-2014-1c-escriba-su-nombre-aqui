@@ -5,51 +5,46 @@
 extern t_log * logger;
 extern pthread_rwlock_t lockEscrituraLectura;
 
-Programa * crearPrograma(uint32_t pid, void * script, void * etiquetas,
-		void * instrucciones_serializado, uint32_t tamanioScript,
-		uint32_t tamanioEtiquetas, uint32_t tamanioInstrucciones,
-		uint32_t tamanioStack) {
-	pthread_rwlock_rdlock(&lockEscrituraLectura);
-	Programa * programa = malloc(sizeof(Programa));
+Programa *crearPrograma(uint32_t pid, void *script, void *etiquetas, void *instrucciones_serializado, socket_pedirMemoria *pedidoMemoria) {
+	Programa *programa = malloc(sizeof(Programa));
 
 	programa->pid = pid;
 
-	srand( time(NULL));
+	srand(time(NULL));
 
-	programa->stack = crearSegmento(tamanioStack);
-	programa->script = crearYllenarSegmento(tamanioScript, script);
-	programa->instrucciones = crearYllenarSegmento(tamanioInstrucciones,instrucciones_serializado);
+	pthread_rwlock_rdlock(&lockEscrituraLectura);
 
-	crearDireccionesVirtuales( programa->stack, tamanioStack, 0);
-	crearDireccionesVirtuales(programa->script, tamanioScript,
-				programa->stack->finVirtual);
+	programa->stack = crearSegmento(pedidoMemoria->stackSegmentSize);
+	programa->script = crearYllenarSegmento(pedidoMemoria->codeSegmentSize, script);
+	programa->instrucciones = crearYllenarSegmento(pedidoMemoria->instruccionesSegmentSize,instrucciones_serializado);
 
-	if( tamanioEtiquetas == 0){
+	crearDireccionesVirtuales(programa->stack, pedidoMemoria->stackSegmentSize, 0);
+	crearDireccionesVirtuales(programa->script, pedidoMemoria->codeSegmentSize, programa->stack->finVirtual);
+
+	if(pedidoMemoria->etiquetasSegmentSize == 0){
 		programa->etiquetas = NULL;
-		crearDireccionesVirtuales( programa->instrucciones, tamanioInstrucciones, programa->script->finVirtual);
-
+		crearDireccionesVirtuales(programa->instrucciones, pedidoMemoria->instruccionesSegmentSize, programa->script->finVirtual);
 	}else{
-		programa->etiquetas = crearYllenarSegmento(tamanioEtiquetas, etiquetas);
-		crearDireccionesVirtuales( programa->etiquetas, tamanioEtiquetas, programa->script->finVirtual);
-		crearDireccionesVirtuales( programa->instrucciones, tamanioInstrucciones, programa->etiquetas->finVirtual);
+		programa->etiquetas = crearYllenarSegmento(pedidoMemoria->etiquetasSegmentSize, etiquetas);
+		crearDireccionesVirtuales( programa->etiquetas, pedidoMemoria->etiquetasSegmentSize, programa->script->finVirtual);
+		crearDireccionesVirtuales( programa->instrucciones, pedidoMemoria->instruccionesSegmentSize, programa->etiquetas->finVirtual);
 	}
 
+	list_add(programas, programa);
+	printf( "stack %d\t\t%d\n", programa->stack->inicioVirtual,programa->stack->finVirtual);
+	printf( "script %d\t\t%d\n", programa->script->inicioVirtual,programa->script->finVirtual);
+	if( programa->etiquetas == NULL){
+		printf("El segmento de etiquetas esta vacio\n");
+		}else{
+			printf( "etiquetas %d\t\t%d\n", programa->etiquetas->inicioVirtual,programa->etiquetas->finVirtual);
+			}
+	printf( "instrucciones %d\t\t%d\n", programa->instrucciones->inicioVirtual,programa->instrucciones->finVirtual);
 
-		list_add(programas, programa);
-		printf( "stack %d\t\t%d\n", programa->stack->inicioVirtual,programa->stack->finVirtual);
-		printf( "script %d\t\t%d\n", programa->script->inicioVirtual,programa->script->finVirtual);
-		if( programa->etiquetas == NULL){
-			printf("El segmento de etiquetas esta vacio\n");
-			}else{
-				printf( "etiquetas %d\t\t%d\n", programa->etiquetas->inicioVirtual,programa->etiquetas->finVirtual);
-				}
-		printf( "instrucciones %d\t\t%d\n", programa->instrucciones->inicioVirtual,programa->instrucciones->finVirtual);
+	pthread_rwlock_unlock(&lockEscrituraLectura);
 
-		pthread_rwlock_unlock(&lockEscrituraLectura);
+	return programa;
 
-		return programa;
-
-	}
+}
 
 socket_umvpcb crearEstructuraParaPCB(Programa * programa) {
 
@@ -84,24 +79,12 @@ Segmento * crearDireccionesVirtuales(Segmento * segmento,
 }
 
 
-Programa * buscarPrograma(uint32_t pid) {
+Programa *buscarPrograma(uint32_t pid) {
 	bool matchearPrograma(Programa *nodoPrograma) {
 		return nodoPrograma->pid == pid;
 	}
 
 	return list_find(programas, matchearPrograma);
-
-	//Seria mas facil asi, que ya se cuenta con una funcion copada en la commons
-
-	//uint32_t tamanioProgramas;
-	//tamanioProgramas = list_size( programas);
-	//int i = 0;
-	//for(i = 0; i <= tamanioProgramas; i++){
-	//	Programa * programa = list_get(programas, i);
-	//	if(programa->pid == pdi)
-	//		return programa;
-	//}
-	//return NULL;
 }
 
 Segmento * buscarSegmentoEnProgramaPorVirtual(Programa * programa, uint32_t base) {
