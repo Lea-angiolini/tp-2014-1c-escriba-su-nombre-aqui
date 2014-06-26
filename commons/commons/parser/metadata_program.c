@@ -56,6 +56,11 @@ t_metadata_program* metadata_desde_literal(const char* literal){
 	return ret;
 }
 
+t_metadata_program* metadatada_desde_literal(const char* literal){
+	puts("DEPRECATED: la funcion metadatada_desde_literal tenia un error de tipeo y esta deprecada.");
+	puts("DEPRECATED: deberia llamarse a la funcion metadata_desde_literal en cambio.");
+	return metadata_desde_literal(literal);
+}
 
 void metadata_destruir(t_metadata_program* victima){
 	free(victima->etiquetas);
@@ -64,13 +69,11 @@ void metadata_destruir(t_metadata_program* victima){
 }
 
 t_puntero_instruccion metadata_buscar_etiqueta(const t_nombre_etiqueta objetivo, const char *etiquetas, const t_size etiquetas_size) {
-	int i=0;
 	int offset = 0;
-	char* nombre;
-	for(i=0; i < etiquetas_size; i++){
-		nombre = etiquetas + offset;
-		if( string_equals_ignore_case(nombre, objetivo) )
-			return *(nombre + 1 + strlen(nombre));
+	while(offset < etiquetas_size){
+		const char* nombre = etiquetas + offset;
+		if( strncasecmp(nombre, objetivo, etiquetas_size - offset) == 0 )
+			return *(nombre + strlen(nombre) + 1);
 		offset += strlen(nombre) + 1 + sizeof(t_puntero_instruccion);
 	}
 	return -1;
@@ -99,4 +102,5 @@ void _agregarEtiqueta(char* linea, t_metadata_program* programa, char* prefix){
 	memcpy(programa->etiquetas+programa->etiquetas_size+etiquetaNameLength, &programa->instrucciones_size, sizeof(t_puntero_instruccion) );
 
 	programa->etiquetas_size += etiquetaNameLength+sizeof(t_puntero_instruccion);
+
 }
