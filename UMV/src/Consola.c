@@ -1,7 +1,8 @@
 #include "Consola.h"
 #include "Segmento.h"
 #include "Programa.h"
-
+#include "stdio.h"
+#include "stdlib.h"
 #include "memoria.h"
 #include "config.h"
 
@@ -10,12 +11,12 @@ extern pthread_rwlock_t lockEscrituraLectura;
 extern t_list * tabla_segmentos;
 
 char comandosBuffer[200];
+FILE *archivoDump;
 
 void * iniciarConsola(void * params) {
 
 	printf("Consola de UMV, escriba-su-nombre-aqui\n");
 	printf("All rights reserved. 2014\n\n");
-
 	while (1) {
 
 		char comando;
@@ -45,7 +46,9 @@ void * iniciarConsola(void * params) {
 			compactar();
 			break;
 		case 'e':
+			archivoDump = fopen("dump.txt", "a");
 			generarDump();
+			fclose(archivoDump);
 			break;
 		default:
 			log_error(logger, "El comando ingresado no es valido");
@@ -232,17 +235,21 @@ void generarDump() {
 
 	switch (reporte) {
 	case 'a':
+		fprintf( archivoDump, "\nTabla de segmentos de todos los procesos:\n");
 		printSegmentosPorPrograma();
 		break;
 	case 'b':
+		fprintf( archivoDump, "\nTabla de segmento de:");
 		buscarProgramaEImprimirSegmentos();
 		break;
 	case 'c':
-		ordenarTablaSegmentos();
+		fprintf( archivoDump, "\nDetalle de la memoria principal;\n");
 		printSegmentos(tabla_segmentos);
 		break;
-	case 'd': imprimirMemoria();
-				break;
+	case 'd':
+		fprintf(archivoDump, "\nContenido de la memoria principal:\n");
+		imprimirMemoria();
+		break;
 	default:
 		log_error(logger, "El comando ingresado es invalido");
 		//Esto lo imprimo en consola directamente
@@ -263,18 +270,18 @@ void imprimirMemoria(){
 		log_error( logger, "Se ha producido Segmentation Fault a causa de indicar una cantidad de bytes que sobrepasa el tamaño de la memoria");
 		printf("Se ha producido Segmentation Fault a causa de indicar una cantidad de bytes que sobrepasa el tamaño de la memoria\n");
 	}else{
-		imprimirBytes( 0, offset, tamanio);
+		guardarBytes( 0, offset, tamanio);
 		}
 }
 
 void printSegmentosHeaders() {
-	printf("\n");
-	printf("\t\t|  Inicio Real  |   Fin  Real   |     Tamaño\n");
-	printf("----------------|---------------|---------------|-------------|\n");
+	fprintf( archivoDump, "\n");
+	fprintf( archivoDump, "\t\t|  Inicio Real  |   Fin  Real   |     Tamaño\n");
+	fprintf( archivoDump, "----------------|---------------|---------------|-------------|\n");
 }
 
 void imprimirSegmentosDe(Programa *programa) {
-	printf("Programa: %d \n", programa->pid);
+	fprintf( archivoDump, "Programa: %d \n", programa->pid);
 	printSegmentosHeaders();
 	printSegmento(programa->stack);
 	printSegmento(programa->script);
@@ -319,28 +326,26 @@ void printSegmentos(t_list * segmentos) {
 		if (segmento->inicioReal != cont) {
 			printEspacioLibre(cont, segmento->inicioReal - 1);
 			cont = segmento->finReal + 1;
-			printf("----------------|---------------|-----------------------------|\n");
+			fprintf( archivoDump, "----------------|---------------|-----------------------------|\n");
 		}
 
 		printSegmento(segmento);
 		cont = segmento->finReal + 1;
-		printf("----------------|---------------|-----------------------------|\n");
+		fprintf( archivoDump, "----------------|---------------|-----------------------------|\n");
 
 	}
 	if (cont < (memoria_size - 1)){
 		printEspacioLibre(cont, (memoria_size - 1));
-		printf("--------------------------------------------------------------|\n");
+		fprintf( archivoDump, "--------------------------------------------------------------|\n");
 	}
 }
 
 void printSegmento(Segmento * segmento) {
-	printf("\t%04d\t|\t%04d\t|\t%04d\t|\t%05d |\n", segmento->id, segmento->inicioReal, segmento->finReal,
-	tamanioSegmento(segmento));
+	fprintf( archivoDump, "\t%04d\t|\t%04d\t|\t%04d\t|\t%05d |\n", segmento->id, segmento->inicioReal, segmento->finReal, tamanioSegmento(segmento));
 
 }
 
 void printEspacioLibre(uint32_t inicioEspacio, uint32_t finEspacio) {
-	printf("\tLibre\t|\t%04d\t|\t%04d\t|\t%05d\n", inicioEspacio, finEspacio,
-			finEspacio - inicioEspacio + 1);
+	fprintf( archivoDump, "\tLibre\t|\t%04d\t|\t%04d\t|\t%05d\n", inicioEspacio, finEspacio, finEspacio - inicioEspacio + 1);
 }
 

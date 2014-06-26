@@ -36,6 +36,9 @@ uint32_t memoriaLibre();
 uint32_t solicitarPosicionDeMemoria( uint32_t base, uint32_t offset, uint32_t tamanio);
 void imprimirBytes( uint32_t base, uint32_t offset, uint32_t tamanio);
 void mostrarCaracteres( uint32_t cantidad, unsigned char * mem);
+//estas dos funciones repiten codigo, pero es una solucion temporaria
+void guardarBytes( uint32_t base, uint32_t offset, uint32_t tamanio);
+void guardarCaracteres( uint32_t cantidad, unsigned char * mem);
 uint32_t escribirPosicionDeMemoria( uint32_t base, uint32_t offset, uint32_t tamanio, uint32_t  buffer[]);
 bool chequearSegmentatiosFault( Segmento * segmento, uint32_t offset, uint32_t tamanio);
 

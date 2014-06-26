@@ -1,7 +1,9 @@
 #include "memoria.h"
 #include "config.h"
+#include "string.h"
 
 extern t_log * logger;
+extern FILE *archivoDump;
 extern pthread_rwlock_t lockEscrituraLectura;
 
 uint32_t contadorId = 0;
@@ -317,6 +319,59 @@ void mostrarCaracteres( uint32_t cantidad, unsigned char * mem){
 			printf(" ");
 		} else {
 			printf("%c", *(mem + i));
+		}
+	}
+}
+
+void guardarBytes( uint32_t base, uint32_t offset, uint32_t tamanio){
+
+	uint32_t alBuffer = base + offset;
+	void * memoriaCorrida = memoria + alBuffer;
+
+	uint32_t i, hastaLoQueDe= 0;
+	unsigned char * mem = memoriaCorrida;
+
+	fprintf( archivoDump, "Direccion  | \t\t\tHex Dump\t\t\t|     ASCII\n");
+	fprintf( archivoDump, "---------------------------------------------------------------------------------\n");
+	fprintf( archivoDump, "    %05d  | ", alBuffer);
+
+	for (i = 0; i < tamanio; i++) {
+
+		unsigned char * posicion = memoriaCorrida + i;
+		fprintf( archivoDump, "%02X ", *posicion);
+		hastaLoQueDe++;
+
+		if( hastaLoQueDe != 16 && i == (tamanio - 1)){
+			uint32_t blancos;
+			for( blancos = 0; blancos < (16 - hastaLoQueDe); blancos++){
+				fprintf( archivoDump, "-- ");
+				}
+			guardarCaracteres( hastaLoQueDe, mem);
+		}
+		if (hastaLoQueDe == 16 ) {
+
+			guardarCaracteres( hastaLoQueDe, mem);
+			fprintf( archivoDump, "\n---------------------------------------------------------------------------------\n");
+			mem += hastaLoQueDe;
+			alBuffer += hastaLoQueDe;
+			hastaLoQueDe = 0;
+			fprintf( archivoDump, "    %05d  | ", alBuffer);
+		}
+
+
+	}
+	fprintf( archivoDump, "\n\n");
+}
+
+void guardarCaracteres( uint32_t cantidad, unsigned char * mem){
+
+	fprintf( archivoDump, " | ");
+	uint32_t i;
+	for (i = 0; i < cantidad; i++) {
+		if (*(mem + i) == '\n' || *(mem + i) == '\t') {
+			fprintf( archivoDump, " ");
+		} else {
+			fprintf( archivoDump, "%c", *(mem + i));
 		}
 	}
 }
