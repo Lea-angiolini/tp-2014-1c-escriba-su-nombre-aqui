@@ -1,10 +1,10 @@
 #include "Kernel.h"
 
-extern t_log * logger;
+extern t_log *logger;
 extern pthread_t threadConexiones;
 extern uint32_t retardoUMV;
 
-void  fnKernelConectado(int socketKernel)
+void fnKernelConectado(int socketKernel)
 {
 	log_info(logger, "Se conecto el Kernel");
 
@@ -86,7 +86,6 @@ bool borrarSegmentos(int socketKernel)
 		return false;
 	}
 
-	removerPIDactivoACPU(programa->pid);
 	destruirPrograma(programa);
 
 	return true;

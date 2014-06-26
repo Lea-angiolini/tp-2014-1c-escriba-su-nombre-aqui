@@ -1,22 +1,24 @@
 #ifndef CPU_H_
 #define CPU_H_
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
-#define SINPROCESOACTIVO 0
+#include "Programa.h"
+#include "memoria.h"
+#include "Consola.h"
 
+#include "commons/collections/list.h"
+#include "commons/log.h"
+#include "commons/sockets.h"
 #include "commons/sockets.h"
 
-typedef struct {
-	uint32_t cpuId;
-	uint32_t pidProcesando;
-	uint32_t socket;
-} CPU;
 
+void fnNuevoCpu(int socketCPU);
+bool recibirYProcesarPedidoCpu(int socketCPU);
 
-
-void fnNuevoCpu	(int socketPtr);
-uint32_t 	recibirYProcesarMensajesCpu	( CPU * cpu );
-void borrarCPU( CPU * cpu );
-void destruirTodasLasCPUS();
-void removerPIDactivoACPU( uint32_t pidActivo);
+bool leerMemoria(int socketCPU);
+bool escribirMemoria(int socketCPU);
 
 #endif /* CPU_H_ */

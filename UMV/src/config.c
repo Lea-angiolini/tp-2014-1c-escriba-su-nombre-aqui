@@ -25,20 +25,19 @@ bool cargar_config(char *config)
 		return false;
 	}
 
-	cpus				= list_create();
 	programas			= list_create();
 	tabla_segmentos		= list_create();
 
 	memoria_size = config_get_int_value(umvConfig, "MEMORIA");
 	retardoUMV = config_get_int_value(umvConfig, "RETARDOUMV");
-	if( config_get_string_value(umvConfig, "MODOCREACIONSEGMENTOS") == "WORSTFIT"){
+	if( string_equals_ignore_case(config_get_string_value(umvConfig, "MODOCREACIONSEGMENTOS"), "WORSTFIT") ){
 		modoActualCreacionSegmentos = WORSTFIT;
 	}else {
 		modoActualCreacionSegmentos = FIRSTFIT;
 	}
 	log_info( logger, "Reservando %d Bytes de memoria", memoria_size );
 
-	memoria = malloc( memoria_size );
+	memoria = malloc(memoria_size);
 	if (memoria == 0) {
 		log_error(logger, "No se pudo alocar la memoria, finalizando...");
 		return false;
@@ -65,9 +64,8 @@ bool validar_configuracion()
 
 void destruir_config()
 {
-	list_destroy_and_destroy_elements( tabla_segmentos, free );
-	list_destroy_and_destroy_elements( programas, free);
-	list_destroy_and_destroy_elements( cpus, free );
+	list_destroy_and_destroy_elements(tabla_segmentos, free);
+	list_destroy_and_destroy_elements(programas, free);
 
 	free(memoria);
 	config_destroy(umvConfig);
