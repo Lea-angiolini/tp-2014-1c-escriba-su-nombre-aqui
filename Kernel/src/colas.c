@@ -166,7 +166,7 @@ conectados_t *removerProgramaConectadoPorSocket(int socketPrograma){
 conectados_t *removerProgramaConectadoId(uint32_t id){
 
 	bool matchearPID(conectados_t *conectado) {
-		return conectado->programaSocket == id;
+		return conectado->pid == id;
 	}
 
 	pthread_mutex_lock(&programasConectadosMutex);

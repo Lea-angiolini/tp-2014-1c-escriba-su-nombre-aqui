@@ -38,7 +38,7 @@ bool iniciarServidorCpu()
 			desconexionCPU(socketCPU);
 			return false;
 		}
-
+		log_info(logpcp, "Multiprogramacion: %d, Block; %d, Ready: %d, Exec: %d, CPUready: %d, CPUexec: %d",multiprogramacion,queue_size(blockQueue),queue_size(readyQueue),queue_size(execQueue),queue_size(cpuReadyQueue),queue_size(cpuExecQueue));
 		return true;
 	}
 
@@ -271,6 +271,12 @@ bool terminoQuantumCPU(int socketCPU)
 	{
 		case 0 : //Termino bien el quantum
 			log_trace(logpcp, "Termino bien el quantum");
+
+			if( buscarProgramaConectado(spcb.pcb.id) == NULL ){
+				moverAExit(pcb);
+				break;
+			}
+
 			moverAReady(pcb);
 			sem_post(&dispatcherReady);
 			break;
