@@ -38,7 +38,7 @@ bool iniciarServidorCpu()
 			desconexionCPU(socketCPU);
 			return false;
 		}
-		log_info(logpcp, "Multiprogramacion: %d, Block; %d, Ready: %d, Exec: %d, CPUready: %d, CPUexec: %d",multiprogramacion,queue_size(blockQueue),queue_size(readyQueue),queue_size(execQueue),queue_size(cpuReadyQueue),queue_size(cpuExecQueue));
+		log_info(logpcp, "MP: %d, New: %d, Ready: %d, Exec: %d, Block, %d, Exit: %d, CPUready: %d, CPUexec: %d",multiprogramacion,queue_size(newQueue),queue_size(readyQueue),queue_size(execQueue),queue_size(blockQueue),queue_size(exitQueue),queue_size(cpuReadyQueue),queue_size(cpuExecQueue));
 		return true;
 	}
 
@@ -91,14 +91,14 @@ void MoverReadyAExec()
 		if( queue_is_empty(readyQueue) )
 			log_error(logpcp, "Se llamo al dispatcher sin tener procesos en READY");
 		else
-			pcb = queue_pop(readyQueue);
+			pcb = queue_peek(readyQueue);
 		pthread_mutex_unlock(&readyQueueMutex);
 	} while(pcb == NULL);
 
 	//CHECK
 	if( buscarProgramaConectado(pcb->id) == NULL )
 	{
-		moverAExit(pcb);
+		moverAExit(sacarDeReady(pcb->id));
 		return;
 	}
 
@@ -109,13 +109,14 @@ void MoverReadyAExec()
 		if( queue_is_empty(cpuReadyQueue) )
 			log_error(logpcp, "Se llamo al dispatcher sin tener una CPU disponible");
 		else
-			cpuInfo = queue_pop(cpuReadyQueue);
+			cpuInfo = queue_peek(cpuReadyQueue);
 		pthread_mutex_unlock(&cpuReadyQueueMutex);
 	} while(cpuInfo == NULL);
 
 
 	log_info(logpcp, "Moviendo PCB de la cola READY a EXEC");
-	moverAExec(pcb);
+
+	moverAExec(sacarDeReady(pcb->id));
 
 	cpuInfo->pid = pcb->id;
 
@@ -126,7 +127,7 @@ void MoverReadyAExec()
 	spcb.header.size = sizeof(socket_pcb);
 	spcb.pcb = *pcb;
 
-	moverCpuAExec(cpuInfo);
+	moverCpuAExec(sacarCpuDeReady(cpuInfo->socketCPU));
 
 	if( send(cpuInfo->socketCPU, &spcb, sizeof(socket_pcb), 0) <= 0 )
 		desconexionCPU(cpuInfo->socketCPU);

@@ -113,6 +113,14 @@ void moverCpuAExec(cpu_info_t *cpuInfo)
 	pthread_mutex_unlock(&cpuExecQueueMutex);
 }
 
+pcb_t *sacarDeReady(uint32_t pid)
+{
+	log_debug(logpcp, "Sacando PCB: %d de la cola Ready",pid);
+	pthread_mutex_lock(&readyQueueMutex);
+	pcb_t *pcb = list_remove_pcb_by_pid(readyQueue->elements, pid);
+	pthread_mutex_unlock(&readyQueueMutex);
+	return pcb;
+}
 
 pcb_t *sacarDeExec(uint32_t pid)
 {

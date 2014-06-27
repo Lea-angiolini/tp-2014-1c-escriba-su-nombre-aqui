@@ -36,7 +36,7 @@ bool iniciarServidorProgramas()
 			desconexionCliente(socketPrograma);
 			return false;
 		}
-		log_info(logplp, "Multiprogramacion: %d, Block; %d, Ready: %d, Exec: %d, CPUready: %d, CPUexec: %d",multiprogramacion,queue_size(blockQueue),queue_size(readyQueue),queue_size(execQueue),queue_size(cpuReadyQueue),queue_size(cpuExecQueue));
+		log_info(logplp, "MP: %d, New: %d, Ready: %d, Exec: %d, Block, %d, Exit: %d, CPUready: %d, CPUexec: %d",multiprogramacion,queue_size(newQueue),queue_size(readyQueue),queue_size(execQueue),queue_size(blockQueue),queue_size(exitQueue),queue_size(cpuReadyQueue),queue_size(cpuExecQueue));
 		return true;
 	}
 
