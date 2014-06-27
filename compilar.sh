@@ -18,31 +18,22 @@ if [ $1 = clean ]; then
 else
 
 	cd commons
-	mkdir Debug
-	cd Debug
-	mkdir parser
-	mkdir collections
-	cd ..
 	make all
 
 	cd $ubicacion
 	cd UMV
-	mkdir Debug
 	make all
 
 	cd $ubicacion
 	cd Kernel
-	mkdir Debug
 	make all
 
 	cd $ubicacion
 	cd CPU
-	mkdir Debug
 	make all
 
 	cd $ubicacion
 	cd Programa
-	mkdir Debug
 	make all
 fi
 	

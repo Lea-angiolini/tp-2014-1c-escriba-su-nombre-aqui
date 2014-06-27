@@ -24,7 +24,7 @@ OBJS += \
 ../commons/Debug/parser/metadata_program.o \
 ../commons/Debug/parser/parser.o
 
-all: colas.o config.o io.o pcp.o plp.o systemcalls.o umv.o Kernel.o Kernel
+all: crearDir colas.o config.o io.o pcp.o plp.o systemcalls.o umv.o Kernel.o Kernel
 
 Kernel: $(OBJS)
 	gcc -lpthread -pthread -o ./Debug/Kernel $(OBJS)
@@ -55,3 +55,6 @@ Kernel.o: ./src/Kernel.c
 
 clear: 
 	rm ./Debug/Kernel ./Debug/*.o
+
+crearDir:
+	mkdir -p Debug

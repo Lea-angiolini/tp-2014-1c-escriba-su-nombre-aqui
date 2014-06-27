@@ -17,7 +17,7 @@ OBJS += \
 ../commons/Debug/parser/metadata_program.o  \
 ../commons/Debug/parser/parser.o
 
-all: Programa.o Programa
+all: crearDir Programa.o Programa
 
 Programa: $(OBJS)
 	gcc -lpthread -pthread -o ./Debug/Programa $(OBJS)
@@ -27,3 +27,6 @@ Programa.o: ./src/Programa.c
 
 clear:
 	rm ./Debug/*.o ./Debug/Programa
+
+crearDir:
+	mkdir -p Debug

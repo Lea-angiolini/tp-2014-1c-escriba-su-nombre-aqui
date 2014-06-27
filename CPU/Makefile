@@ -23,7 +23,7 @@ OBJS += \
 ../commons/Debug/parser/metadata_program.o \
 ../commons/Debug/parser/parser.o
 
-all: config.o ejecucion.o kernel.o primitivas.o stack.o umv.o CPU.o CPU
+all: crearDir config.o ejecucion.o kernel.o primitivas.o stack.o umv.o CPU.o CPU
 CPU: $(OBJS)
 	gcc -lpthread -pthread -o ./Debug/CPU $(OBJS)
 
@@ -50,3 +50,6 @@ CPU.o: ./src/CPU.c
 
 clear:
 	rm ./Debug/*.o ./Debug/CPU
+
+crearDir:
+	mkdir -p Debug

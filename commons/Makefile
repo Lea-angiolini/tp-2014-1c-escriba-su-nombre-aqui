@@ -1,4 +1,4 @@
-all: bitarray.o config.o error.o log.o pcb.o process.o sockets.o string.o temporal.o tools.o txt.o dictionary.o list.o queue.o node.o metadata_program.o parser.o sintax.o
+all: crearDir bitarray.o config.o error.o log.o pcb.o process.o sockets.o string.o temporal.o tools.o txt.o dictionary.o list.o queue.o node.o metadata_program.o parser.o sintax.o
 
 bitarray.o: ./commons/bitarray.c ./commons/bitarray.h 
 	gcc -c ./commons/bitarray.c -o ./Debug/bitarray.o
@@ -56,3 +56,8 @@ sintax.o: ./commons/parser/sintax.h
 
 clear:
 	rm ./Debug/*.o ./Debug/collections/*.o ./Debug/parser/*.o
+
+crearDir:
+	mkdir -p Debug
+	mkdir -p Debug/collections
+	mkdir -p Debug/parser

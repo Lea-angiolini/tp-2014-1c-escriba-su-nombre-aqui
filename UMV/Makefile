@@ -26,7 +26,7 @@ OBJS +=  \
 ../commons/Debug/parser/metadata_program.o  \
 ../commons/Debug/parser/parser.o
 
-all: config.o Consola.o CPU.o handshake.o Kernel.o memoria.o mocks.o Programa.o Segmento.o UMV.o UMV
+all: crearDir config.o Consola.o CPU.o handshake.o Kernel.o memoria.o mocks.o Programa.o Segmento.o UMV.o UMV
 
 UMV: $(OBJS)
 	gcc -lpthread -pthread -o ./Debug/UMV $(OBJS)
@@ -63,3 +63,7 @@ UMV.o: ./src/UMV.c
 
 clear:
 	rm ./Debug/*.o ./Debug/UMV
+
+crearDir:
+	mkdir -p Debug
+
