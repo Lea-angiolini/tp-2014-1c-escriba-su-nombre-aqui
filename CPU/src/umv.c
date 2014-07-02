@@ -157,32 +157,39 @@ bool escribirMemoria(uint32_t base, uint32_t offset, uint32_t length, void * dat
 
 void * leerMemoria(uint32_t base, uint32_t offset, uint32_t length){
 	socket_leerMemoria sLeer;
+	sLeer.header.code = 'b';
 	sLeer.pdi = PCB_enEjecucion.id;
 	sLeer.base = base;
 	sLeer.offset = offset;
 	sLeer.length = length;
 	log_debug(logger, "Leyendo UMV base = %d, offset = %d, length = %d", base, offset, length);
-	void *_respuesta = enviarYRecibirPaquete(socketUMV, (void*)&sLeer, sizeof(socket_leerMemoria), sizeof(socket_RespuestaLeerMemoria) , 'b', 'a', logger) ;
 
-	socket_RespuestaLeerMemoria *respuesta = (socket_RespuestaLeerMemoria *)_respuesta;
+	if( send(socketUMV, &sLeer, sizeof(socket_leerMemoria), 0) < 0 )
+		return NULL; //Arreglar
 
-	if(respuesta == NULL || respuesta->status == false){
+	socket_RespuestaLeerMemoria respuesta;
+	uint32_t tam = sizeof(socket_RespuestaLeerMemoria) + length;
+	void *buffer = malloc(tam);
+
+	if( recv(socketUMV, buffer, tam, MSG_WAITALL) != tam ){
+		free(buffer); //Arreglar
+		return NULL;
+	}
+
+	void *data = malloc(length);
+	memcpy(&respuesta, buffer, sizeof(socket_RespuestaLeerMemoria));
+	memcpy(data, buffer+sizeof(socket_RespuestaLeerMemoria), length);
+	free(buffer);
+
+	if(respuesta.status == false){
 		PCB_enEjecucion.lastErrorCode = 2;
 		quantumRestante = 0;
 		return NULL;
 	}
 
-	void * data = malloc(length);
-	memcpy(data, _respuesta+sizeof(socket_RespuestaLeerMemoria), length);
-	free(_respuesta);
 	return data;
 }
 
 void * leerStack(uint32_t offset, uint32_t length){
 	return leerMemoria(PCB_enEjecucion.stackSegment, offset, length);
 }
-
-
-
-
-

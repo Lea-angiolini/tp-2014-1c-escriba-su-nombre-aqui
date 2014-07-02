@@ -57,19 +57,22 @@ bool leerMemoria(int socketCPU)
 	}
 
 	//Respuesta
-	char *buffer = malloc(leerMemoria.length);
+	uint32_t tam = sizeof(socket_RespuestaLeerMemoria) + leerMemoria.length;
+	char *buffer = malloc(tam);
 
 	socket_RespuestaLeerMemoria respuesta;
 
 	respuesta.header.size = sizeof(socket_RespuestaLeerMemoria) + leerMemoria.length;
 	respuesta.status = true;
 
-	if( memLeer(segmento, buffer, leerMemoria.offset, leerMemoria.length) != true ) {
+	if( memLeer(segmento, buffer+sizeof(socket_RespuestaLeerMemoria), leerMemoria.offset, leerMemoria.length) != true ) {
 		respuesta.status = false;
 		//return false; notese que de esta forma no desconectamos a esa CPU
 	}
 
-	if( send(socketCPU, &respuesta, sizeof(socket_RespuestaLeerMemoria), 0) < 0 || send(socketCPU, buffer, leerMemoria.length, 0) < 0 )
+	memcpy(buffer, &respuesta, sizeof(socket_RespuestaLeerMemoria));
+
+	if(send(socketCPU, buffer,tam, 0) < 0)
 	{
 		log_error(logger, "Hubo un error al enviar la respuesta a lectura de memoria");
 		free(buffer);

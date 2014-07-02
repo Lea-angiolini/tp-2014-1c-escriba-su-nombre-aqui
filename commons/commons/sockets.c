@@ -256,7 +256,7 @@ void * recibirPaquete( int socket, t_size sizeReceive, char receiveCode, t_log *
 
 	socket_header headerRespuesta;
 	//int tamRecibido = recv( socket, &headerRespuesta, sizeof(socket_header), 0);
-	int tamRecibido = recv( socket, &headerRespuesta, sizeof(socket_header), MSG_PEEK);
+	int tamRecibido = recv( socket, &headerRespuesta, sizeof(socket_header),  MSG_WAITALL | MSG_PEEK);
 	if ( tamRecibido < 0 ){
 		return NULL;
 	}else if (tamRecibido == 0)  {
