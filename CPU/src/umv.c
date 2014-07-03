@@ -125,33 +125,42 @@ bool escribirStack(uint32_t offset, uint32_t length, void * data){
 }
 
 bool escribirMemoria(uint32_t base, uint32_t offset, uint32_t length, void * data){
-	uint32_t totalLengt = sizeof(socket_guardarEnMemoria) + length;
-	char *buffer = malloc(totalLengt);
-
 	socket_guardarEnMemoria sGuardarEnMemoria;
-
+	sGuardarEnMemoria.header.code = 'c';
 	sGuardarEnMemoria.offset	= offset;
 	sGuardarEnMemoria.pdi		= PCB_enEjecucion.id;
 	sGuardarEnMemoria.length	= length;
 	sGuardarEnMemoria.base		= base;
-	memcpy(buffer, &sGuardarEnMemoria, sizeof(socket_guardarEnMemoria));
 
+	uint32_t tam = sizeof(socket_guardarEnMemoria) + length;
+	void *buffer = malloc(tam);
+
+	memcpy(buffer, &sGuardarEnMemoria, sizeof(socket_guardarEnMemoria));
 	memcpy(buffer+sizeof(socket_guardarEnMemoria), data, length);
 
-	socket_RespuestaGuardarEnMemoria * respuesta = (socket_RespuestaGuardarEnMemoria*) enviarYRecibirPaquete(socketUMV, buffer, totalLengt, 0, 'c', 'a', logger);
-	bool exito = (respuesta != NULL && respuesta->status != false);
-	if(respuesta!= NULL){
-		free(respuesta);
-	}
-
-	if(!exito){
+	if( send(socketUMV, buffer, tam, 0) < 0){
 		PCB_enEjecucion.lastErrorCode = 2;
 		quantumRestante = 0;
+		free(buffer);
+		return false;
 	}
 
 	free(buffer);
+	socket_RespuestaGuardarEnMemoria respuesta;
 
-	return exito;
+	if( recv(socketUMV, &respuesta, sizeof(socket_RespuestaGuardarEnMemoria), MSG_WAITALL) != sizeof(socket_RespuestaGuardarEnMemoria)){
+		PCB_enEjecucion.lastErrorCode = 2;
+		quantumRestante = 0;
+		return false;
+	}
+
+	if(respuesta.status == false){
+		PCB_enEjecucion.lastErrorCode = 2;
+		quantumRestante = 0;
+		return false;
+	}
+
+	return true;
 
 }
 
@@ -164,15 +173,20 @@ void * leerMemoria(uint32_t base, uint32_t offset, uint32_t length){
 	sLeer.length = length;
 	log_debug(logger, "Leyendo UMV base = %d, offset = %d, length = %d", base, offset, length);
 
-	if( send(socketUMV, &sLeer, sizeof(socket_leerMemoria), 0) < 0 )
-		return NULL; //Arreglar
+	if( send(socketUMV, &sLeer, sizeof(socket_leerMemoria), 0) < 0 ){
+		PCB_enEjecucion.lastErrorCode = 2;
+		quantumRestante = 0;
+		return NULL;
+	}
 
 	socket_RespuestaLeerMemoria respuesta;
 	uint32_t tam = sizeof(socket_RespuestaLeerMemoria) + length;
 	void *buffer = malloc(tam);
 
 	if( recv(socketUMV, buffer, tam, MSG_WAITALL) != tam ){
-		free(buffer); //Arreglar
+		PCB_enEjecucion.lastErrorCode = 2;
+		quantumRestante = 0;
+		free(buffer);
 		return NULL;
 	}
 
