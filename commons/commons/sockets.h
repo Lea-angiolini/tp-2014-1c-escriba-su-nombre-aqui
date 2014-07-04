@@ -68,6 +68,7 @@ typedef struct {
 typedef struct {
 	socket_header header; //header.code = 'p'
 	pcb_t pcb;
+	bool terminoCpu;
 }  __attribute__((packed)) socket_pcb;
 
 //System Calls (sc)

@@ -20,9 +20,12 @@ bool syscallIO(int socketCPU)
 
 	log_debug(logpcp, "CPU: %d, mando nuevo trabajo de IO del dispositivo: %s", socketCPU, io.identificador);
 
-	moverCpuAReady(sacarCpuDeExec(socketCPU));
-
-	sem_post(&dispatcherCpu);
+	if(spcb.terminoCpu)
+		free(sacarCpuDeExec(socketCPU));
+	else{
+		moverCpuAReady(sacarCpuDeExec(socketCPU));
+		sem_post(&dispatcherCpu);
+	}
 
 	pcb_t *pcb = sacarDeExec(spcb.pcb.id);
 	*pcb = spcb.pcb;
@@ -121,11 +124,13 @@ bool syscallWait(int socketCPU)
 		*pid = spcb.pcb.id;
 		queue_push(semaforo->cola, pid);
 
-		//Moviendo cpu de cpuExec a cpuReady
-		moverCpuAReady(sacarCpuDeExec(socketCPU));
-		sem_post(&dispatcherCpu);
+		if(spcb.terminoCpu)
+			free(sacarCpuDeExec(socketCPU));
+		else{
+			moverCpuAReady(sacarCpuDeExec(socketCPU));
+			sem_post(&dispatcherCpu);
+		}
 
-		//Actualizando pcb y moviendolo a block
 		pcb_t *pcb = sacarDeExec(spcb.pcb.id);
 		*pcb = spcb.pcb;
 		moverABlock(pcb);

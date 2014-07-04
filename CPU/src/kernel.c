@@ -87,6 +87,7 @@ bool enviarPCB()
 {
 	socket_pcb spcb;
 
+	spcb.terminoCpu = debeFinalizar;
 	spcb.header.size = sizeof(socket_pcb);
 	spcb.header.code = 'p';
 	spcb.pcb = PCB_enEjecucion;

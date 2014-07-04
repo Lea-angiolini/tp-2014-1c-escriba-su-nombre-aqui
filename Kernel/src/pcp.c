@@ -109,7 +109,7 @@ void MoverReadyAExec()
 		if( queue_is_empty(cpuReadyQueue) )
 			log_error(logpcp, "Se llamo al dispatcher sin tener una CPU disponible");
 		else
-			cpuInfo = queue_peek(cpuReadyQueue);
+			cpuInfo = queue_pop(cpuReadyQueue);
 		pthread_mutex_unlock(&cpuReadyQueueMutex);
 	} while(cpuInfo == NULL);
 
@@ -127,7 +127,7 @@ void MoverReadyAExec()
 	spcb.header.size = sizeof(socket_pcb);
 	spcb.pcb = *pcb;
 
-	moverCpuAExec(sacarCpuDeReady(cpuInfo->socketCPU));
+	moverCpuAExec(cpuInfo);
 
 	if( send(cpuInfo->socketCPU, &spcb, sizeof(socket_pcb), 0) <= 0 )
 		desconexionCPU(cpuInfo->socketCPU);
@@ -197,7 +197,10 @@ void desconexionCPU(int socketCPU)
 	else
 	{
 		log_info(logpcp, "La CPU desconectada no se encontraba en ejecucion");
-		free(sacarCpuDeReady(socketCPU));
+		cpuInfo = sacarCpuDeReady(socketCPU);
+
+		if( cpuInfo != NULL )
+			free(cpuInfo);
 	}
 }
 
@@ -251,9 +254,12 @@ bool terminoQuantumCPU(int socketCPU)
 		return false;
 	}
 
-	moverCpuAReady(cpuInfo);
-
-	sem_post(&dispatcherCpu);
+	if(spcb.terminoCpu)
+		free(cpuInfo);
+	else{
+		moverCpuAReady(cpuInfo);
+		sem_post(&dispatcherCpu);
+	}
 
 	pcb_t *pcb = sacarDeExec(spcb.pcb.id);
 
