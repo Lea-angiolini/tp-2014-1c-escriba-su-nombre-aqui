@@ -1,4 +1,6 @@
 #!/usr/bin/ansisop
+#Alliance - S4
+
 begin
 variables f, i, t
 
@@ -15,8 +17,10 @@ variables f, i, t
 	#`t`: Comparador entre `i` y `f`
 	t=f-i
 	#De no ser iguales, salta a inicio
-	jnz t inicio
 
+	#esperar
+	io HDD1 3
+	jnz t inicio
 end
 
 

@@ -16,7 +16,6 @@ OBJS += \
 ../commons/Debug/sockets.o \
 ../commons/Debug/string.o \
 ../commons/Debug/temporal.o \
-../commons/Debug/tools.o \
 ../commons/Debug/txt.o \
 ../commons/Debug/collections/dictionary.o \
 ../commons/Debug/collections/list.o \
