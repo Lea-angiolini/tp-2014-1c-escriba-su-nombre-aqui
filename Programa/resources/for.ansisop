@@ -1,7 +1,7 @@
 #!/usr/bin/ansisop
 begin
 variables f, i, t
-
+	i=0
 	#`f`: Hasta donde contar
 	f=20
 	:inicio
