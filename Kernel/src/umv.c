@@ -70,29 +70,31 @@ bool respuestaCreacionSegmentos()
 
 bool enviarSegmentos(uint32_t pid, char *script, uint32_t scriptSize, t_metadata_program *scriptMetadata)
 {
-	if( send(socketUMV, &pid, sizeof(uint32_t), 0) <= 0 ){
-		log_error(logplp, "No se pudo enviar nextProcessId a la UMV. Desconectando");
+	socket_header header;
+
+	header.size = sizeof(socket_header)+sizeof(uint32_t)+(scriptSize+1)+scriptMetadata->etiquetas_size+scriptMetadata->instrucciones_size * sizeof(t_intructions);
+	header.code = 's';
+
+	void *buffer = malloc(header.size);
+	uint32_t index = 0;
+
+	memcpy(buffer+index, &header, sizeof(socket_header));
+	index = sizeof(socket_header);
+	memcpy(buffer+index, &pid, sizeof(uint32_t));
+	index += sizeof(uint32_t);
+	memcpy(buffer+index, script, scriptSize+1);
+	index += scriptSize+1;
+	memcpy(buffer+index, scriptMetadata->etiquetas, scriptMetadata->etiquetas_size);
+	index += scriptMetadata->etiquetas_size;
+	memcpy(buffer+index, scriptMetadata->instrucciones_serializado, scriptMetadata->instrucciones_size * sizeof(t_intructions));
+
+	if( send(socketUMV, buffer, header.size, 0) < 0 ){
+		log_error(logplp, "No se pudo enviar el contenido de los segmentos a la UMV. Desconectando");
 		sem_post(&semKernel);
 		return false;
 	}
 
-	if( send(socketUMV, script, scriptSize + 1, 0) < 0 ){
-		log_error(logplp, "No se pudo enviar script a la UMV. Desconectando");
-		sem_post(&semKernel);
-		return false;
-	}
-
-	if( send(socketUMV, scriptMetadata->etiquetas, scriptMetadata->etiquetas_size, 0) < 0 ){
-		log_error(logplp, "No se pudo enviar etiquetas a la UMV. Desconectando");
-		sem_post(&semKernel);
-		return false;
-	}
-
-	if( send(socketUMV, scriptMetadata->instrucciones_serializado, scriptMetadata->instrucciones_size * sizeof(t_intructions), 0) < 0 ){
-		log_error(logplp, "No se puedo enviar instrucciones serializado a la UMV. Desconectando");
-		sem_post(&semKernel);
-		return false;
-	}
+	free(buffer);
 
 	return true;
 }

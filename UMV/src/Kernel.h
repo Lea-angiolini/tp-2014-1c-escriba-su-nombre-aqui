@@ -17,8 +17,8 @@
 void  fnKernelConectado(int socketKernel);
 bool recibirYProcesarPedidoKernel(int socketKernel);
 
-bool crearSegmentos(int socketKernel);
+bool pedirMemoria(int socketKernel);
 bool borrarSegmentos(int socketKernel);
-bool recibirSegmentos(int socketKernel, socket_pedirMemoria *pedidoMemoria);
+bool recibirSegmentos(int socketKernel);
 
 #endif /* KERNEL_H_ */

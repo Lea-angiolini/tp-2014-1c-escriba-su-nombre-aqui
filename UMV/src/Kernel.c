@@ -4,6 +4,8 @@ extern t_log *logger;
 extern pthread_t threadConexiones;
 extern uint32_t retardoUMV;
 
+socket_pedirMemoria pedidoMemoria; //Ultimo pedido de memoria
+
 void fnKernelConectado(int socketKernel)
 {
 	log_info(logger, "Se conecto el Kernel");
@@ -27,9 +29,11 @@ bool recibirYProcesarPedidoKernel(int socketKernel)
 	switch(header.code)
 	{
 	case 'p':
-		return crearSegmentos(socketKernel);
+		return pedirMemoria(socketKernel);
 	case 'b':
 		return borrarSegmentos(socketKernel);
+	case 's':
+		return recibirSegmentos(socketKernel);
 	default:
 		log_error(logger, "Pedido invalido del kernel");
 		return false;
@@ -38,10 +42,9 @@ bool recibirYProcesarPedidoKernel(int socketKernel)
 	return true;
 }
 
-bool crearSegmentos(int socketKernel)
+bool pedirMemoria(int socketKernel)
 {
-	log_trace(logger, "Procesando solicitud del Kernel de creacion de segmentos");
-	socket_pedirMemoria pedidoMemoria;
+	log_trace(logger, "Procesando solicitud del Kernel de pedido de memoria para los segmentos");
 
 	if( recv(socketKernel, &pedidoMemoria, sizeof(socket_pedirMemoria), MSG_WAITALL) != sizeof(socket_pedirMemoria) )
 		return false;
@@ -65,10 +68,7 @@ bool crearSegmentos(int socketKernel)
 		return false;
 	}
 
-	if(respuestaSegmentos.valor == false)
-		return true;
-
-	return recibirSegmentos(socketKernel, &pedidoMemoria);
+	return true;
 }
 
 bool borrarSegmentos(int socketKernel)
@@ -91,12 +91,20 @@ bool borrarSegmentos(int socketKernel)
 	return true;
 }
 
-bool recibirSegmentos(int socketKernel, socket_pedirMemoria *pedidoMemoria)
+bool recibirSegmentos(int socketKernel)
 {
+	socket_header header;
+
+	if( recv(socketKernel, &header, sizeof(socket_header), MSG_WAITALL) < 0 )
+	{
+		log_error(logger, "Error al recibir los segmentos del Kernel");
+		return false;
+	}
+
 	uint32_t pid;
-	void *script = malloc(pedidoMemoria->codeSegmentSize);
-	void *etiquetas = malloc(pedidoMemoria->etiquetasSegmentSize);
-	void *instrucciones	= malloc(pedidoMemoria->instruccionesSegmentSize);
+	void *script = malloc(pedidoMemoria.codeSegmentSize);
+	void *etiquetas = malloc(pedidoMemoria.etiquetasSegmentSize);
+	void *instrucciones	= malloc(pedidoMemoria.instruccionesSegmentSize);
 
 	void liberar()
 	{
@@ -106,16 +114,16 @@ bool recibirSegmentos(int socketKernel, socket_pedirMemoria *pedidoMemoria)
 	}
 
 	if( recv(socketKernel, &pid, sizeof(uint32_t), MSG_WAITALL) < 0 ||
-		recv(socketKernel, script, pedidoMemoria->codeSegmentSize, MSG_WAITALL) < 0 ||
-		recv(socketKernel, etiquetas, pedidoMemoria->etiquetasSegmentSize, MSG_WAITALL) < 0 ||
-		recv(socketKernel, instrucciones, pedidoMemoria->instruccionesSegmentSize, MSG_WAITALL) < 0)
+		recv(socketKernel, script, pedidoMemoria.codeSegmentSize, MSG_WAITALL) < 0 ||
+		recv(socketKernel, etiquetas, pedidoMemoria.etiquetasSegmentSize, MSG_WAITALL) < 0 ||
+		recv(socketKernel, instrucciones, pedidoMemoria.instruccionesSegmentSize, MSG_WAITALL) < 0)
 	{
 		log_error(logger, "Error al recibir los segmentos del Kernel");
 		liberar();
 		return false;
 	}
 
-	Programa *programa = crearPrograma(pid, script, etiquetas, instrucciones, pedidoMemoria);
+	Programa *programa = crearPrograma(pid, script, etiquetas, instrucciones, &pedidoMemoria);
 	socket_umvpcb datosSegmentos = crearEstructuraParaPCB(programa);
 
 	if ( send(socketKernel, &datosSegmentos, sizeof(datosSegmentos), 0) < 0 ) {
