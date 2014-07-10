@@ -15,6 +15,8 @@ extern uint32_t quantumRestante;
 int socketKernel;
 
 bool debeFinalizar = false;
+bool ejecutando = false; //Usado para el manejo de la senial
+
 
 bool crearConexionKernel() {
 
@@ -69,6 +71,9 @@ bool recibirYProcesarMensajesKernel()
 			return true;
 		}
 
+		//Usado para el manejo de la senial
+		ejecutando = true;
+
 		log_trace(logger, "Se ha recibido una nueva PCB, seteo el quantum en %d", quantumPorEjecucion);
 
 		PCB_enEjecucion = pcbNuevo.pcb;
@@ -82,6 +87,9 @@ bool recibirYProcesarMensajesKernel()
 		}else{
 			log_trace( logger, "Se le devolvio el PCB al Kernel" );
 		}
+
+		//Lo hago aca porque si se envia la senial mas arriba, se cierra el socket con el kernel y nose le puede devolver el pcb
+		ejecutando = false;
 	}
 
 	return true;
@@ -103,9 +111,13 @@ bool enviarPCB()
 }
 
 void finalizarCpu(){
-	log_info(logger, "Se envio la señal de finalizar, se ejecuta el último quantum");
 	debeFinalizar = true;
-	close(socketKernel);
+	if(!ejecutando){
+		log_info(logger, "Se envio la señal de finalizar");
+		close(socketKernel);
+	}else{
+		log_info(logger, "Se envio la señal de finalizar, ejecutando ultimo quantum");
+	}
 }
 
 /****************** SYSCALLS ************************/
