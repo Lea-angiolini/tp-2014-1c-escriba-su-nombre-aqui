@@ -62,8 +62,12 @@ bool recibirYProcesarMensajesKernel()
 	{
 		log_debug(logger, "Esperando nueva PCB del Kernel...");
 
-		if( recv(socketKernel, &pcbNuevo, sizeof(socket_pcb), MSG_WAITALL) != sizeof(socket_pcb) )
+		if( recv(socketKernel, &pcbNuevo, sizeof(socket_pcb), MSG_WAITALL) != sizeof(socket_pcb) && !debeFinalizar )
 			return false;
+
+		if(debeFinalizar){
+			return true;
+		}
 
 		log_trace(logger, "Se ha recibido una nueva PCB, seteo el quantum en %d", quantumPorEjecucion);
 
@@ -101,6 +105,7 @@ bool enviarPCB()
 void finalizarCpu(){
 	log_info(logger, "Se envio la señal de finalizar, se ejecuta el último quantum");
 	debeFinalizar = true;
+	close(socketKernel);
 }
 
 /****************** SYSCALLS ************************/
