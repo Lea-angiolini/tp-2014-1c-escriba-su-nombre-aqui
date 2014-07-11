@@ -262,6 +262,8 @@ void imprimirMemoria(){
 	printf("Indique una cantidad de bytes");
 	scanf("%d", &tamanio);
 	while( getchar() != '\n');
+	printf("El tamanio es %d", tamanio);
+	printf("El offset es %d", offset);
 
 	if( memoria_size < (tamanio + offset)){
 		log_error( logger, "Se ha producido Segmentation Fault a causa de indicar una cantidad de bytes que sobrepasa el tamaño de la memoria");

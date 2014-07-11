@@ -350,10 +350,6 @@ void imprimirBytes( uint32_t base, uint32_t offset, uint32_t tamanio, char porDo
 		}
 		if (hastaLoQueDe == 16 )
 		{
-			mem += hastaLoQueDe;
-			alBuffer += hastaLoQueDe;
-			hastaLoQueDe = 0;
-
 			if( porDondeImprimo == PorCONSOLA){
 				mostrarCaracteres( hastaLoQueDe, mem, PorCONSOLA);
 				printf("\n---------------------------------------------------------------------------------\n");
@@ -364,10 +360,13 @@ void imprimirBytes( uint32_t base, uint32_t offset, uint32_t tamanio, char porDo
 				fprintf( archivoDump, "\n---------------------------------------------------------------------------------\n");
 				fprintf( archivoDump, "    %05d  | ", alBuffer);
 			}
+			mem += hastaLoQueDe;
+			alBuffer += hastaLoQueDe;
+			hastaLoQueDe = 0;
 		}
-
-
 	}
+
+
 	if (porDondeImprimo == PorCONSOLA)
 		printf("\n\n");
 	else
@@ -383,7 +382,7 @@ void mostrarCaracteres( uint32_t cantidad, unsigned char * mem, char porDondeImp
 	uint32_t i;
 	for (i = 0; i < cantidad; i++)
 	{
-		if (*(mem + i) == '\n' || *(mem + i) == '\t')
+		if (mem[i] == '\n' || mem[i] == '\t' || mem[i] == NULL )
 		{
 			if( porDondeImprimo == PorCONSOLA)
 				printf(" ");
@@ -392,9 +391,9 @@ void mostrarCaracteres( uint32_t cantidad, unsigned char * mem, char porDondeImp
 		} else
 		  {
 			if( porDondeImprimo == PorCONSOLA)
-				printf("%c", *(mem + i));
+				printf("%c", mem[i]);
 			else
-				fprintf( archivoDump, "%c", *(mem + i));
+				fprintf( archivoDump, "%c", mem[i]);
 		  }
 	}
 }
