@@ -225,10 +225,11 @@ uint32_t memoriaLibre()
 
 void compactar()
 {
-	pthread_rwlock_wrlock(&lockEscrituraLectura);
+	//pthread_rwlock_wrlock(&lockEscrituraLectura);
 	if( list_size(tabla_segmentos) != 0)
 	{
 		ordenarTablaSegmentos();
+		pthread_rwlock_wrlock(&lockEscrituraLectura);
 		uint32_t u = 0;
 		Segmento * primerSegmento = (Segmento *) list_get(tabla_segmentos, u);
 
@@ -249,13 +250,15 @@ void compactar()
 			}
 
 		}
+		pthread_rwlock_unlock(&lockEscrituraLectura);
 		log_info(logger, "Se ha compactado correctamente");
 		printSegmentos(tabla_segmentos, PorCONSOLA);
+		return;
 	}
 	log_info( logger, "Se ha compactado correctamente");
 
 	printSegmentos(tabla_segmentos, PorCONSOLA);
-	pthread_rwlock_unlock(&lockEscrituraLectura);
+	//pthread_rwlock_unlock(&lockEscrituraLectura);
 
 	return;
 }

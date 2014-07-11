@@ -321,6 +321,13 @@ void printSegmentos(t_list * segmentos, char porDondeImprimo) {
 	ordenarTablaSegmentos();
 	printSegmentosHeaders(porDondeImprimo);
 
+	void imprimirSeparador(char porDondeImprimo){
+		if(porDondeImprimo == PorCONSOLA)
+			printf("------------------|-----------------------|-----------------------|-----------------|\n");
+		else
+			fprintf( archivoDump, "------------------|-----------------------|-----------------------|-----------------|\n");
+	}
+
 	int i = 0;
 	uint32_t cont = 0;
 	for (i = 0; i < list_size(segmentos); i++) {
@@ -329,11 +336,8 @@ void printSegmentos(t_list * segmentos, char porDondeImprimo) {
 			printEspacioLibre(cont, segmento->inicioReal - 1, porDondeImprimo);
 			cont = segmento->finReal + 1;
 
-			if(porDondeImprimo == PorCONSOLA)
-				printf("----------------|---------------|-----------------------------|\n");
-							else
-				fprintf( archivoDump, "----------------|---------------|-----------------------------|\n");
 
+			imprimirSeparador(porDondeImprimo);
 
 		}
 		else{
@@ -342,19 +346,16 @@ void printSegmentos(t_list * segmentos, char porDondeImprimo) {
 		cont = segmento->finReal + 1;
 		}
 
-		if (porDondeImprimo == PorCONSOLA)
-			printf( "----------------|---------------|-----------------------------|\n");
-		else
-			fprintf(archivoDump, "----------------|---------------|-----------------------------|\n");
+		imprimirSeparador(porDondeImprimo);
 
 	}
 	if (cont < (memoria_size - 1)){
 		printEspacioLibre(cont, (memoria_size - 1), porDondeImprimo);
 
 		if (porDondeImprimo == PorCONSOLA)
-			printf( "--------------------------------------------------------------|\n");
+			printf( "------------------------------------------------------------------------------------|\n");
 		else
-			fprintf( archivoDump, "--------------------------------------------------------------|\n");
+			fprintf( archivoDump, "------------------------------------------------------------------------------------|\n");
 
 	}
 }
@@ -371,7 +372,7 @@ void printEspacioLibre(uint32_t inicioEspacio, uint32_t finEspacio, char porDond
 	if (porDondeImprimo == PorCONSOLA)
 		printf("\tLibre\t|\t%04d\t|\t%04d\t|\t%05d\n", inicioEspacio, finEspacio, finEspacio - inicioEspacio + 1);
 	else
-		fprintf( archivoDump, "\tLibre\t|\t%04d\t|\t%04d\t|\t%05d\n", inicioEspacio, finEspacio, finEspacio - inicioEspacio + 1);
+		fprintf( archivoDump, "\tLibre\t|\t  %04d  \t\t|\t   %04d  \t|\t%05d\t|\n", inicioEspacio, finEspacio, finEspacio - inicioEspacio + 1);
 }
 
 int imprimirListaDeProgramas(){
