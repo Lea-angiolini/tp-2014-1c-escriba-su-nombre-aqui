@@ -237,7 +237,6 @@ void generarDump() {
 		printSegmentosPorPrograma();
 		break;
 	case 'b':
-		fprintf( archivoDump, "\nTabla de segmento de:");
 		buscarProgramaEImprimirSegmentos();
 		break;
 	case 'c':
@@ -307,7 +306,7 @@ void printSegmentosPorPrograma() {
 void buscarProgramaEImprimirSegmentos() {
 	uint32_t pid;
 	Programa *programaAImprimir;
-
+	if(!imprimirListaDeProgramas()) return;
 	printf("Ingrese el id del programa para imprimir sus segmentos\n");
 
 	scanf("%d\n\n", &pid);
@@ -315,6 +314,7 @@ void buscarProgramaEImprimirSegmentos() {
 		;
 
 	programaAImprimir = buscarPrograma(pid);
+	fprintf( archivoDump, "\nTabla de segmento de:");
 	imprimirSegmentosDe(programaAImprimir);
 
 }
@@ -376,3 +376,19 @@ void printEspacioLibre(uint32_t inicioEspacio, uint32_t finEspacio, char porDond
 		fprintf( archivoDump, "\tLibre\t|\t%04d\t|\t%04d\t|\t%05d\n", inicioEspacio, finEspacio, finEspacio - inicioEspacio + 1);
 }
 
+int imprimirListaDeProgramas(){
+	int i;
+	Programa *programa;
+	if (!list_is_empty(programas)){
+		printf("\n\t| Id Programa \t|\n");
+		for (i = 0;i<list_size(programas); i++){
+			programa = list_get(programas, i);
+			printf("\t| %d \t\t|\n", programa->pid);
+
+		}
+		return 1;
+	}
+	printf("\nNo hay programas en memoria\n\n");
+	return 0;
+
+}

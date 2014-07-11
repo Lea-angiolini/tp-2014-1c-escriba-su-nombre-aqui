@@ -37,5 +37,5 @@ void printEspacioLibre(uint32_t inicioEspacio, uint32_t finEspacio, char porDond
 bool verificarRequisitos( uint32_t programa, uint32_t base);
 
 void imprimirSegmentosDe(Programa * programaAImprimir);
-
+int imprimirListaDeProgramas();
 #endif
