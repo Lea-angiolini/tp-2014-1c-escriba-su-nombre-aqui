@@ -14,6 +14,9 @@
 #include "Programa.h"
 #include <pthread.h>
 
+#define PorCONSOLA 0
+#define PorARCHIVO 1
+
 void * iniciarConsola(void * params);
 uint32_t parsearComando(char * comando);
 void operacionesConSegmentos();
@@ -24,13 +27,13 @@ void requisitosOperacionSegmento( char operacion);
 void solicitarPosicion( uint32_t base, uint32_t offset, uint32_t tamanio);
 void escribirPosicion();
 void imprimirMemoria();
-void printSegmentos(t_list * segmentos);
-void printSegmentosHeaders();
+void printSegmentos(t_list * segmentos, char porDondeImprimo);
+void printSegmentosHeaders(char porDondeImprimo);
 void printSegmentosPorPrograma();
 void printTodosSegmentos();
-void printSegmento(Segmento * segmento);
+void printSegmento(Segmento * segmento, char porDondeImprimo);
 void buscarProgramaEImprimirSegmentos();
-void printEspacioLibre(uint32_t inicioEspacio, uint32_t finEspacio);
+void printEspacioLibre(uint32_t inicioEspacio, uint32_t finEspacio, char porDondeImprimo);
 bool verificarRequisitos( uint32_t programa, uint32_t base);
 
 void imprimirSegmentosDe(Programa * programaAImprimir);

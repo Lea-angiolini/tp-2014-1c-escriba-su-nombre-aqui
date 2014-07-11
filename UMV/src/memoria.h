@@ -15,6 +15,8 @@
 #define WORSTFIT 1
 #define FIRSTFIT 0
 #define SEGMENTOVACIO 0
+#define PorCONSOLA 0
+#define PorARCHIVO 1
 
 bool segmentoEsAnterior( void * seg1, void * seg2 );
 t_list * crearListaEspacioDisponible();
@@ -34,8 +36,8 @@ uint32_t memoriaOcupada();
 uint32_t memoriaLibre();
 
 uint32_t solicitarPosicionDeMemoria( uint32_t base, uint32_t offset, uint32_t tamanio);
-void imprimirBytes( uint32_t base, uint32_t offset, uint32_t tamanio);
-void mostrarCaracteres( uint32_t cantidad, unsigned char * mem);
+void imprimirBytes( uint32_t base, uint32_t offset, uint32_t tamanio, char porDondeImprimo);
+void mostrarCaracteres( uint32_t cantidad, unsigned char * mem, char porDondeImprimo);
 //estas dos funciones repiten codigo, pero es una solucion temporaria
 void guardarBytes( uint32_t base, uint32_t offset, uint32_t tamanio);
 void guardarCaracteres( uint32_t cantidad, unsigned char * mem);

@@ -19,7 +19,7 @@ int main(int argc, char * argv[]) {
 		printf("Modo de empleo: ./UMV config.cfg\n");
 		return EXIT_SUCCESS;
 	}
-	logger = log_create("log.txt", "UMV", 1, LOG_LEVEL_TRACE);
+	logger = log_create("log.txt", "UMV", 0, LOG_LEVEL_TRACE);
 
 	log_info(logger, "Iniciando UMV...");
 

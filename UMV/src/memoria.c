@@ -250,11 +250,11 @@ void compactar()
 
 		}
 		log_info(logger, "Se ha compactado correctamente");
-		printSegmentos(tabla_segmentos);
+		printSegmentos(tabla_segmentos, PorCONSOLA);
 	}
 	log_info( logger, "Se ha compactado correctamente");
 
-	printSegmentos(tabla_segmentos);
+	printSegmentos(tabla_segmentos, PorCONSOLA);
 	pthread_rwlock_unlock(&lockEscrituraLectura);
 
 	return;
@@ -293,13 +293,13 @@ uint32_t solicitarPosicionDeMemoria( uint32_t base, uint32_t offset, uint32_t ta
 
 		return -1;
 
-	imprimirBytes( base, offset, tamanio);
+	imprimirBytes( base, offset, tamanio, PorCONSOLA);
 
 	return 1;
 
 }
 
-void imprimirBytes( uint32_t base, uint32_t offset, uint32_t tamanio)
+void imprimirBytes( uint32_t base, uint32_t offset, uint32_t tamanio, char porDondeImprimo)
 {
 
 	uint32_t alBuffer = base + offset;
@@ -307,16 +307,27 @@ void imprimirBytes( uint32_t base, uint32_t offset, uint32_t tamanio)
 
 	uint32_t i, hastaLoQueDe= 0;
 	unsigned char * mem = memoriaCorrida;
-
-	printf("Direccion  | \t\t\tHex Dump\t\t\t|     ASCII\n");
-	printf("---------------------------------------------------------------------------------\n");
-	printf("    %05d  | ", alBuffer);
+	if (porDondeImprimo == PorCONSOLA){
+		printf("Direccion  | \t\t\tHex Dump\t\t\t|     ASCII\n");
+		printf("---------------------------------------------------------------------------------\n");
+		printf("    %05d  | ", alBuffer);
+	}
+	else{
+		fprintf( archivoDump, "Direccion  | \t\t\tHex Dump\t\t\t|     ASCII\n");
+		fprintf( archivoDump, "---------------------------------------------------------------------------------\n");
+		fprintf( archivoDump, "    %05d  | ", alBuffer);
+	}
 
 	for (i = 0; i < tamanio; i++)
 	{
 
 		unsigned char * posicion = memoriaCorrida + i;
-		printf("%02X ", *posicion);
+
+		if (porDondeImprimo == PorCONSOLA)
+			printf("%02X ", *posicion);
+		else
+			fprintf( archivoDump, "%02X ", *posicion);
+
 		hastaLoQueDe++;
 
 		if( hastaLoQueDe != 16 && i == (tamanio - 1))
@@ -324,99 +335,64 @@ void imprimirBytes( uint32_t base, uint32_t offset, uint32_t tamanio)
 			uint32_t blancos;
 			for( blancos = 0; blancos < (16 - hastaLoQueDe); blancos++)
 			{
-				printf("-- ");
+				if( porDondeImprimo == PorCONSOLA)
+					printf("-- ");
+				else
+					fprintf( archivoDump, "-- ");
 			}
-			mostrarCaracteres( hastaLoQueDe, mem);
+			if (porDondeImprimo == PorCONSOLA)
+				mostrarCaracteres( hastaLoQueDe, mem, PorCONSOLA);
+			else
+				mostrarCaracteres(hastaLoQueDe, mem, PorARCHIVO);
 		}
 		if (hastaLoQueDe == 16 )
 		{
-
-			mostrarCaracteres( hastaLoQueDe, mem);
-			printf("\n---------------------------------------------------------------------------------\n");
 			mem += hastaLoQueDe;
 			alBuffer += hastaLoQueDe;
 			hastaLoQueDe = 0;
-			printf("    %05d  | ", alBuffer);
+
+			if( porDondeImprimo == PorCONSOLA){
+				mostrarCaracteres( hastaLoQueDe, mem, PorCONSOLA);
+				printf("\n---------------------------------------------------------------------------------\n");
+				printf("    %05d  | ", alBuffer);
+			}
+			else{
+				mostrarCaracteres( hastaLoQueDe, mem, PorARCHIVO);
+				fprintf( archivoDump, "\n---------------------------------------------------------------------------------\n");
+				fprintf( archivoDump, "    %05d  | ", alBuffer);
+			}
 		}
 
 
 	}
-	printf("\n\n");
+	if (porDondeImprimo == PorCONSOLA)
+		printf("\n\n");
+	else
+		fprintf( archivoDump, "\n\n");
 }
 
-void mostrarCaracteres( uint32_t cantidad, unsigned char * mem)
-{
-	printf(" | ");
+void mostrarCaracteres( uint32_t cantidad, unsigned char * mem, char porDondeImprimo){
+	if( porDondeImprimo == PorCONSOLA)
+		printf(" | ");
+	else
+		fprintf( archivoDump, " | ");
+
 	uint32_t i;
 	for (i = 0; i < cantidad; i++)
 	{
 		if (*(mem + i) == '\n' || *(mem + i) == '\t')
 		{
-			printf(" ");
+			if( porDondeImprimo == PorCONSOLA)
+				printf(" ");
+			else
+				fprintf( archivoDump, " ");
 		} else
 		  {
-			printf("%c", *(mem + i));
+			if( porDondeImprimo == PorCONSOLA)
+				printf("%c", *(mem + i));
+			else
+				fprintf( archivoDump, "%c", *(mem + i));
 		  }
-	}
-}
-
-void guardarBytes( uint32_t base, uint32_t offset, uint32_t tamanio)
-{
-
-	uint32_t alBuffer = base + offset;
-	void * memoriaCorrida = memoria + alBuffer;
-
-	uint32_t i, hastaLoQueDe= 0;
-	unsigned char * mem = memoriaCorrida;
-
-	fprintf( archivoDump, "Direccion  | \t\t\tHex Dump\t\t\t|     ASCII\n");
-	fprintf( archivoDump, "---------------------------------------------------------------------------------\n");
-	fprintf( archivoDump, "    %05d  | ", alBuffer);
-
-	for (i = 0; i < tamanio; i++)
-	{
-
-		unsigned char * posicion = memoriaCorrida + i;
-		fprintf( archivoDump, "%02X ", *posicion);
-		hastaLoQueDe++;
-
-		if( hastaLoQueDe != 16 && i == (tamanio - 1))
-		{
-			uint32_t blancos;
-			for( blancos = 0; blancos < (16 - hastaLoQueDe); blancos++)
-			{
-				fprintf( archivoDump, "-- ");
-			}
-			guardarCaracteres( hastaLoQueDe, mem);
-		}
-		if (hastaLoQueDe == 16 )
-		{
-			guardarCaracteres( hastaLoQueDe, mem);
-			fprintf( archivoDump, "\n---------------------------------------------------------------------------------\n");
-			mem += hastaLoQueDe;
-			alBuffer += hastaLoQueDe;
-			hastaLoQueDe = 0;
-			fprintf( archivoDump, "    %05d  | ", alBuffer);
-		}
-
-
-	}
-	fprintf( archivoDump, "\n\n");
-}
-
-void guardarCaracteres( uint32_t cantidad, unsigned char * mem)
-{
-
-	fprintf( archivoDump, " | ");
-	uint32_t i;
-	for (i = 0; i < cantidad; i++)
-	{
-		if (*(mem + i) == '\n' || *(mem + i) == '\t')
-		{
-			fprintf( archivoDump, " ");
-		} else {
-			fprintf( archivoDump, "%c", *(mem + i));
-			}
 	}
 }
 

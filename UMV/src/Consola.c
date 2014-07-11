@@ -13,6 +13,7 @@ extern t_list * tabla_segmentos;
 char comandosBuffer[200];
 FILE *archivoDump;
 
+
 void * iniciarConsola(void * params) {
 
 	printf("Consola de UMV, escriba-su-nombre-aqui\n");
@@ -97,14 +98,16 @@ void operacionesConSegmentos() {
 		break;
 
 	case 'd':
-		printSegmentos( tabla_segmentos);
+		printSegmentos( tabla_segmentos, PorCONSOLA);
 		printf("Ingrese el ID del segmento a destruir");
 		uint32_t idSeg;
+
 		scanf("%d", &idSeg);
 		while (getchar() != '\n');
 		pthread_rwlock_wrlock(&lockEscrituraLectura);
 		Segmento * segmento = buscarSegmentoEnTabla( idSeg);
 		borrarSegmento( segmento);
+
 		pthread_rwlock_unlock(&lockEscrituraLectura);
 		break;
 
@@ -117,11 +120,10 @@ void operacionesConSegmentos() {
 void requisitosOperacionSegmento(char operacion) {
 
 	usleep( retardoUMV * 1000);
+	printSegmentos( tabla_segmentos, PorCONSOLA);
 
 	pthread_rwlock_wrlock(&lockEscrituraLectura);
 
-
-	printSegmentos( tabla_segmentos);
 
 	printf("Ingrese la base del segmento a solicitar\n");
 	uint32_t base;
@@ -155,22 +157,18 @@ void requisitosOperacionSegmento(char operacion) {
 }
 
 
-void solicitarPosicion( uint32_t base, uint32_t offset,
-		uint32_t tamanio) {
+void solicitarPosicion( uint32_t base, uint32_t offset,	uint32_t tamanio) {
 
-	uint32_t solicitud = solicitarPosicionDeMemoria( base, offset,
-			tamanio);
+	uint32_t solicitud = solicitarPosicionDeMemoria( base, offset,	tamanio);
 
 	if (solicitud == -1)
 		printf("No se ha podido realizar la lectura de memoria\n");
 
 }
 
-void escribirPosicion( uint32_t base, uint32_t offset,
-		uint32_t tamanio) {
+void escribirPosicion( uint32_t base, uint32_t offset,	uint32_t tamanio) {
 
-	printf(
-			"Ingrese el buffer que desea escribir, presionando ENTER entre cada byte\n");
+	printf("Ingrese el buffer que desea escribir, presionando ENTER entre cada byte\n");
 	uint32_t buffer[tamanio];
 
 	uint32_t i;
@@ -244,7 +242,7 @@ void generarDump() {
 		break;
 	case 'c':
 		fprintf( archivoDump, "\nDetalle de la memoria principal;\n");
-		printSegmentos(tabla_segmentos);
+		printSegmentos(tabla_segmentos, PorARCHIVO);
 		break;
 	case 'd':
 		fprintf(archivoDump, "\nContenido de la memoria principal:\n");
@@ -269,24 +267,30 @@ void imprimirMemoria(){
 	if( memoria_size < (tamanio + offset)){
 		log_error( logger, "Se ha producido Segmentation Fault a causa de indicar una cantidad de bytes que sobrepasa el tamaño de la memoria");
 		printf("Se ha producido Segmentation Fault a causa de indicar una cantidad de bytes que sobrepasa el tamaño de la memoria\n");
-	}else{
-		guardarBytes( 0, offset, tamanio);
-		}
+	}
+	else{
+		imprimirBytes( 0, offset, tamanio, PorARCHIVO);
+	}
 }
 
-void printSegmentosHeaders() {
-	fprintf( archivoDump, "\n");
-	fprintf( archivoDump, "\t\t|  Inicio Real  |   Fin  Real   |     Tamaño\n");
-	fprintf( archivoDump, "----------------|---------------|---------------|-------------|\n");
+void printSegmentosHeaders(char porDondeImprimo) {
+	if (porDondeImprimo == PorCONSOLA){
+		printf( "\n\t\t|  Inicio Real  |   Fin  Real   |     Tamaño\n");
+		printf( "----------------|---------------|---------------|-------------|\n");
+	}
+	else{
+		fprintf( archivoDump, "\n\t\t|  Inicio Real  |   Fin  Real   |     Tamaño\n");
+		fprintf( archivoDump, "----------------|---------------|---------------|-------------|\n");
+	}
 }
 
 void imprimirSegmentosDe(Programa *programa) {
 	fprintf( archivoDump, "Programa: %d \n", programa->pid);
-	printSegmentosHeaders();
-	printSegmento(programa->stack);
-	printSegmento(programa->script);
-	printSegmento(programa->etiquetas);
-	printSegmento(programa->instrucciones);
+	printSegmentosHeaders(PorARCHIVO);
+	printSegmento(programa->stack, PorARCHIVO);
+	printSegmento(programa->script, PorARCHIVO);
+	printSegmento(programa->etiquetas, PorARCHIVO);
+	printSegmento(programa->instrucciones, PorARCHIVO);
 }
 
 void printSegmentosPorPrograma() {
@@ -315,37 +319,60 @@ void buscarProgramaEImprimirSegmentos() {
 
 }
 
-void printSegmentos(t_list * segmentos) {
+void printSegmentos(t_list * segmentos, char porDondeImprimo) {
 	ordenarTablaSegmentos();
-	printSegmentosHeaders();
+	printSegmentosHeaders(porDondeImprimo);
 
 	int i = 0;
 	uint32_t cont = 0;
 	for (i = 0; i < list_size(segmentos); i++) {
 		Segmento * segmento = (Segmento *) list_get(segmentos, i);
 		if (segmento->inicioReal != cont) {
-			printEspacioLibre(cont, segmento->inicioReal - 1);
+			printEspacioLibre(cont, segmento->inicioReal - 1, porDondeImprimo);
 			cont = segmento->finReal + 1;
-			fprintf( archivoDump, "----------------|---------------|-----------------------------|\n");
+
+			if(porDondeImprimo == PorCONSOLA)
+				printf("----------------|---------------|-----------------------------|\n");
+							else
+				fprintf( archivoDump, "----------------|---------------|-----------------------------|\n");
+
+
+		}
+		else{
+
+		printSegmento(segmento, porDondeImprimo);
+		cont = segmento->finReal + 1;
 		}
 
-		printSegmento(segmento);
-		cont = segmento->finReal + 1;
-		fprintf( archivoDump, "----------------|---------------|-----------------------------|\n");
+		if (porDondeImprimo == PorCONSOLA)
+			printf( "----------------|---------------|-----------------------------|\n");
+		else
+			fprintf(archivoDump, "----------------|---------------|-----------------------------|\n");
 
 	}
 	if (cont < (memoria_size - 1)){
-		printEspacioLibre(cont, (memoria_size - 1));
-		fprintf( archivoDump, "--------------------------------------------------------------|\n");
+		printEspacioLibre(cont, (memoria_size - 1), porDondeImprimo);
+
+		if (porDondeImprimo == PorCONSOLA)
+			printf( "--------------------------------------------------------------|\n");
+		else
+			fprintf( archivoDump, "--------------------------------------------------------------|\n");
+
 	}
 }
 
-void printSegmento(Segmento * segmento) {
-	fprintf( archivoDump, "\t%04d\t|\t%04d\t|\t%04d\t|\t%05d |\n", segmento->id, segmento->inicioReal, segmento->finReal, tamanioSegmento(segmento));
+void printSegmento(Segmento * segmento, char porDondeImprimo) {
+	if (porDondeImprimo == PorCONSOLA)
+		printf( "\t%04d\t|\t%04d\t|\t%04d\t|\t%05d |\n", segmento->id, segmento->inicioReal, segmento->finReal, tamanioSegmento(segmento));
+	else
+		fprintf( archivoDump, "\t%04d\t|\t%04d\t|\t%04d\t|\t%05d |\n", segmento->id, segmento->inicioReal, segmento->finReal, tamanioSegmento(segmento));
 
 }
 
-void printEspacioLibre(uint32_t inicioEspacio, uint32_t finEspacio) {
-	fprintf( archivoDump, "\tLibre\t|\t%04d\t|\t%04d\t|\t%05d\n", inicioEspacio, finEspacio, finEspacio - inicioEspacio + 1);
+void printEspacioLibre(uint32_t inicioEspacio, uint32_t finEspacio, char porDondeImprimo) {
+	if (porDondeImprimo == PorCONSOLA)
+		printf("\tLibre\t|\t%04d\t|\t%04d\t|\t%05d\n", inicioEspacio, finEspacio, finEspacio - inicioEspacio + 1);
+	else
+		fprintf( archivoDump, "\tLibre\t|\t%04d\t|\t%04d\t|\t%05d\n", inicioEspacio, finEspacio, finEspacio - inicioEspacio + 1);
 }
 
