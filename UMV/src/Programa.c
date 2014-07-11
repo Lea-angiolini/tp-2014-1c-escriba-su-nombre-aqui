@@ -7,14 +7,6 @@ extern pthread_rwlock_t lockEscrituraLectura;
 
 Programa *crearPrograma(uint32_t pid, void *script, void *etiquetas, void *instrucciones_serializado, socket_pedirMemoria *pedidoMemoria) {
 
-	//bool yaExisteEsePID(Programa *programa){
-	//	return programa->pid == pid;
-	//}
-	//if (list_any_statisfy( programas, yaExisteEsePID)) return NULL;
-	//
-	//Esto es para chequear si ya existe un programa con ese pid
-
-
 	Programa *programa = malloc(sizeof(Programa));
 
 	programa->pid = pid;
