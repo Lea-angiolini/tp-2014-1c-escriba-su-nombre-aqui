@@ -278,8 +278,8 @@ void printSegmentosHeaders(char porDondeImprimo) {
 		printf( "----------------|---------------|---------------|-------------|\n");
 	}
 	else{
-		fprintf( archivoDump, "\n\t\t|  Inicio Real  |   Fin  Real   |     Tamaño\n");
-		fprintf( archivoDump, "----------------|---------------|---------------|-------------|\n");
+		fprintf( archivoDump, "\n\t\t\t|  Inicio Real  \t|     Fin  Real   \t|  Tamaño\t|\n");
+		fprintf( archivoDump, "------------------|-----------------------|-----------------------|-----------------|\n");
 	}
 }
 
@@ -309,9 +309,7 @@ void buscarProgramaEImprimirSegmentos() {
 	if(!imprimirListaDeProgramas()) return;
 	printf("Ingrese el id del programa para imprimir sus segmentos\n");
 
-	scanf("%d\n\n", &pid);
-	while (getchar() != '\n')
-		;
+	scanf("%d", &pid);
 
 	programaAImprimir = buscarPrograma(pid);
 	fprintf( archivoDump, "\nTabla de segmento de:");
@@ -365,7 +363,7 @@ void printSegmento(Segmento * segmento, char porDondeImprimo) {
 	if (porDondeImprimo == PorCONSOLA)
 		printf( "\t%04d\t|\t%04d\t|\t%04d\t|\t%05d |\n", segmento->id, segmento->inicioReal, segmento->finReal, tamanioSegmento(segmento));
 	else
-		fprintf( archivoDump, "\t%04d\t|\t%04d\t|\t%04d\t|\t%05d |\n", segmento->id, segmento->inicioReal, segmento->finReal, tamanioSegmento(segmento));
+		fprintf( archivoDump, "\t%04d\t|\t  %04d\t\t|\t    %04d\t\t|\t%05d\t|\n", segmento->id, segmento->inicioReal, segmento->finReal, tamanioSegmento(segmento));
 
 }
 
