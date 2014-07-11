@@ -124,6 +124,17 @@ bool recibirSegmentos(int socketKernel)
 	}
 
 	Programa *programa = crearPrograma(pid, script, etiquetas, instrucciones, &pedidoMemoria);
+
+	//if (programa == NULL){
+	//	log_error( logger, "No se ha podido crear el nuevo programa porque ya existe un programa con ese pid");
+	//	send(socketKernel, , ); enviarle al kernel algun tipo de aviso para que sepa que no se pudo crear el programa
+	//	liberar();
+	//	return false;
+	//}
+	//
+	//Esto es para resolver si existe un programa con el pid del programa a crear
+
+
 	socket_umvpcb datosSegmentos = crearEstructuraParaPCB(programa);
 
 	if ( send(socketKernel, &datosSegmentos, sizeof(datosSegmentos), 0) < 0 ) {
