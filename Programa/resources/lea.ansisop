@@ -1,0 +1,24 @@
+#!/usr/bin/ansisop
+begin
+variables a
+	
+!x = 8
+	a=2
+		:inicio
+			print a
+			a=a-1
+						
+			
+		jnz a inicio
+a = !xdf
+wait done
+ io Impresora 2
+end
+
+function pep
+variables b,d
+textPrint #########
+b=$0
+d=$1
+
+end

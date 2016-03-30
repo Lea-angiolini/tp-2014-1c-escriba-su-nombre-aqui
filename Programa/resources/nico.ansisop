@@ -1,0 +1,14 @@
+#!/usr/bin/ansisop
+begin
+    variables a, g 
+    a = 5
+    g = 80
+    g <- retornarmasuno &a
+    print g
+end
+function retornarmasuno
+	variables a
+	*$0 = 1
+	a = 5 + *$0
+    return a
+end

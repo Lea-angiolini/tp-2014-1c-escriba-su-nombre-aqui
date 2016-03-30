@@ -1,0 +1,12 @@
+#!/usr/bin/ansisop
+begin
+
+variables  i
+
+i=1+2
+
+textPrint    Hola Mundo!
+
+print i
+
+end

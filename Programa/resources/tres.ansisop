@@ -1,0 +1,24 @@
+#!/usr/bin/ansisop
+begin
+variables a, b, c, d
+	a=1
+	b=3
+	c=6
+	textPrint lalaalala
+	d <- sumt a b c
+	print d
+
+end
+
+function sumt
+variables n, m
+	textPrint se recibio como $0
+	print $0
+	textPrint se recibio como 1
+	#print $1
+	#textPrint se recibio como 2
+	print $2
+	
+	#n=$0 + $1 + $2
+	return 9
+end

@@ -1,0 +1,31 @@
+#!/usr/bin/ansisop
+begin
+variables f, i, t
+	i=1
+	t = 0
+		:inicio
+	
+			t = t+1
+			i <- mult t,i
+			textPrint #####################################
+			textPrint El Factorial de
+			print t
+			textPrint es:
+			print i
+			textPrint #####################################
+	
+		goto inicio
+end
+
+function mult
+variables n, a
+	a=$0
+	n=0
+		:for
+
+			n=n + $1
+			a=a-1
+
+		jnz a for
+	return n
+end

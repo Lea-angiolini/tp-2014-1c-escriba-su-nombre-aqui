@@ -1,0 +1,6 @@
+[DEBUG] 19:13:03:3 Programa/(3345:3345): Conectando
+[INFO] 19:13:03:3 Programa/(3345:3345): Conectado al kernel
+[INFO] 19:13:08:45 Programa/(3345:3345):    Hola Mundo!
+
+[INFO] 19:13:10:47 Programa/(3345:3345): 3
+[INFO] 19:13:14:49 Programa/(3345:3345): Desconectado del servidor

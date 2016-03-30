@@ -1,0 +1,15 @@
+#!/usr/bin/ansisop
+begin
+variables a,z
+	
+	z=0
+	a=1
+		:inicio
+			print a
+			a=a+z
+			z=a-z
+			
+			
+		goto inicio
+end
+

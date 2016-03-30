@@ -1,0 +1,11 @@
+#!/usr/bin/ansisop
+begin
+variables a
+
+a=1
+:for
+signal done
+a=a-1
+jnz a for
+
+end
